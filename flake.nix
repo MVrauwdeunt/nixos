@@ -2,8 +2,9 @@
   description = "Declarative NixOS configuration managed via flakes";
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
   inputs.disko.url   = "github:nix-community/disko";
+  inputs.sops-nix.url = "github:Mic92/sops-nix";
 
-  outputs = { self, nixpkgs, disko, ... }:
+  outputs = { self, nixpkgs, disko, sops-nix, ... }:
   let
     lib = nixpkgs.lib;
 
@@ -22,6 +23,9 @@
             ./modules/base.nix
             ./modules/ssh-hardened.nix
             ./modules/users/zanbee.nix
+            sops-nix.nixosModules.sops
+            ./modules/sops.nix
+            ./modules/tailscale.nix
             (if platform == "hetzner" then ./modules/network/hetzner-cloud.nix
                                        else ./modules/network/proxmox-bridge.nix)
             { networking.hostName = name; }
