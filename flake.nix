@@ -29,7 +29,9 @@
             (if platform == "hetzner" then ./modules/network/hetzner-cloud.nix
                                        else ./modules/network/proxmox-bridge.nix)
             { networking.hostName = name; }
+            ./modules/network/safe-recovery.nix
           ]
+
           ++ (if useDisko then [
                 disko.nixosModules.disko
                 (if firmware == "uefi" then ./modules/disko-uefi-ext4.nix else ./modules/disko-bios-ext4.nix)
