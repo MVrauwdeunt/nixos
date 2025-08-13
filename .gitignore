@@ -1,0 +1,6 @@
+# nix/flake rotzooi
+result
+.direnv
+.envrc
+# eventuele secretsmap, als je die later gebruikt
+secrets/
