@@ -18,5 +18,5 @@
   services.openssh.enable = true;
 
   # NIET zomaar verhogen op bestaande hosts
-  system.stateVersion = "23.11";
+  system.stateVersion = "25.05";
 }
