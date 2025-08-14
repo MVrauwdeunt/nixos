@@ -21,6 +21,7 @@
         modules =
           [
             ./modules/base.nix
+            ./modules/packages.nix
             ./modules/ssh-hardened.nix
             ./modules/users/zanbee.nix
             sops-nix.nixosModules.sops
@@ -29,7 +30,7 @@
             (if platform == "hetzner" then ./modules/network/hetzner-cloud.nix
                                        else ./modules/network/proxmox-bridge.nix)
             { networking.hostName = name; }
-            ./modules/network/safe-recovery.nix
+            # ./modules/network/safe-recovery.nix
           ]
 
           ++ (if useDisko then [
