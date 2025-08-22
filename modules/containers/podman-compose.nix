@@ -1,40 +1,39 @@
 { config, lib, pkgs, ... }:
 let
-  inherit (lib) mkIf mkMerge mkOption types concatStringsSep mapAttrsToList optionalString literalExpression;
+  inherit (lib)
+    mkIf mkMerge mkOption types optionalString concatStringsSep mapAttrsToList;
 
   cfg = config.modules.caddyCompose;
 
-  # Eén vhost-blok renderen
-  vhostToBlock = name: v:
-    ''
+  # Render vhost -> Caddyfile blok
+  vhostToBlock = name: v: ''
     ${name} {
       reverse_proxy ${v.upstream}
       ${optionalString (v.extraConfig or "" != "") v.extraConfig}
     }
-    '';
+  '';
 
   caddyfileText =
     concatStringsSep "\n\n" (mapAttrsToList vhostToBlock cfg.virtualHosts);
 
-  composeDir   = "/etc/compose/${cfg.stackName}";
-  caddyDir     = "/etc/caddy";
-  dataDir      = cfg.dataDir;       # ACME storage & runtime
-  composeYml   = "${composeDir}/compose.yml";
-  caddyfile    = "${caddyDir}/Caddyfile";
+  composeDir = "/etc/compose/${cfg.stackName}";
+  # Op NixOS is /etc/caddy een symlink → mount één bestand om symlinkgedoe te vermijden:
+  caddyFileHost = "/etc/static/caddy/Caddyfile";
+  dataDir       = cfg.dataDir;
+  composeYml    = "${composeDir}/compose.yml";
 in
 {
   options.modules.caddyCompose = {
     enable = mkOption {
       type = types.bool;
       default = false;
-      description = "Enable Caddy managed by Podman Compose.";
+      description = "Enable Caddy managed via Podman Compose.";
     };
 
-    # naam van de compose stack en service
     stackName = mkOption {
       type = types.str;
       default = "caddy";
-      description = "Compose stack/service name (used by systemd template and /etc/compose path).";
+      description = "Compose stack/service name.";
     };
 
     image = mkOption {
@@ -49,17 +48,16 @@ in
       description = "ACME/Let's Encrypt contact email (CADDY_EMAIL).";
     };
 
-    # Host networking is de simpelste manier voor 80/443 en ACME
     useHostNetwork = mkOption {
       type = types.bool;
       default = true;
-      description = "Run container with host networking instead of mapping ports.";
+      description = "Use host networking instead of explicit port mappings.";
     };
 
     ports = mkOption {
       type = types.listOf types.str;
       default = [ "80:80" "443:443" ];
-      description = "Port mappings when not using host networking.";
+      description = "Port mappings when host networking is disabled.";
     };
 
     openFirewall = mkOption {
@@ -74,133 +72,113 @@ in
       description = "Directory for ACME storage (/data) and runtime config (/config).";
     };
 
-    # Declaratieve vhosts
     virtualHosts = mkOption {
       type = types.attrsOf (types.submodule ({ ... }: {
         options = {
           upstream = mkOption {
             type = types.str;
-            description = "Reverse proxy upstream URL (e.g., http://host:port or https://host:port).";
+            description = "Reverse proxy upstream (e.g. http://host:port or https://host:port).";
           };
           extraConfig = mkOption {
             type = types.lines;
             default = "";
-            description = "Extra Caddy directives for this vhost (headers, timeouts, etc.).";
+            description = "Extra Caddy directives for this vhost.";
           };
         };
       }));
       default = { };
-      description = "Map van hostnames -> upstream config.";
-      example = literalExpression ''
-        {
-          "recipes.gladsheimr.nl" = {
-            upstream = "http://mealie.gladsheimr.ts.net:9000";
-            extraConfig = '''
-              header {
-                Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
-              }
-            ''';
-          };
-        }
-      '';
+      description = "Map of hostname -> vhost config (rendered into Caddyfile).";
     };
 
-    # Extra environment voor de container
     environment = mkOption {
       type = types.attrsOf types.str;
       default = { };
-      description = "Extra environment variables for the Caddy container.";
+      description = "Extra environment variables passed to the Caddy container.";
     };
 
-    # Extra volumes (naast Caddyfile + data/config)
     extraVolumes = mkOption {
       type = types.listOf types.str;
       default = [ ];
       description = "Additional volume mounts for the Caddy container.";
     };
 
-    # Extra compose service-keys (als je iets speciaals wilt toevoegen)
-    extraCompose = mkOption {
-      type = types.lines;
-      default = "";
-      description = "Raw YAML fragment appended under the caddy service in compose.yml.";
+    serviceOverrides = mkOption {
+      type = types.attrs;
+      default = { };
+      description = "Arbitrary docker-compose service fields to merge (advanced).";
+      example = lib.literalExpression ''{ mem_limit = "512m"; }'';
     };
   };
 
   config = mkIf cfg.enable (mkMerge [
     {
-      # Open poorten indien gewenst
-      networking.firewall.allowedTCPPorts = mkIf cfg.openFirewall [ 80 443 ];
+      virtualisation.podman.enable = true;
+      environment.systemPackages = [ pkgs.podman pkgs.podman-compose ];
 
-      # Bestanden: Caddyfile & Compose
+      networking.firewall = mkIf cfg.openFirewall {
+        allowedTCPPorts = [ 80 443 ];
+      };
+
+      # Declaratieve bestanden
       environment.etc = {
-        # "${builtins.baseNameOf caddyfile}".source = caddyfile;
-        # NB: we schrijven de content hieronder in .text (zelfde pad)
         "caddy/Caddyfile".text = caddyfileText;
 
         "${"compose/" + cfg.stackName + "/compose.yml"}".text =
           let
-            portsYaml = if cfg.useHostNetwork then "" else ''
-              ports:
-              ${concatStringsSep "\n" (map (p: "      - \"${p}\"") cfg.ports)}
-            '';
+            # Mount 1 bestand i.p.v. de hele map (lost NixOS symlink naar /nix/store op)
+            volumes = [
+              "${caddyFileHost}:/etc/caddy/Caddyfile:ro"
+              "${dataDir}:/data"
+              "${dataDir}:/config"
+            ] ++ cfg.extraVolumes;
 
-            networkModeYaml = if cfg.useHostNetwork then ''
-              network_mode: host
-            '' else "";
+            envAttrs =
+              cfg.environment //
+              (lib.optionalAttrs (cfg.email != null) { CADDY_EMAIL = cfg.email; });
 
-            volumesYaml = concatStringsSep "\n" ([
-              "      - ${caddyDir}:/etc/caddy:ro"
-              "      - ${dataDir}:/data"
-              "      - ${dataDir}:/config"
-            ] ++ cfg.extraVolumes);
+            serviceBase = {
+              image = cfg.image;
+              volumes = volumes;
+              restart = "unless-stopped";
+            };
 
-            envYaml =
-              concatStringsSep "\n"
-                (map (k: "      - ${k}=${cfg.environment.${k}}")
-                  (lib.attrNames cfg.environment))
-              + (if cfg.email == null then "" else "\n      - CADDY_EMAIL=${cfg.email}");
+            service =
+              serviceBase
+              // (if cfg.useHostNetwork then { network_mode = "host"; } else { ports = cfg.ports; })
+              // (if envAttrs == {} then {} else { environment = envAttrs; })
+              // cfg.serviceOverrides;
+
+            composeObj = {
+              version = "3.9";
+              services."${cfg.stackName}" = service;
+            };
           in
-          ''
-            version: "3.9"
-            services:
-              ${cfg.stackName}:
-                image: ${cfg.image}
-                ${networkModeYaml}${portsYaml}
-                volumes:
-                ${volumesYaml}
-                environment:
-                ${envYaml}
-                restart: unless-stopped
-            ${cfg.extraCompose}
-          '';
+          lib.generators.toYAML {} composeObj;
       };
 
-      # Directories
-      systemd.tmpfiles.rules = [
-        "d ${dataDir} 0750 root root -"
-      ];
+      # Zorg dat /var/lib/caddy bestaat
+      systemd.tmpfiles.rules = [ "d ${dataDir} 0750 root root -" ];
 
-      # Templated systemd service: podman-compose@<stackName>
+      # Podman Compose service
       systemd.services."podman-compose@${cfg.stackName}" = {
         description = "Podman Compose stack: ${cfg.stackName}";
-        after = [ "network-online.target" "tailscaled.service" ];
+        after = [ "network-online.target" "tailscaled.service" "local-fs.target" ];
         wants = [ "network-online.target" ];
         serviceConfig = {
           Type = "oneshot";
           RemainAfterExit = true;
           WorkingDirectory = "${composeDir}";
+          Environment = "PATH=/run/current-system/sw/bin";
+
+          # Start alleen als het host-bestand bestaat
+          ExecStartPre = "/run/current-system/sw/bin/test -f ${caddyFileHost}";
+
           ExecStart = "${pkgs.podman-compose}/bin/podman-compose -f ${composeYml} up -d";
           ExecStop  = "${pkgs.podman-compose}/bin/podman-compose -f ${composeYml} down";
           TimeoutStartSec = 0;
         };
         wantedBy = [ "multi-user.target" ];
       };
-
-      systemd.services."podman-compose@${cfg.stackName}".enable = true;
-
-      # Zorg dat podman-compose beschikbaar is
-      environment.systemPackages = [ pkgs.podman-compose ];
     }
   ]);
 }

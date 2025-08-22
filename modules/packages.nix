@@ -6,6 +6,11 @@
     vim
     git
     curl
+    wget
+    tree
+    dig
+    fzf
+    bat
 
     # Handig (optioneel, zet ze aan naar smaak):
     # wget unzip zip
