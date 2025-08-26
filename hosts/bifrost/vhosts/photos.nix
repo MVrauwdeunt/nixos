@@ -1,29 +1,23 @@
 # hosts/bifrost/vhosts/photos.nix
-{ config, lib, ... }:
+{ lib, ... }:
 {
-  modules.caddyCompose = {
-    enable = true;
+  apps.caddy.virtualHosts."photos.gladsheimr.nl" = {
+    # HTTPS upstream via Tailscale with correct SNI/Host to the tailnet service
+    upstream = ''
+      https://photos.fiordland-gar.ts.net {
+        header_up Host {upstream_hostport}
+      }
+    '';
 
-    # E-mail voor Let's Encrypt (CADDY_EMAIL)
-    email = "admin@gladsheimr.nl";
-
-    # Zet vhost(s)
-    virtualHosts."photos.gladsheimr.nl" = {
-      # We willen HTTPS upstream met correcte SNI/Host naar tailscale-host:
-      upstream = ''
-        https://photos.fiordland-gar.ts.net {
-          # Zorg dat SNI + Host op upstream kloppen (niet de public host)
-          header_up Host {upstream_hostport}
-        }
-      '';
-
-      # Extra harde headers
-      extraConfig = ''
-        header {
-          Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
-        }
-      '';
-    };
+    # Extra security headers / policies
+    extraConfig = ''
+      encode gzip
+      header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+        Referrer-Policy "strict-origin-when-cross-origin"
+      }
+    '';
   };
 }
-

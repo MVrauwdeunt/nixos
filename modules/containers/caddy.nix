@@ -1,7 +1,7 @@
 { config, lib, pkgs, ... }:
 let
   inherit (lib) mkIf mkOption types optionalString concatStringsSep mapAttrsToList;
-  cfg = config.containers.caddy;
+  cfg = config.apps.caddy;
 
   vhostToBlock = name: v: ''
     ${name} {
@@ -15,7 +15,7 @@ let
   caddyfilePath = "/etc/caddy/Caddyfile";
   dataDir       = cfg.dataDir;
 in {
-  options.containers.caddy = {
+  options.apps.caddy = {
     enable = mkOption { type = types.bool; default = false; };
     image  = mkOption { type = types.str; default = "docker.io/caddy:2"; };
     email  = mkOption { type = types.nullOr types.str; default = null; };

@@ -11,6 +11,7 @@
     dig
     fzf
     bat
+    jq
 
     # Handig (optioneel, zet ze aan naar smaak):
     # wget unzip zip
