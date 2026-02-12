@@ -13,6 +13,7 @@
       { name = "bifrost"; platform = "hetzner"; firmware = "bios"; disk = "/dev/sda"; useDisko = false; }
       # Voor nieuwe hosts zet je useDisko = true en kies je firmware en disk
       # { name = "Thor"; platform = "proxmox"; firmware = "uefi"; disk = "/dev/sda"; useDisko = true; }
+      { name = "vm"; platform = "qemu"; firmware = " uefi"; disk = "/dev/vda"; useDisko = false;}   
     ];
 
     mkHost = { name, platform, firmware, disk, useDisko ? true }:

@@ -5,7 +5,8 @@
     ./hardware-configuration.nix
 
     ../../modules/base.nix
-    ../../modules/xfce.nix
+    ../../modules/desktops/xfce.nix
+    ../../modules/users/zanbee.nix
   ];
   
   boot.loader.grub = {
@@ -14,6 +15,7 @@
   };
 
   networking.hostName = "vm";
+  # my.users = ["zanbee"];
 
   # Temp ssh
   services.openssh.enable = true;
