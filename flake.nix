@@ -24,7 +24,7 @@
             ./modules/base.nix
             ./modules/packages.nix
             ./modules/ssh-hardened.nix
-            ./modules/users/zanbee.nix
+            #./modules/users/zanbee.nix
             sops-nix.nixosModules.sops
             ./modules/sops.nix
             ./modules/tailscale.nix
