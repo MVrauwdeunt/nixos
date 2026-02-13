@@ -20,4 +20,7 @@
   # Temp ssh
   services.openssh.enable = true;
 
+  programs.zsh.enable = true;
+
+
 }    
