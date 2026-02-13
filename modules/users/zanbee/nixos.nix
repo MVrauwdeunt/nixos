@@ -1,5 +1,4 @@
-{ pkgs, ... }:
-{ inputs, ... }:
+{ pkgs, inputs, ... }:
 {
   users.users.zanbee = {
     isNormalUser = true;
