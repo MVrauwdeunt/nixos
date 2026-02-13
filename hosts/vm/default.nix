@@ -6,7 +6,7 @@
 
     ../../modules/base.nix
     ../../modules/desktops/xfce.nix
-    ../../modules/users/zanbee.nix
+    ../../modules/users/zanbee
   ];
   
   boot.loader.grub = {
