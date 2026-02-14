@@ -62,12 +62,6 @@ in
 
       user="$(basename "$home")"
 
-      # ~/Justfile for default just lookup
-      if [ ! -e "$home/Justfile" ]; then
-        ln -s /etc/just/Justfile "$home/Justfile"
-        chown -h "$user:$user" "$home/Justfile" || true
-      fi
-
       # ~/.justfile for alias generation
       if [ ! -e "$home/.justfile" ]; then
         ln -s /etc/just/Justfile "$home/.justfile"
