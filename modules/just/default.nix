@@ -2,7 +2,7 @@
 
 let
   # Base Justfile stored in the repo (adjust this path if you prefer another location)
-  baseJustfile = ./just/base.just;
+  baseJustfile = ./base.just;
 
   # Wrapper that uses a project Justfile if found, otherwise falls back to /etc/just/Justfile
   justWrapper = pkgs.writeShellScriptBin "just" ''
