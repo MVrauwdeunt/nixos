@@ -3,6 +3,35 @@
 let
   # Base Justfile shipped to every host
   baseJustfile = ./base.just;
+
+  # Bash snippet to auto-generate aliases from recipes in ~/.justfile
+  bashAliasScript = ''
+    # Auto-generate bash aliases from recipes in ~/.justfile
+    # Only run in interactive shells
+    case "$-" in
+      *i*) ;;
+      *) return ;;
+    esac
+
+    # Prevent running twice in the same shell
+    if [ -n "''${__JUST_ALIASES_LOADED:-}" ]; then
+      return
+    fi
+    __JUST_ALIASES_LOADED=1
+
+    command -v just >/dev/null 2>&1 || return
+    [ -f "$HOME/.justfile" ] || return
+
+    while IFS= read -r recipe; do
+      [ -n "$recipe" ] || continue
+      case "$recipe" in
+        *[!a-zA-Z0-9_-]*)
+          continue
+          ;;
+      esac
+      alias "$recipe"="just -f \"$HOME/.justfile\" $recipe"
+    done < <(just -f "$HOME/.justfile" --summary 2>/dev/null)
+  '';
 in
 {
   # Install just
@@ -24,26 +53,10 @@ in
     done
   '';
 
-  # Generate recipe aliases for interactive shells (bash-focused)
-  environment.shellInit = ''
-    # Auto-generate shell aliases from recipes in ~/.justfile (interactive shells only)
-    case "$-" in
-      *i*) ;;
-      *) return ;;
-    esac
+  # Run the alias generator in interactive bash shells
+  programs.bash.interactiveShellInit = bashAliasScript;
 
-    command -v just >/dev/null 2>&1 || return
-    [ -f "$HOME/.justfile" ] || return
-
-    while IFS= read -r recipe; do
-      [ -n "$recipe" ] || continue
-      case "$recipe" in
-        *[!a-zA-Z0-9_-]*)
-          continue
-          ;;
-      esac
-      alias "$recipe"="just -f \"$HOME/.justfile\" $recipe"
-    done < <(just -f "$HOME/.justfile" --summary 2>/dev/null)
-  '';
+  # Also source it for login shells (some setups rely on /etc/profile.d)
+  environment.etc."profile.d/just-aliases.sh".text = bashAliasScript;
 }
 
