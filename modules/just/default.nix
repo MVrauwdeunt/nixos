@@ -1,4 +1,4 @@
-{ pkgs, lib, ... }:
+{ pkgs, ... }:
 
 let
   # Base Justfile shipped to every host
@@ -8,22 +8,20 @@ let
   justWrapper = pkgs.writeShellScriptBin "just" ''
     set -euo pipefail
 
-    # Walk upwards to find a project Justfile/justfile
-    search_dir="$PWD"
-    while [ "$search_dir" != "/" ]; do
-      if [ -f "$search_dir/Justfile" ] || [ -f "$search_dir/justfile" ]; then
-        exec ${pkgs.just}/bin/just "$@"
-      fi
-      search_dir="$(dirname "$search_dir")"
-    done
+    # Try default justfile discovery (works without coreutils).
+    # If a project Justfile exists somewhere above, this succeeds.
+    if ${pkgs.just}/bin/just --unstable --dump >/dev/null 2>&1; then
+      exec ${pkgs.just}/bin/just "$@"
+    fi
 
     # No project Justfile found: use the global base Justfile
     exec ${pkgs.just}/bin/just --justfile /etc/just/Justfile "$@"
   '';
 in
 {
-  # Force the wrapper to be installed (and avoid installing the real `just` into PATH)
-  environment.systemPackages = lib.mkForce [
+  # Install the wrapper (and also the real just binary for completeness)
+  environment.systemPackages = [
+    pkgs.just
     justWrapper
   ];
 
