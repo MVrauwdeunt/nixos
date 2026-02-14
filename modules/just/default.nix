@@ -1,10 +1,10 @@
 { pkgs, lib, ... }:
 
 let
-  # Base Justfile stored in the repo (adjust this path if you prefer another location)
+  # Base Justfile shipped to every host
   baseJustfile = ./base.just;
 
-  # Wrapper that uses a project Justfile if found, otherwise falls back to /etc/just/Justfile
+  # Wrapper that prefers a project Justfile, otherwise uses the global one
   justWrapper = pkgs.writeShellScriptBin "just" ''
     set -euo pipefail
 
@@ -22,13 +22,12 @@ let
   '';
 in
 {
-  # Install just and the wrapper (wrapper will be earlier in PATH)
-  environment.systemPackages = [
-    pkgs.just
+  # Force the wrapper to be installed (and avoid installing the real `just` into PATH)
+  environment.systemPackages = lib.mkForce [
     justWrapper
   ];
 
-  # Install the global base Justfile on every host
+  # Install the global base Justfile
   environment.etc."just/Justfile".source = baseJustfile;
 }
 
