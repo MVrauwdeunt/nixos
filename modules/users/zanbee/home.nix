@@ -7,7 +7,6 @@
   home.stateVersion = "25.05";
 
   programs.git.enable = true;
-  programs.zsh.enable = true;
 
   home.packages = with pkgs; [
     ripgrep
