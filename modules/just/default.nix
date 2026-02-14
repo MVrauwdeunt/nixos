@@ -31,7 +31,7 @@ let
           ;;
       esac
 
-      alias "$recipe"="just -f \"$HOME/.justfile\" -d. $recipe"
+      alias "$recipe"="just -f \"$HOME/.justfile\" $recipe"
     done < <(just -f "$HOME/.justfile" --summary 2>/dev/null)
   '';
 in
@@ -49,20 +49,31 @@ in
   environment.etc."just/Justfile".source = baseJustfile;
 
   ########################################
-  # Load alias generator for bash users
+  # Install alias generator into bashrc.d
   ########################################
-  environment.etc."profile.d/just-aliases.sh".source = bashAliases;
+  environment.etc."bashrc.d/just-aliases.sh".source = bashAliases;
 
   ########################################
-  # Symlink Justfiles into user homes
+  # Ensure bash loads /etc/bashrc.d/*
   ########################################
-  system.activationScripts.linkGlobalJustfiles.text = ''
+  environment.etc."bashrc".text = ''
+    # Load system-wide bashrc snippets
+    if [ -d /etc/bashrc.d ]; then
+      for f in /etc/bashrc.d/*; do
+        [ -r "$f" ] && . "$f"
+      done
+    fi
+  '';
+
+  ########################################
+  # Symlink only ~/.justfile into user homes
+  ########################################
+  system.activationScripts.linkGlobalJustfile.text = ''
     for home in /home/*; do
       [ -d "$home" ] || continue
 
       user="$(basename "$home")"
 
-      # ~/.justfile for alias generation
       if [ ! -e "$home/.justfile" ]; then
         ln -s /etc/just/Justfile "$home/.justfile"
         chown -h "$user:$user" "$home/.justfile" || true
