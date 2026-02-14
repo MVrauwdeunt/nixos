@@ -12,6 +12,7 @@
     fzf
     bat
     jq
+    just
 
     # Handig (optioneel, zet ze aan naar smaak):
     # wget unzip zip
