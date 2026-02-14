@@ -5,8 +5,8 @@
     ./hardware-configuration.nix
 
     ../../modules/base.nix
-    ../../modules/desktops/xfce.nix
     ../../modules/users/zanbee
+    ../../modules/roles/workstation
   ];
   
   boot.loader.grub = {
