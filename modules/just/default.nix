@@ -5,7 +5,7 @@ let
   baseJustfile = ./base.just;
 
   # Bash snippet to auto-generate aliases from recipes in ~/.justfile
-  bashAliases = pkgs.writeText "just-aliases.sh" ''
+  bashAliasScript = pkgs.writeText "just-aliases.sh" ''
     # Auto-generate bash aliases from recipes in ~/.justfile
     # Only run in interactive shells
     case "$-" in
@@ -20,9 +20,7 @@ let
     # Generate aliases safely
     while IFS= read -r recipe; do
       # Skip empty lines
-      if [ -z "$recipe" ]; then
-        continue
-      fi
+      [ -n "$recipe" ] || continue
 
       # Skip invalid alias names
       case "$recipe" in
@@ -49,24 +47,22 @@ in
   environment.etc."just/Justfile".source = baseJustfile;
 
   ########################################
-  # Install alias generator into bashrc.d
+  # Install alias generator script
   ########################################
-  environment.etc."bashrc.d/just-aliases.sh".source = bashAliases;
+  environment.etc."just/just-aliases.sh".source = bashAliasScript;
 
   ########################################
-  # Ensure bash loads /etc/bashrc.d/*
+  # Ensure bash runs the alias generator for every interactive shell
   ########################################
-  environment.etc."bashrc".text = ''
-    # Load system-wide bashrc snippets
-    if [ -d /etc/bashrc.d ]; then
-      for f in /etc/bashrc.d/*; do
-        [ -r "$f" ] && . "$f"
-      done
+  programs.bash.interactiveShellInit = ''
+    # Load global just aliases for interactive shells
+    if [ -r /etc/just/just-aliases.sh ]; then
+      . /etc/just/just-aliases.sh
     fi
   '';
 
   ########################################
-  # Symlink only ~/.justfile into user homes
+  # Symlink only ~/.justfile into user homes (non-root)
   ########################################
   system.activationScripts.linkGlobalJustfile.text = ''
     for home in /home/*; do
