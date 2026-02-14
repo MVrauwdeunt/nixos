@@ -34,8 +34,8 @@ net:
   resolvectl status || true
 
 # Show last boot logs (useful when something fails after reboot)
-bootlog lines=200:
-  journalctl -b -n {{lines}} --no-pager
+#bootlog lines=200:
+#  journalctl -b -n {{lines}} --no-pager
 
 # Follow logs (optionally filter by service name)
 logs service="":
