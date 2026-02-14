@@ -1,9 +1,7 @@
 { pkgs, ... }:
 {
-  programs.zsh.enable = true;
-
-  # Zet login shell van zanbee op zsh
-  my.users.zanbee.shell = pkgs.zsh;
+  # Use bash as login shell for zanbee (workstation role)
+  my.users.zanbee.shell = pkgs.bashInteractive;
 
   hardware.bluetooth.enable = true;
   services.blueman.enable = true;
@@ -21,6 +19,5 @@
   services.printing.enable = true;
 
   programs.nm-applet.enable = true;
-
 }
 
