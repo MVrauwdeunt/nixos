@@ -14,7 +14,7 @@ in
       ./hardware-configuration.nix
       ../../modules/containers/caddy.nix
       ../../modules/containers/authelia.nix
-      ../../modules/hosts/zanbee
+      ../../modules/users/zanbee
     ]
     ++ vhostFiles;
 
