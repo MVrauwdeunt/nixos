@@ -13,6 +13,11 @@ info:
   nixos-version
   uname -a
 
+# Remove SSH host key
+ssh_remkey HOST:
+  @echo "Removing SSH host key for {{HOST}}"
+  @ssh-keygen -R {{HOST}}
+
 # Quick overview: disk, memory, load, top processes
 status:
   uptime
