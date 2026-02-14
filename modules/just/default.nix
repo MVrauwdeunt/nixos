@@ -5,9 +5,6 @@ let
   baseJustfile = ./base.just;
 in
 {
-  # Ensure system-wide bash init is enabled so interactiveShellInit is applied
-  programs.bash.enable = true;
-
   # Install just
   environment.systemPackages = [ pkgs.just ];
 
@@ -27,9 +24,14 @@ in
     done
   '';
 
-  # Generate recipe aliases for interactive bash shells
-  programs.bash.interactiveShellInit = ''
-    # Auto-generate bash aliases from recipes in ~/.justfile
+  # Generate recipe aliases for interactive shells (bash-focused)
+  environment.shellInit = ''
+    # Auto-generate shell aliases from recipes in ~/.justfile (interactive shells only)
+    case "$-" in
+      *i*) ;;
+      *) return ;;
+    esac
+
     command -v just >/dev/null 2>&1 || return
     [ -f "$HOME/.justfile" ] || return
 
