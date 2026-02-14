@@ -3,29 +3,29 @@
 let
   # Base Justfile shipped to every host
   baseJustfile = ./base.just;
-
-  # Wrapper that prefers a project Justfile, otherwise uses the global one
-  justWrapper = pkgs.writeShellScriptBin "just" ''
-    set -euo pipefail
-
-    # Try default justfile discovery (works without coreutils).
-    # If a project Justfile exists somewhere above, this succeeds.
-    if ${pkgs.just}/bin/just --unstable --dump >/dev/null 2>&1; then
-      exec ${pkgs.just}/bin/just "$@"
-    fi
-
-    # No project Justfile found: use the global base Justfile
-    exec ${pkgs.just}/bin/just --justfile /etc/just/Justfile "$@"
-  '';
 in
 {
-  # Install the wrapper (and also the real just binary for completeness)
+  # Install just normally
   environment.systemPackages = [
     pkgs.just
-    justWrapper
   ];
 
   # Install the global base Justfile
   environment.etc."just/Justfile".source = baseJustfile;
+
+  # Create ~/Justfile symlink for each real user under /home
+  system.activationScripts.linkGlobalJustfile.text = ''
+    for home in /home/*; do
+      [ -d "$home" ] || continue
+
+      user="$(basename "$home")"
+
+      # Skip if Justfile already exists
+      if [ ! -e "$home/Justfile" ]; then
+        ln -s /etc/just/Justfile "$home/Justfile"
+        chown -h "$user:$user" "$home/Justfile" || true
+      fi
+    done
+  '';
 }
 
