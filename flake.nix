@@ -25,6 +25,7 @@
         system = "x86_64-linux";
         modules =
           [
+            home-manager.nixosModules.home-manager
             ./modules/base.nix
             ./modules/packages.nix
             ./modules/ssh-hardened.nix
