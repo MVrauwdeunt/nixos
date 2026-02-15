@@ -11,8 +11,7 @@
 
   # fzf integration
   programs.fzf = {
-    enable = true;
-    # keybindings = true;
+    keybindings = true;
     fuzzyCompletion = true;
   };
 }
