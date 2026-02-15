@@ -16,7 +16,7 @@
 
   # Bash QoL (interactive only)
   programs.bash = {
-    interactiveShellInit = ''
+    loginShellInit = ''
       # Enable autocd so typing a directory name jumps into it
       shopt -s autocd
 
