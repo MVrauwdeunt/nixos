@@ -11,8 +11,11 @@
 
   # fzf integration
   programs.fzf = {
-    keybindings = true;
-    completion = true;
+    enable = true;
+    # keybindings = true;
+    FuzzyCompletion = true;
+
+    enableBashIntegration = true;
   };
 }
 
