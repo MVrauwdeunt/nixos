@@ -11,11 +11,10 @@
 
   # fzf integration
   programs.fzf = {
-    # enable = true;
+    enable = true;
     # keybindings = true;
     fuzzyCompletion = true;
-
-    enableBashIntegration = true;
   };
 }
+
 
