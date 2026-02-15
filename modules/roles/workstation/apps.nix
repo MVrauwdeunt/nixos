@@ -4,6 +4,7 @@
     pkgs.kdePackages.kate
     pkgs.kdePackages.kdenlive
     firefox
+    keepassrc
   ];
 }
 
