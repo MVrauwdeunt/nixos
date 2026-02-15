@@ -21,6 +21,7 @@
     ripgrep
     fd
     jq
+    ulauncher
   ];
 }
 
