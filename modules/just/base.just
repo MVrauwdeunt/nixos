@@ -33,4 +33,4 @@ net:
 
 # Run an package in a temporary shell (not installed permanent)
 run PKG *CMD:
-  nix shell nixpkgs#{{PKG}} -c {{CMD}}  
+	nix shell nixpkgs#{{PKG}} {{ if CMD != "" { "-c " + CMD } else { "" } }}
