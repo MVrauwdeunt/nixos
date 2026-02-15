@@ -32,5 +32,5 @@ net:
   resolvectl status || true
 
 # Run an package in a temporary shell (not installed permanent)
-run PKG +CMD:
+run PKG *CMD:
   nix shell -p {{PKG}} {{CMD}}  
