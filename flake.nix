@@ -21,8 +21,8 @@
         system = "x86_64-linux";
         modules =
           [
-            ./modules/base.nix
-            ./modules/packages.nix
+            ./modules/base
+            #./modules/packages.nix
             ./modules/ssh-hardened.nix
             ./modules/just
             sops-nix.nixosModules.sops
