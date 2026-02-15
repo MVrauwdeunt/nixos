@@ -13,7 +13,7 @@
   programs.fzf = {
     enable = true;
     # keybindings = true;
-    FuzzyCompletion = true;
+    fuzzyCompletion = true;
 
     enableBashIntegration = true;
   };
