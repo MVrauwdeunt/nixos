@@ -8,7 +8,7 @@
   inputs.home-manager.url = "github:nix-community/home-manager/release-25.05";
   inputs.home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
-  outputs = { self, nixpkgs, disko, sops-nix, ... }:
+  outputs = { self, nixpkgs, disko, sops-nix, home-manager, ... }:
   let
     lib = nixpkgs.lib;
 
