@@ -22,4 +22,10 @@
 
   services.tailscale.enable = false;
 
+  home-manager.useGlobalPkgs = true;
+  home-manager.useUserPackages = true;
+
+  home-manager.users.zanbee = import ../../modules/users/zanbee/home-manager.nix;
+
+
 }    
