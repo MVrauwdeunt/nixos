@@ -20,6 +20,6 @@
   # NIET zomaar verhogen op bestaande hosts
   system.stateVersion = "25.05";
   imports = [
-    ./modules/packages.nix
+    ./packages.nix
   ];
 }
