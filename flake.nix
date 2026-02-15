@@ -4,6 +4,10 @@
   inputs.disko.url   = "github:nix-community/disko";
   inputs.sops-nix.url = "github:Mic92/sops-nix";
 
+  # Home Manager
+  inputs.home-manager.url = "github:nix-community/home-manager/release-25.05";
+  inputs.home-manager.inputs.nixpkgs.follows = "nixpkgs";
+
   outputs = { self, nixpkgs, disko, sops-nix, ... }:
   let
     lib = nixpkgs.lib;
@@ -13,7 +17,7 @@
       { name = "bifrost"; platform = "hetzner"; firmware = "bios"; disk = "/dev/sda"; useDisko = false; }
       # Voor nieuwe hosts zet je useDisko = true en kies je firmware en disk
       # { name = "Thor"; platform = "proxmox"; firmware = "uefi"; disk = "/dev/sda"; useDisko = true; }
-      { name = "vm"; platform = "qemu"; firmware = " uefi"; disk = "/dev/vda"; useDisko = false;}   
+      { name = "vm"; platform = "qemu"; firmware = "uefi"; disk = "/dev/vda"; useDisko = false;}   
     ];
 
     mkHost = { name, platform, firmware, disk, useDisko ? true }:
