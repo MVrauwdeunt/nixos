@@ -14,23 +14,42 @@
   boot.tmp.cleanOnBoot = true;
   zramSwap.enable = true;
 
-  # Bash QoL (interactive only)
+  # Bash QoL
   programs.bash = {
+    enableCompletion = true;
+
+    # Interactive shells (desktop terminals, interactive SSH)
+    interactiveShellInit = ''
+      # Only apply to interactive shells
+      case $- in
+        *i*)
+          # Enable autocd so typing a directory name jumps into it
+          shopt -s autocd
+
+          # Append to history instead of overwriting
+          shopt -s histappend
+
+          # Recursive globbing with **
+          shopt -s globstar
+
+          # Update LINES/COLUMNS after terminal resize
+          shopt -s checkwinsize
+          ;;
+      esac
+    '';
+
+    # Login shells (many SSH sessions) do not always read /etc/bashrc automatically
     loginShellInit = ''
-      # Enable autocd so typing a directory name jumps into it
-      shopt -s autocd
-
-      # Append to history instead of overwriting
-      shopt -s histappend
-
-      # Recursive globbing with **
-      shopt -s globstar
-
-      # Update LINES/COLUMNS after terminal resize
-      shopt -s checkwinsize
+      # Only apply to interactive shells
+      case $- in
+        *i*)
+          if [ -f /etc/bashrc ]; then
+            . /etc/bashrc
+          fi
+          ;;
+      esac
     '';
   };
-
 
   # SSH (details hardening in aparte module)
   services.openssh.enable = true;
