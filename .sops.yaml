@@ -2,6 +2,8 @@ keys:
   - &zanbee  age132epu6cpy3983s2wpq684u6q2x4uhra2kh45t73zv6uszfuhdfpqczl6v0
   - &bifrost age1fgrckwqj6acu42pucsuknneva7cupph4suhddvcw9ek25mrv4srqpxsh32
   - &vm      age1dvjf4kcmwd708xvx8y3mscypxpv2cu7sggmkve2492g0xwzzyavs2zgr5c
+  - &installer  age1sznqae8mac0eff0p7qukenx5t4qkzl4lk6c8p79na67n9sv8av9q525sek
+
 creation_rules:
   - path_regex: secrets\.yaml$
     key_groups:
@@ -9,3 +11,10 @@ creation_rules:
           - *zanbee
           - *bifrost
           - *vm
+
+    # Installer secrets: decryptable by you + the USB installer key
+  - path_regex: hosts/installer\secrets\.yaml$
+    key_groups:
+      - age:
+          - *zanbee
+          - *installer

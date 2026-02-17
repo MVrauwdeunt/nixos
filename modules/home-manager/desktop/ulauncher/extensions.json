@@ -1,0 +1,79 @@
+{
+    "com.github.eckhoff42.ulauncher-kill-process-on-click": {
+        "id": "com.github.eckhoff42.ulauncher-kill-process-on-click",
+        "url": "https://github.com/Eckhoff42/Ulauncher-Kill-process-on-click",
+        "updated_at": "2024-01-08T14:50:14.842823",
+        "last_commit": "1cc49319d1a8811a2db63b6111effbb5ba087494",
+        "last_commit_time": "2022-05-05T09:03:54"
+    },
+    "com.github.dhelmr.ulauncher-tldr": {
+        "id": "com.github.dhelmr.ulauncher-tldr",
+        "url": "https://github.com/dhelmr/ulauncher-tldr",
+        "updated_at": "2024-01-08T14:57:02.147316",
+        "last_commit": "2e5904451bf89dfa155280dfb6fa3d45ed4cab4c",
+        "last_commit_time": "2023-07-29T11:06:30"
+    },
+    "com.github.beajeanm.ulauncher-windows-switcher": {
+        "id": "com.github.beajeanm.ulauncher-windows-switcher",
+        "url": "https://github.com/beajeanm/ulauncher-windows-switcher",
+        "updated_at": "2024-02-13T11:54:41.907673",
+        "last_commit": "e746afcd1ae971294f983dadb6ad2c90a730ec39",
+        "last_commit_time": "2022-08-04T22:59:46"
+    },
+    "com.github.episode6.ulauncher-system-management-direct": {
+        "id": "com.github.episode6.ulauncher-system-management-direct",
+        "url": "https://github.com/episode6/ulauncher-system-management-direct",
+        "updated_at": "2024-02-14T09:07:54.892244",
+        "last_commit": "c6c0febff9eae884e4a8bc97d057480436fb5c9b",
+        "last_commit_time": "2020-07-22T18:41:36"
+    },
+    "com.github.eckhoff42.ulauncher-favorite-directories": {
+        "id": "com.github.eckhoff42.ulauncher-favorite-directories",
+        "url": "https://github.com/Eckhoff42/Ulauncher-favorite-directories",
+        "updated_at": "2024-02-23T14:01:58.013756",
+        "last_commit": "ac1deaffb31562a7918b37b6331cce27adc4660e",
+        "last_commit_time": "2022-08-29T14:25:22"
+    },
+    "com.github.ulauncher.ulauncher-emoji": {
+        "id": "com.github.ulauncher.ulauncher-emoji",
+        "url": "https://github.com/Ulauncher/ulauncher-emoji",
+        "updated_at": "2025-09-20T09:56:32.347672",
+        "last_commit": "a294e2d623c09f6443981e33385e97784f55b988",
+        "last_commit_time": "2025-09-08T15:28:24"
+    },
+    "com.github.hillaryychan.ulauncher-fzf": {
+        "id": "com.github.hillaryychan.ulauncher-fzf",
+        "url": "https://github.com/hillaryychan/ulauncher-fzf",
+        "updated_at": "2024-02-25T23:00:52.658473",
+        "last_commit": "e8137dae6448041fc53ae418263501b068857073",
+        "last_commit_time": "2023-05-16T12:35:35"
+    },
+    "com.github.troublor.ulauncher-numconverter": {
+        "id": "com.github.troublor.ulauncher-numconverter",
+        "url": "https://github.com/Troublor/ulauncher-numconverter",
+        "updated_at": "2024-02-25T23:04:47.224289",
+        "last_commit": "98d5e01d82671eedc98c000053980ae7ceb4ea28",
+        "last_commit_time": "2021-09-29T13:19:39"
+    },
+    "com.github.eckhoff42.ulauncher-bluetooth-quick-connect": {
+        "id": "com.github.eckhoff42.ulauncher-bluetooth-quick-connect",
+        "url": "https://github.com/Eckhoff42/Ulauncher-Bluetooth-quick-connect",
+        "updated_at": "2024-12-17T07:58:00.718849",
+        "last_commit": "2cb1d85cdfa870888e3eeda733b63467b0966ad1",
+        "last_commit_time": "2022-05-10T15:18:43"
+    },
+    "com.github.ghostdevv.ulauncher-fw-fanctrl": {
+        "id": "com.github.ghostdevv.ulauncher-fw-fanctrl",
+        "url": "https://github.com/ghostdevv/ulauncher-fw-fanctrl",
+        "updated_at": "2025-09-20T10:01:09.696095",
+        "last_commit": "14440d5c2b66d67b892d9c17ca8cb5db3835b46a",
+        "last_commit_time": "2025-06-17T05:20:51"
+    },
+    "com.github.ghostdevv.ulauncher-tailscale": {
+        "id": "com.github.ghostdevv.ulauncher-tailscale",
+        "url": "https://github.com/ghostdevv/ulauncher-tailscale",
+        "updated_at": "2025-09-20T10:49:58.888491",
+        "last_commit": "5f4a43359e1df1f0c9b79104e8c006cdfead0903",
+        "last_commit_time": "2025-06-16T05:45:50"
+    }
+}

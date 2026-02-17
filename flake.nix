@@ -51,6 +51,16 @@
       });
   in
   {
-    nixosConfigurations = lib.listToAttrs (map mkHost hosts);
+    nixosConfigurations =
+      (lib.listToAttrs (map mkHost hosts))
+      // {
+        installer = nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
+          specialArgs = { inherit sops-nix nixpkgs; };
+          modules = [
+            ./hosts/installer/default.nix
+          ];
+        };
+      };
   };
 }

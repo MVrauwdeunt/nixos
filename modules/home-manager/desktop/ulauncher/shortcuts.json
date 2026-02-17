@@ -1,0 +1,112 @@
+{
+    "f9bce061-3b73-4d0a-a4ee-ac7eb707f8b7": {
+        "id": "f9bce061-3b73-4d0a-a4ee-ac7eb707f8b7",
+        "name": "Google Search",
+        "keyword": "g",
+        "cmd": "https://google.com/search?q=%s",
+        "icon": "/usr/share/ulauncher/media/google-search-icon.png",
+        "is_default_search": true,
+        "run_without_argument": false,
+        "added": 1704577278.6683257
+    },
+    "7ed83122-1d93-4387-9d2b-53d61e52c104": {
+        "id": "7ed83122-1d93-4387-9d2b-53d61e52c104",
+        "name": "Stack Overflow",
+        "keyword": "so",
+        "cmd": "https://stackoverflow.com/search?q=%s",
+        "icon": "/usr/share/ulauncher/media/stackoverflow-icon.svg",
+        "is_default_search": true,
+        "run_without_argument": false,
+        "added": 1704577278.6683354
+    },
+    "51c12fcf-6647-4c15-ab5e-af0c205c1925": {
+        "id": "51c12fcf-6647-4c15-ab5e-af0c205c1925",
+        "name": "Wikipedia",
+        "keyword": "wiki",
+        "cmd": "https://en.wikipedia.org/wiki/%s",
+        "icon": "/usr/share/ulauncher/media/wikipedia-icon.png",
+        "is_default_search": true,
+        "run_without_argument": false,
+        "added": 1704577278.668342
+    },
+    "008fa6a5-d519-4eb2-ab5d-a6ad73b1f906": {
+        "id": "008fa6a5-d519-4eb2-ab5d-a6ad73b1f906",
+        "name": "MyIwell",
+        "keyword": "my",
+        "cmd": "https://myiwell.nl/cubes/monitoring?group=installed&filter=%s",
+        "icon": null,
+        "is_default_search": false,
+        "run_without_argument": false,
+        "added": 1704577402.682413
+    },
+    "27a94d30-bf7a-414a-ba98-7c6bbfbe9684": {
+        "id": "27a94d30-bf7a-414a-ba98-7c6bbfbe9684",
+        "name": "Cube wiki",
+        "keyword": "cube",
+        "cmd": "https://dev.azure.com/iwell/Cube/_search?text=%s%2A&type=wiki&lp=dashboard-Project&pageSize=25",
+        "icon": null,
+        "is_default_search": true,
+        "run_without_argument": false,
+        "added": 1704622019.2407582
+    },
+    "d1d51a37-0e6c-4cc1-8192-164811c8fb35": {
+        "id": "d1d51a37-0e6c-4cc1-8192-164811c8fb35",
+        "name": "Technical knowledge base",
+        "keyword": "tkb",
+        "cmd": "https://dev.azure.com/iwell/Technical%20knowledge%20base/_search?text=%s%2A&type=wiki&lp=dashboard-Project&pageSize=25",
+        "icon": null,
+        "is_default_search": true,
+        "run_without_argument": false,
+        "added": 1704622058.0254838
+    },
+    "31ec07a8-67cd-48b8-950c-d45e1b929329": {
+        "id": "31ec07a8-67cd-48b8-950c-d45e1b929329",
+        "name": "Mikrotik Spreadsheet",
+        "keyword": "mikro",
+        "cmd": "https://docs.google.com/spreadsheets/d/1xkte0Ebf5qUlG2iXI0eV8MNg7Tmz5umL/edit?gid=214813628#gid=214813628",
+        "icon": null,
+        "is_default_search": false,
+        "run_without_argument": true,
+        "added": 1704698648.4636147
+    },
+    "eeeada83-e4e1-453b-8118-6a9bf134db1d": {
+        "id": "eeeada83-e4e1-453b-8118-6a9bf134db1d",
+        "name": "Storingen",
+        "keyword": "st",
+        "cmd": "https://iwell-team.monday.com/boards/1134583821/views/23358119",
+        "icon": null,
+        "is_default_search": false,
+        "run_without_argument": true,
+        "added": 1704705689.2323692
+    },
+    "4788e254-a0b8-41c7-aa51-56e3f1ed195e": {
+        "id": "4788e254-a0b8-41c7-aa51-56e3f1ed195e",
+        "name": "Just",
+        "keyword": "j",
+        "cmd": "/usr/bin/just %s",
+        "icon": null,
+        "is_default_search": false,
+        "run_without_argument": true,
+        "added": 1704715196.3956778
+    },
+    "125593d2-5671-4985-820d-35c646fe928b": {
+        "id": "125593d2-5671-4985-820d-35c646fe928b",
+        "name": "Winbox",
+        "keyword": "winbox",
+        "cmd": "/usr/bin/winbox/WinBox",
+        "icon": null,
+        "is_default_search": true,
+        "run_without_argument": true,
+        "added": 1704875170.9393115
+    },
+    "340977c6-6635-4d89-8e16-165462c5fcd0": {
+        "id": "340977c6-6635-4d89-8e16-165462c5fcd0",
+        "name": "Google Maps",
+        "keyword": "map",
+        "cmd": "https://www.google.com/maps/place/%s",
+        "icon": null,
+        "is_default_search": true,
+        "run_without_argument": false,
+        "added": 1705647926.5902495
+    }
+}
