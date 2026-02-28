@@ -54,7 +54,10 @@ in {
     # Caddy container (systemd: container-caddy.service)
     virtualisation.oci-containers.containers.caddy = {
       image = cfg.image;
-      extraOptions = [ "--network=host" ];
+      extraOptions = [ 
+        "--network=host" 
+        "--dns=100.100.100.100"
+      ];
       environment = cfg.environment //
         (lib.optionalAttrs (cfg.email != null) { CADDY_EMAIL = cfg.email; });
       volumes = [
