@@ -1,7 +1,7 @@
 { lib, ... }:
 {
   apps.caddy.virtualHosts."view.gladsheimr.nl" = {
-    upstream = "http://127.0.0.1:8889";
+    upstream = "http://100.103.30.4:8888";
 
     extraConfig = ''
       encode gzip
