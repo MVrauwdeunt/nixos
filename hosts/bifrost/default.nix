@@ -71,4 +71,7 @@ in
   systemd.services.podman-caddy.wants = [ "network-online.target" ];
   systemd.services.podman-authelia.after = [ "network-online.target" "tailscaled.service" ];
   systemd.services.podman-authelia.wants = [ "network-online.target" ];
+  
+  # allow udp port for live streams 
+  networking.firewall.allowedUDPPorts = [ 8189 ];
 }
