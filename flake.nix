@@ -18,6 +18,7 @@
     hosts = [
       # Bifrost stays legacy (non-disko)
       { name = "bifrost"; platform = "hetzner"; firmware = "bios"; disk = "/dev/sda"; useDisko = false; }
+      { name = "sif"; platform = "proxmox"; firmware = "bios"; disk = "/dev/sda"; useDisko = false; }
 
       # Local VM stays legacy for now
       { name = "vm"; platform = "qemu"; firmware = "uefi"; disk = "/dev/vda"; useDisko = false; }
