@@ -6,15 +6,16 @@ let
   cfg = config.apps.unifi;
 
   initMongoScript = pkgs.writeText "init-mongo.sh" ''
-    #!/bin/bash
+    #!/bin/sh
+    set -eu
 
-    if which mongosh > /dev/null 2>&1; then
-      mongo_init_bin='mongosh'
+    if command -v mongosh >/dev/null 2>&1; then
+      mongo_init_bin="mongosh"
     else
-      mongo_init_bin='mongo'
+      mongo_init_bin="mongo"
     fi
 
-    "${mongo_init_bin}" <<EOF
+    "$mongo_init_bin" <<EOF
     use ${cfg.mongoAuthSource}
     db.auth("${cfg.mongoRootUser}", "${cfg.mongoRootPassword}")
     db.createUser({
@@ -36,76 +37,91 @@ in
     image = mkOption {
       type = types.str;
       default = "lscr.io/linuxserver/unifi-network-application:10.1.89";
+      description = "Container image for UniFi Network Application";
     };
 
     mongoImage = mkOption {
       type = types.str;
       default = "docker.io/mongo:8.0";
+      description = "MongoDB container image";
     };
 
     dataDir = mkOption {
       type = types.path;
       default = "/var/lib/unifi";
+      description = "Base data directory for UniFi";
     };
 
     uid = mkOption {
       type = types.int;
       default = 1000;
+      description = "UID used inside the UniFi container";
     };
 
     gid = mkOption {
       type = types.int;
       default = 1000;
+      description = "GID used inside the UniFi container";
     };
 
     timezone = mkOption {
       type = types.str;
       default = "Europe/Amsterdam";
+      description = "Timezone for the containers";
     };
 
     mongoDbName = mkOption {
       type = types.str;
       default = "unifi";
+      description = "MongoDB database name";
     };
 
     mongoUser = mkOption {
       type = types.str;
       default = "unifi";
+      description = "MongoDB username";
     };
 
     mongoPassword = mkOption {
       type = types.str;
       default = "changeme";
+      description = "MongoDB password";
     };
 
     mongoRootUser = mkOption {
       type = types.str;
       default = "root";
+      description = "MongoDB root username";
     };
 
     mongoRootPassword = mkOption {
       type = types.str;
       default = "changeme-root";
+      description = "MongoDB root password";
     };
 
     mongoAuthSource = mkOption {
       type = types.str;
       default = "admin";
+      description = "MongoDB auth source";
     };
 
     memLimit = mkOption {
       type = types.str;
       default = "1024";
+      description = "JVM memory limit for UniFi";
     };
 
     memStartup = mkOption {
       type = types.str;
       default = "1024";
+      description = "JVM startup memory for UniFi";
     };
 
     openFirewall = mkOption {
       type = types.bool;
       default = true;
+      description = "Open UniFi ports in the firewall";
     };
   };
 
@@ -126,10 +142,6 @@ in
         environment = {
           MONGO_INITDB_ROOT_USERNAME = cfg.mongoRootUser;
           MONGO_INITDB_ROOT_PASSWORD = cfg.mongoRootPassword;
-          MONGO_USER = cfg.mongoUser;
-          MONGO_PASS = cfg.mongoPassword;
-          MONGO_DBNAME = cfg.mongoDbName;
-          MONGO_AUTHSOURCE = cfg.mongoAuthSource;
         };
 
         volumes = [
