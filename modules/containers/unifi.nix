@@ -185,6 +185,7 @@ in
           "--hostname=unifi"
           "--network=host"
           "--userns=host"
+          "--env=UNIFI_HOSTNAME=192.168.100.150"
         ];
       };
     };
