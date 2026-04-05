@@ -12,13 +12,20 @@
     manageHostName = false;
   };
 
-  services.fstrim.enable = false;
-  services.qemuGuest.enable = lib.mkForce false;
-
   networking.useDHCP = lib.mkForce false;
   networking.useNetworkd = lib.mkForce true;
 
-  systemd.network.enable = lib.mkForce false;
+  systemd.network.enable = true;
+  systemd.network.networks."10-eth0" = {
+    matchConfig.Name = "eth0";
+    networkConfig = {
+      DHCP = "yes";
+      IPv6AcceptRA = true;
+    };
+  };
+
+  services.fstrim.enable = lib.mkForce false;
+  services.qemuGuest.enable = lib.mkForce false;
 
   services.tailscale.enable = lib.mkForce false;
 }
