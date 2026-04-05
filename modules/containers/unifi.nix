@@ -157,6 +157,7 @@ in
 
         extraOptions = [
           "--hostname=unifi"
+          "--userns=host"
           "--network=bridge"
         ];
       };
