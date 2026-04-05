@@ -3,7 +3,7 @@ keys:
   - &bifrost age1fgrckwqj6acu42pucsuknneva7cupph4suhddvcw9ek25mrv4srqpxsh32
   - &vm      age1dvjf4kcmwd708xvx8y3mscypxpv2cu7sggmkve2492g0xwzzyavs2zgr5c
   - &installer  age1sznqae8mac0eff0p7qukenx5t4qkzl4lk6c8p79na67n9sv8av9q525sek
-  - &sif:     age1ecrvy5zc9xgmzhk2s4yu333nfqwgy4an73cp74wjrt93y6c32urslz8kyz
+  - &sif     age1ecrvy5zc9xgmzhk2s4yu333nfqwgy4an73cp74wjrt93y6c32urslz8kyz
 
 creation_rules:
   - path_regex: secrets\.yaml$
