@@ -30,7 +30,9 @@
   # Firewall
   networking.firewall = {
     enable = true;
-    allowedTCPPorts = [ 22 8443 8080 8843 8880 6789 ];
+
+    # Keep existing ports + nginx (80/443)
+    allowedTCPPorts = [ 22 80 443 8443 8080 8843 8880 6789 ];
     allowedUDPPorts = [ 3478 10001 1900 5514 ];
   };
 
@@ -56,6 +58,37 @@
       Cache=true
       CacheFromLocalhost=true
     '';
+  };
+
+  # --------------------------------------------------
+  # Beszel (native, no containers)
+  # --------------------------------------------------
+  services.beszel.hub = {
+    enable = true;
+
+    # Local port (only used internally via nginx)
+    port = 8090;
+  };
+
+  # nginx reverse proxy for Beszel
+  services.nginx = {
+    enable = true;
+
+    virtualHosts."beszel.jouwdomein.nl" = {
+      enableACME = true;
+      forceSSL = true;
+
+      locations."/" = {
+        proxyPass = "http://127.0.0.1:${toString config.services.beszel.hub.port}";
+        proxyWebsockets = true;
+      };
+    };
+  };
+
+  # ACME (Let's Encrypt)
+  security.acme = {
+    acceptTerms = true;
+    defaults.email = "jij@jouwdomein.nl";
   };
 
   # UniFi
@@ -88,7 +121,6 @@
   # TEMPORARY: disable secrets during bootstrap
   # --------------------------------------------------
 
-  # Match your initial container version
   system.stateVersion = lib.mkForce "25.11";
 
   systemd.suppressedSystemUnits = [
