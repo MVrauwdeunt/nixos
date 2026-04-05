@@ -109,10 +109,10 @@
     tailscaleImage = "docker.io/tailscale/tailscale:stable";
 
     tailscaleHostname = "beszel";
-
     tailscaleAuthFile = config.sops.secrets."sif/tailscale".path;
+    tailscaleAdvertiseTags = [ "tag:container" ];
 
-    # Use the Tailscale name you want Beszel to advertise
+    # Use the public Tailscale URL you actually want Beszel to advertise
     appUrl = "https://beszel.fiordland-gar.ts.net";
 
     # Set to true if /dev/net/tun is problematic in Proxmox LXC
@@ -120,6 +120,9 @@
 
     # Keep Beszel private to Tailscale
     openFirewall = false;
+
+    # Declarative Tailscale Serve configuration
+    serveConfigFile = ../../modules/containers/beszel-serve.json;
   };
 
   # --------------------------------------------------
