@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, ... }:
 
 with lib;
 
@@ -8,18 +8,6 @@ in
 {
   options.apps.beszel-agent = {
     enable = mkEnableOption "Beszel agent";
-
-    envFile = mkOption {
-      type = types.path;
-      default = config.sops.secrets."beszel/agent".path;
-      description = "Environment file containing KEY, TOKEN and HUB_URL";
-    };
-
-    package = mkOption {
-      type = types.package;
-      default = pkgs.beszel-agent;
-      description = "Beszel agent package";
-    };
   };
 
   config = mkIf cfg.enable {
@@ -27,18 +15,9 @@ in
       sopsFile = ../../secrets.yaml;
     };
 
-    systemd.services.beszel-agent = {
-      description = "Beszel Agent";
-      wantedBy = [ "multi-user.target" ];
-      after = [ "network-online.target" ];
-      wants = [ "network-online.target" ];
-
-      serviceConfig = {
-        EnvironmentFile = cfg.envFile;
-        ExecStart = "${cfg.package}/bin/beszel-agent";
-        Restart = "always";
-        RestartSec = "5s";
-      };
+    services.beszel.agent = {
+      enable = true;
+      environmentFile = config.sops.secrets."beszel/agent".path;
     };
   };
 }
