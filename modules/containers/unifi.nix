@@ -114,6 +114,7 @@ in
         extraOptions = [
           "--hostname=unifi-db"
           "--network=bridge"
+          "--userns=host"
         ];
       };
 
