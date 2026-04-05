@@ -29,18 +29,19 @@
   services.fstrim.enable = lib.mkForce false;
   services.qemuGuest.enable = lib.mkForce false;
 
-  # Enable SSH for initial access
-  services.openssh = {
-    enable = true;
-    openFirewall = true;
-    settings = {
-      PermitRootLogin = "yes";
-      PasswordAuthentication = true;
-      PermitEmptyPasswords = "yes";
-    };
+  # --------------------------------------------------
+  # TEMPORARY SSH BOOTSTRAP CONFIG
+  # Remove this after SSH key login works
+  # --------------------------------------------------
+  services.openssh.enable = true;
+  services.openssh.openFirewall = true;
+  services.openssh.settings = {
+    PermitRootLogin = lib.mkForce "yes";
+    PasswordAuthentication = lib.mkForce true;
+    PermitEmptyPasswords = lib.mkForce true;
   };
 
-  # DNS caching
+  # DNS caching (optional)
   services.resolved = {
     extraConfig = ''
       Cache=true
@@ -48,10 +49,13 @@
     '';
   };
 
-  # Temporary: disable secret-dependent services for bootstrap
+  # --------------------------------------------------
+  # TEMPORARY: disable secrets during bootstrap
+  # --------------------------------------------------
   services.tailscale.enable = lib.mkForce false;
   sops.defaultSopsFile = lib.mkForce null;
   sops.secrets = lib.mkForce {};
 
+  # Match your initial container version
   system.stateVersion = lib.mkForce "25.11";
 }
