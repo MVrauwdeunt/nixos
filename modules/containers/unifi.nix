@@ -151,8 +151,7 @@ in
 
         extraOptions = [
           "--hostname=unifi-db"
-          "--network=podman"
-          "--network-alias=unifi-db"
+          "--network=host"
           "--userns=host"
         ];
       };
@@ -169,7 +168,7 @@ in
 
           MONGO_USER = cfg.mongoUser;
           MONGO_PASS = cfg.mongoPassword;
-          MONGO_HOST = "unifi-db";
+          MONGO_HOST = "127.0.0.1";
           MONGO_PORT = "27017";
           MONGO_DBNAME = cfg.mongoDbName;
           MONGO_AUTHSOURCE = cfg.mongoAuthSource;
@@ -182,21 +181,9 @@ in
           "${cfg.dataDir}/config:/config"
         ];
 
-        ports = [
-          "8443:8443"
-          "8080:8080"
-          "3478:3478/udp"
-          "10001:10001/udp"
-          "1900:1900/udp"
-          "8843:8843"
-          "8880:8880"
-          "6789:6789"
-          "5514:5514/udp"
-        ];
-
         extraOptions = [
           "--hostname=unifi"
-          "--network=podman"
+          "--network=host"
           "--userns=host"
         ];
       };
