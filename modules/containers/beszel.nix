@@ -58,7 +58,7 @@ in
 
     tailscaleAdvertiseTags = mkOption {
       type = types.listOf types.str;
-      default = [ "tag:containers" ];
+      default = [ "tag:container" ];
       description = "Tags advertised by the Tailscale sidecar";
     };
 
@@ -72,6 +72,12 @@ in
       type = types.bool;
       default = false;
       description = "Open the Beszel port on the host firewall";
+    };
+
+    serveConfigFile = mkOption {
+      type = types.nullOr types.path;
+      default = null;
+      description = "Path to a JSON file for Tailscale Serve configuration";
     };
   };
 
@@ -89,20 +95,28 @@ in
         image = cfg.tailscaleImage;
         autoStart = true;
 
-        environment = {
-          TS_HOSTNAME = cfg.tailscaleHostname;
-          TS_STATE_DIR = "/var/lib/tailscale";
-          TS_USERSPACE = if cfg.userspaceNetworking then "true" else "false";
-          TS_EXTRA_ARGS = "--advertise-tags=${concatStringsSep "," cfg.tailscaleAdvertiseTags}";
-        };
+        environment =
+          {
+            TS_HOSTNAME = cfg.tailscaleHostname;
+            TS_STATE_DIR = "/var/lib/tailscale";
+            TS_USERSPACE = if cfg.userspaceNetworking then "true" else "false";
+            TS_EXTRA_ARGS = "--advertise-tags=${concatStringsSep "," cfg.tailscaleAdvertiseTags}";
+          }
+          // optionalAttrs (cfg.serveConfigFile != null) {
+            TS_SERVE_CONFIG = "/config/serve.json";
+          };
 
         environmentFiles = [
           cfg.tailscaleAuthFile
         ];
 
-        volumes = [
-          "${cfg.tailscaleStateDir}:/var/lib/tailscale"
-        ];
+        volumes =
+          [
+            "${cfg.tailscaleStateDir}:/var/lib/tailscale"
+          ]
+          ++ optionals (cfg.serveConfigFile != null) [
+            "${cfg.serveConfigFile}:/config/serve.json:ro"
+          ];
 
         extraOptions =
           [
@@ -142,9 +156,16 @@ in
       allowedTCPPorts = [ cfg.appPort ];
     };
 
-    systemd.services.podman-beszel.after = [ "network-online.target" "podman-tailscale-beszel.service" ];
+    systemd.services.podman-beszel.after = [
+      "network-online.target"
+      "podman-tailscale-beszel.service"
+    ];
+
     systemd.services.podman-beszel.wants = [ "network-online.target" ];
-    systemd.services.podman-beszel.requires = [ "podman-tailscale-beszel.service" ];
+
+    systemd.services.podman-beszel.requires = [
+      "podman-tailscale-beszel.service"
+    ];
 
     systemd.services.podman-tailscale-beszel.after = [ "network-online.target" ];
     systemd.services.podman-tailscale-beszel.wants = [ "network-online.target" ];

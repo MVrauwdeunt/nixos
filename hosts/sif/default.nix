@@ -108,12 +108,12 @@
     image = "docker.io/henrygd/beszel:latest";
     tailscaleImage = "docker.io/tailscale/tailscale:stable";
 
-    tailscaleHostname = "sif-beszel";
+    tailscaleHostname = "beszel";
 
     tailscaleAuthFile = config.sops.secrets."sif/tailscale".path;
 
     # Use the Tailscale name you want Beszel to advertise
-    appUrl = "http://sif-beszel:8090";
+    appUrl = "https://beszel.fiordland-gar.ts.net";
 
     # Set to true if /dev/net/tun is problematic in Proxmox LXC
     userspaceNetworking = false;
