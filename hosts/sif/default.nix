@@ -58,4 +58,9 @@
 
   # Match your initial container version
   system.stateVersion = lib.mkForce "25.11";
+
+  systemd.suppressedSystemUnits = [
+    "sys-kernel-debug.mount"
+];
+
 }
