@@ -55,8 +55,6 @@
   # TEMPORARY: disable secrets during bootstrap
   # --------------------------------------------------
   services.tailscale.enable = lib.mkForce false;
-  sops.defaultSopsFile = lib.mkForce null;
-  sops.secrets = lib.mkForce {};
 
   # Match your initial container version
   system.stateVersion = lib.mkForce "25.11";
