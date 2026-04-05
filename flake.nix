@@ -51,6 +51,7 @@
             sops-nix.nixosModules.sops
             ./modules/sops.nix
             ./modules/tailscale.nix
+            ./modules/services/beszel-agent.nix
 
             # Network module selection
             (if platform == "hetzner" then ./modules/network/hetzner-cloud.nix

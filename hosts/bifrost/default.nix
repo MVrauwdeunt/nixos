@@ -31,6 +31,8 @@ in
     device = "/dev/sda";
   };
 
+  apps.beszel-agent.enable = true;
+
   # --- OCI containers (Podman backend) ---
   apps.caddy = {
     enable = true;
