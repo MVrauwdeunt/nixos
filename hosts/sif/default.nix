@@ -5,7 +5,6 @@
     ../../modules/users/zanbee
   ];
 
-  ./modules/users
 
   nix.settings.sandbox = false;
 
