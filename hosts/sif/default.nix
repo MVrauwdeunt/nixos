@@ -4,6 +4,7 @@
     (modulesPath + "/virtualisation/proxmox-lxc.nix")
     ../../modules/users/zanbee
     ../../modules/containers/unifi.nix
+    ../../modules/containers/beszel.nix
   ];
 
   nix.settings.sandbox = false;
@@ -31,8 +32,8 @@
   networking.firewall = {
     enable = true;
 
-    # Keep existing ports + nginx (80/443)
-    allowedTCPPorts = [ 22 80 443 8443 8080 8843 8880 6789 ];
+    # UniFi ports only
+    allowedTCPPorts = [ 22 8443 8080 8843 8880 6789 ];
     allowedUDPPorts = [ 3478 10001 1900 5514 ];
   };
 
@@ -52,7 +53,7 @@
     PermitEmptyPasswords = lib.mkForce true;
   };
 
-  # DNS caching (optional)
+  # DNS caching
   services.resolved = {
     extraConfig = ''
       Cache=true
@@ -61,37 +62,16 @@
   };
 
   # --------------------------------------------------
-  # Beszel (native, no containers)
+  # SOPS
   # --------------------------------------------------
-  services.beszel.hub = {
-    enable = true;
-
-    # Local port (only used internally via nginx)
-    port = 8090;
+  sops.secrets."sif/tailscale" = {
+    sopsFile = ../../secrets.yaml;
+    format = "dotenv";
   };
 
-  # nginx reverse proxy for Beszel
-  services.nginx = {
-    enable = true;
-
-    virtualHosts."beszel.jouwdomein.nl" = {
-      enableACME = true;
-      forceSSL = true;
-
-      locations."/" = {
-        proxyPass = "http://127.0.0.1:${toString config.services.beszel.hub.port}";
-        proxyWebsockets = true;
-      };
-    };
-  };
-
-  # ACME (Let's Encrypt)
-  security.acme = {
-    acceptTerms = true;
-    defaults.email = "jij@jouwdomein.nl";
-  };
-
+  # --------------------------------------------------
   # UniFi
+  # --------------------------------------------------
   apps.unifi = {
     enable = true;
 
@@ -118,9 +98,34 @@
   systemd.services.podman-unifi-db.wants = [ "network-online.target" ];
 
   # --------------------------------------------------
-  # TEMPORARY: disable secrets during bootstrap
+  # Beszel
   # --------------------------------------------------
+  apps.beszel = {
+    enable = true;
 
+    dataDir = "/var/lib/beszel";
+    tailscaleStateDir = "/var/lib/tailscale-beszel";
+
+    image = "docker.io/henrygd/beszel:latest";
+    tailscaleImage = "docker.io/tailscale/tailscale:stable";
+
+    tailscaleHostname = "sif-beszel";
+
+    tailscaleAuthFile = config.sops.secrets."sif/tailscale".path;
+
+    # Use the Tailscale name you want Beszel to advertise
+    appUrl = "http://sif-beszel:8090";
+
+    # Set to true if /dev/net/tun is problematic in Proxmox LXC
+    userspaceNetworking = false;
+
+    # Keep Beszel private to Tailscale
+    openFirewall = false;
+  };
+
+  # --------------------------------------------------
+  # System
+  # --------------------------------------------------
   system.stateVersion = lib.mkForce "25.11";
 
   systemd.suppressedSystemUnits = [
