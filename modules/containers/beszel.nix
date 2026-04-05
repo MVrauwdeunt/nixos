@@ -108,6 +108,7 @@ in
           [
             "--hostname=tailscale-beszel"
             "--network=bridge"
+            "--userns=host"
           ]
           ++ optionals (!cfg.userspaceNetworking) [
             "--cap-add=NET_ADMIN"
@@ -132,6 +133,7 @@ in
         extraOptions = [
           "--hostname=beszel"
           "--network=container:tailscale-beszel"
+          "--userns=host"
         ];
       };
     };
