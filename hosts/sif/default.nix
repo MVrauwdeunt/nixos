@@ -2,6 +2,7 @@
 {
   imports = [
     (modulesPath + "/virtualisation/proxmox-lxc.nix")
+    ../../modules/users/zanbee
   ];
 
   ./modules/users

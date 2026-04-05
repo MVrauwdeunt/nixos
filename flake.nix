@@ -45,7 +45,6 @@
 
             # Common baseline modules
             ./modules/base.nix
-            ./modules/users
             ./modules/packages.nix
             ./modules/ssh-hardened.nix
             ./modules/just
