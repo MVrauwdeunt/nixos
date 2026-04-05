@@ -3,8 +3,8 @@
   imports = [
     (modulesPath + "/virtualisation/proxmox-lxc.nix")
     ../../modules/users/zanbee
+    ../../modules/containers/unifi.nix
   ];
-
 
   nix.settings.sandbox = false;
 
@@ -25,6 +25,13 @@
       DHCP = "yes";
       IPv6AcceptRA = true;
     };
+  };
+
+  # Firewall
+  networking.firewall = {
+    enable = true;
+    allowedTCPPorts = [ 22 8443 8080 8843 8880 6789 ];
+    allowedUDPPorts = [ 3478 10001 1900 5514 ];
   };
 
   # Not useful in containers
@@ -51,6 +58,32 @@
     '';
   };
 
+  # UniFi
+  apps.unifi = {
+    enable = true;
+
+    dataDir = "/var/lib/unifi";
+
+    uid = 1000;
+    gid = 1000;
+
+    timezone = "Europe/Amsterdam";
+
+    image = "lscr.io/linuxserver/unifi-network-application:10.1.89";
+    mongoImage = "docker.io/mongo:8.0";
+
+    mongoUser = "unifi";
+    mongoPassword = "vervang-dit-met-een-goed-wachtwoord";
+  };
+
+  # Make sure generated Podman units wait for networking
+  systemd.services.podman-unifi.after = [ "network-online.target" "podman-unifi-db.service" ];
+  systemd.services.podman-unifi.wants = [ "network-online.target" ];
+  systemd.services.podman-unifi.requires = [ "podman-unifi-db.service" ];
+
+  systemd.services.podman-unifi-db.after = [ "network-online.target" ];
+  systemd.services.podman-unifi-db.wants = [ "network-online.target" ];
+
   # --------------------------------------------------
   # TEMPORARY: disable secrets during bootstrap
   # --------------------------------------------------
@@ -60,6 +93,5 @@
 
   systemd.suppressedSystemUnits = [
     "sys-kernel-debug.mount"
-];
-
+  ];
 }
