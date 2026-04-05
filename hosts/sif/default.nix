@@ -40,7 +40,7 @@
     };
   };
 
-  # DNS caching (optional but harmless)
+  # DNS caching
   services.resolved = {
     extraConfig = ''
       Cache=true
@@ -48,10 +48,10 @@
     '';
   };
 
-  # Temporary: disable secrets & dependent services for bootstrap
+  # Temporary: disable secret-dependent services for bootstrap
   services.tailscale.enable = lib.mkForce false;
   sops.defaultSopsFile = lib.mkForce null;
   sops.secrets = lib.mkForce {};
 
-  system.stateVersion = "25.11";
+  system.stateVersion = lib.mkForce "25.11";
 }
