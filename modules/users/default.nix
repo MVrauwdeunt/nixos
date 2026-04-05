@@ -9,5 +9,5 @@ in
     default = [ ];
   };
 
-  imports = map (u: ./. + "/${u}.nix") usersList;
+  imports = map (u: ./. + "/${u}") usersList;
 }

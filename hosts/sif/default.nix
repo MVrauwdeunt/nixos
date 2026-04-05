@@ -4,6 +4,8 @@
     (modulesPath + "/virtualisation/proxmox-lxc.nix")
   ];
 
+  ./modules/users
+
   nix.settings.sandbox = false;
 
   proxmoxLXC = {
