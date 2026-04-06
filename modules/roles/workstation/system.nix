@@ -14,8 +14,6 @@
   };
   security.rtkit.enable = true;
 
-  hardware.pulseaudio.enable = false;
-
   services.printing.enable = true;
 
   programs.nm-applet.enable = true;

@@ -16,7 +16,7 @@
 
   # Bash QoL
   programs.bash = {
-    enableCompletion = true;
+    completion.enable = true;
 
     # Interactive shells (desktop terminals, interactive SSH)
     interactiveShellInit = ''
