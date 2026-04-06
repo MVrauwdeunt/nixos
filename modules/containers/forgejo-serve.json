@@ -5,7 +5,7 @@
     }
   },
   "Web": {
-    "forgejo.fiordland-gar.ts.net": {
+    "forgejo.fiordland-gar.ts.net:443": {
       "Handlers": {
         "/": {
           "Proxy": "http://127.0.0.1:3000"
