@@ -82,11 +82,13 @@ in
         flags = [ "--all" ];
       };
     };
-
+    
     systemd.tmpfiles.rules = [
       "d ${cfg.dataDir} 0755 ${toString cfg.uid} ${toString cfg.gid} - -"
+      "d ${cfg.dataDir}/db 0755 ${toString cfg.uid} ${toString cfg.gid} - -"
+      "d ${cfg.dataDir}/config 0755 ${toString cfg.uid} ${toString cfg.gid} - -"
     ];
-
+    
     virtualisation.oci-containers.containers.netalertx = {
       image = cfg.image;
       autoStart = true;
