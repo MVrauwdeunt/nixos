@@ -1,4 +1,3 @@
-cat hosts/sif/default.nix
 { config, modulesPath, pkgs, lib, ... }:
 {
   imports = [
