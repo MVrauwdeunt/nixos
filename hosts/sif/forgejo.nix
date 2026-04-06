@@ -6,7 +6,7 @@
     dataDir = "/var/lib/forgejo";
     tailscaleStateDir = "/var/lib/tailscale-forgejo";
 
-    image = "codeberg.org/forgejo/forgejo:latest";
+    image = "codeberg.org/forgejo/forgejo:14";
     tailscaleImage = "docker.io/tailscale/tailscale:stable";
 
     tailscaleHostname = "forgejo";
