@@ -87,6 +87,7 @@ in
       "d ${cfg.dataDir} 0755 ${toString cfg.uid} ${toString cfg.gid} - -"
       "d ${cfg.dataDir}/db 0755 ${toString cfg.uid} ${toString cfg.gid} - -"
       "d ${cfg.dataDir}/config 0755 ${toString cfg.uid} ${toString cfg.gid} - -"
+      "f ${cfg.dataDir}/config/app.conf 0644 ${toString cfg.uid} ${toString cfg.gid} - -"
     ];
     
     virtualisation.oci-containers.containers.netalertx = {
