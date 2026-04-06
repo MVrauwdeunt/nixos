@@ -84,7 +84,7 @@ in
     };
 
     systemd.tmpfiles.rules = [
-      "d ${cfg.dataDir} 0755 root root - -"
+      "d ${cfg.dataDir} 0755 ${toString cfg.uid} ${toString cfg.gid} - -"
     ];
 
     virtualisation.oci-containers.containers.netalertx = {
@@ -102,7 +102,6 @@ in
         NETALERTX_DEBUG = toString cfg.debug;
       };
 
-      # 🔥 DE FIX: juiste mount
       volumes = [
         "${cfg.dataDir}:/data"
         "/etc/localtime:/etc/localtime:ro"
@@ -113,7 +112,6 @@ in
         "--network=host"
         "--userns=host"
 
-        # capabilities (nodig voor network scanning)
         "--cap-drop=ALL"
         "--cap-add=NET_ADMIN"
         "--cap-add=NET_RAW"
@@ -122,13 +120,14 @@ in
         "--cap-add=SETUID"
         "--cap-add=SETGID"
 
-        # resources
+        "--tmpfs=/tmp:rw,noexec,nosuid,size=64m"
+        "--tmpfs=/run:rw,noexec,nosuid,size=16m"
+
         "--memory=2048m"
         "--memory-reservation=1024m"
         "--cpus=0.5"
         "--pids-limit=512"
 
-        # security (nog steeds redelijk safe)
         "--security-opt=no-new-privileges"
       ];
     };
