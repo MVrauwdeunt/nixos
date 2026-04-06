@@ -81,20 +81,16 @@
           ];
         };
       };
+
+    deploy = import ./deploy {
+      inherit self deploy-rs system;
+    };
   in
   {
-    inherit nixosConfigurations;
-
-    deploy.nodes.sif = {
-      hostname = "sif.fiordland-gar.ts.net";
-      profiles.system = {
-        user = "root";
-        path = deploy-rs.lib.${system}.activate.nixos self.nixosConfigurations.sif;
-      };
-    };
+    inherit nixosConfigurations deploy;
 
     checks = builtins.mapAttrs
-      (system: deployLib: deployLib.deployChecks self.deploy)
+      (_system: deployLib: deployLib.deployChecks self.deploy)
       deploy-rs.lib;
   };
 }
