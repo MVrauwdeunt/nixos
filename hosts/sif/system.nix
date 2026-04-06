@@ -1,6 +1,7 @@
 { lib, ... }:
 {
   nix.settings.sandbox = false;
+  nix.settings.trusted-users = [ "root" "zanbee" ];
 
   proxmoxLXC = {
     manageNetwork = false;
