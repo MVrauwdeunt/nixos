@@ -30,6 +30,7 @@ in
     enable = true;
     device = "/dev/sda";
   };
+  nix.settings.trusted-users = [ "root" "zanbee" ];
 
   apps.beszel-agent.enable = true;
 
