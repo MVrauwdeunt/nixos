@@ -19,3 +19,10 @@
     tailscaleAdvertiseTags = [ "tag:container" ];
 
     appUrl = "https://beszel.fiordland-gar.ts.net";
+
+    userspaceNetworking = false;
+    openFirewall = false;
+
+    serveConfigFile = ../../modules/containers/beszel-serve.json;
+  };
+}
