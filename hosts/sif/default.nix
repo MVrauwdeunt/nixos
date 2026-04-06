@@ -6,6 +6,7 @@
     ../../modules/containers/unifi.nix
     ../../modules/containers/beszel.nix
     ../../modules/containers/netalertx.nix
+    ../../modules/containers/forgejo.nix
 
     ./system.nix
     ./networking.nix
@@ -13,5 +14,6 @@
     ./unifi.nix
     ./beszel.nix
     ./netalertx.nix
+    ./forgejo.nix
   ];
 }
