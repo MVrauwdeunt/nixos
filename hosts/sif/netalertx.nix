@@ -16,6 +16,6 @@
     port = 20211;
     graphqlPort = 20212;
 
-    openFirewall = false;
+    openFirewall = true;
   };
 }
