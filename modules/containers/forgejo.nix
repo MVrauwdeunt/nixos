@@ -11,7 +11,7 @@ in
 
     image = mkOption {
       type = types.str;
-      default = "codeberg.org/forgejo/forgejo:latest";
+      default = "codeberg.org/forgejo/forgejo:14";
       description = "Container image for Forgejo";
     };
 
