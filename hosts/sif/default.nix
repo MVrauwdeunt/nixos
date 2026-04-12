@@ -11,6 +11,7 @@
     ./system.nix
     ./networking.nix
     ./sops.nix
+    ./tailscale-services.nix
     ./unifi.nix
     ./beszel.nix
     ./netalertx.nix
