@@ -8,6 +8,7 @@
       "podman-netalertx.service"
       "podman-unifi.service"
       "podman-beszel.service"
+      "podman-forgejo.service"
     ];
     wants = [
       "network-online.target"
@@ -15,6 +16,7 @@
       "podman-netalertx.service"
       "podman-unifi.service"
       "podman-beszel.service"
+      "podman-forgejo.service"
     ];
     wantedBy = [ "multi-user.target" ];
 
@@ -38,6 +40,7 @@
       ${pkgs.tailscale}/bin/tailscale serve clear svc:unifi || true
       ${pkgs.tailscale}/bin/tailscale serve clear svc:netalertx || true
       ${pkgs.tailscale}/bin/tailscale serve clear svc:beszel || true
+      ${pkgs.tailscale}/bin/tailscale serve clear svc:forgejo || true
 
       # Configure UniFi service (self-signed HTTPS backend)
       ${pkgs.tailscale}/bin/tailscale serve \
@@ -56,6 +59,12 @@
         --service=svc:beszel \
         --https=443 \
         http://127.0.0.1:8090
+
+      # Configure Forgejo service (HTTP backend)
+      ${pkgs.tailscale}/bin/tailscale serve \
+        --service=svc:forgejo \
+        --https=443 \
+        http://127.0.0.1:3000
     '';
   };
 }
