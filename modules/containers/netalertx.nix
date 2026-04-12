@@ -103,12 +103,8 @@ in
         "/etc/localtime:/etc/localtime:ro"
       ];
 
-      ports = [
-        "127.0.0.1:${toString cfg.port}:${toString cfg.port}"
-        "127.0.0.1:${toString cfg.graphqlPort}:${toString cfg.graphqlPort}"
-      ];
-
       extraOptions = [
+        "--network=host"
         "--hostname=netalertx"
         "--userns=host"
 
