@@ -17,5 +17,5 @@
     ./netalertx.nix
     ./forgejo.nix
   ];
-  apps.beszel-agent.enable = true;
+  # apps.beszel-agent.enable = true;
 }
