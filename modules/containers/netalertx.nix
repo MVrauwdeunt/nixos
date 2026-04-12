@@ -107,6 +107,7 @@ in
         "--network=host"
         "--hostname=netalertx"
         "--userns=host"
+        "--user=0.0"
 
         "--cap-drop=ALL"
         "--cap-add=NET_ADMIN"
