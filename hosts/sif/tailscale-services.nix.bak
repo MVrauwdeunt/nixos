@@ -6,15 +6,13 @@
       "network-online.target"
       "tailscaled.service"
       "podman-netalertx.service"
-      "podman-unifi.service"
-      "podman-beszel.service"
+      "unifi.service"
     ];
     wants = [
       "network-online.target"
       "tailscaled.service"
       "podman-netalertx.service"
-      "podman-unifi.service"
-      "podman-beszel.service"
+      "unifi.service"
     ];
     wantedBy = [ "multi-user.target" ];
 
@@ -26,7 +24,7 @@
     script = ''
       set -eu
 
-      # Wait until Tailscale is fully available
+      # Wait until tailscale is fully available
       for i in $(seq 1 30); do
         if ${pkgs.tailscale}/bin/tailscale status >/dev/null 2>&1; then
           break
@@ -37,7 +35,6 @@
       # Clear existing service definitions to avoid stale configs
       ${pkgs.tailscale}/bin/tailscale serve clear svc:unifi || true
       ${pkgs.tailscale}/bin/tailscale serve clear svc:netalertx || true
-      ${pkgs.tailscale}/bin/tailscale serve clear svc:beszel || true
 
       # Configure UniFi service (self-signed HTTPS backend)
       ${pkgs.tailscale}/bin/tailscale serve \
@@ -50,12 +47,6 @@
         --service=svc:netalertx \
         --https=443 \
         http://127.0.0.1:20211
-
-      # Configure Beszel service (HTTP backend)
-      ${pkgs.tailscale}/bin/tailscale serve \
-        --service=svc:beszel \
-        --https=443 \
-        http://127.0.0.1:8090
     '';
   };
 }
