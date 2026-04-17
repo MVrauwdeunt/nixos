@@ -20,6 +20,7 @@
     hosts = [
       { name = "bifrost"; platform = "hetzner"; firmware = "bios"; disk = "/dev/sda"; useDisko = false; }
       { name = "sif"; platform = "proxmox"; firmware = "bios"; disk = "/dev/sda"; useDisko = false; }
+      { name = "mimir"; platform = "proxmox"; firmware = "bios"; disk = "/dev/sda"; useDisko = false; }
       { name = "vm"; platform = "qemu"; firmware = "uefi"; disk = "/dev/vda"; useDisko = false; }
       { name = "proxmox-vm"; platform = "proxmox"; firmware = "uefi"; disk = "/dev/vda"; useDisko = true; }
     ];
