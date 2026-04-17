@@ -19,7 +19,7 @@
       };
     };
     mimir = {
-      hostname = "mimir.fiordland-gar.ts.net";
+      hostname = "192.168.178.240";
       sshUser = "zanbee";
       profiles.system = {
         user = "root";

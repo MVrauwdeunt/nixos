@@ -6,7 +6,7 @@
 
     ./system.nix
     ./networking.nix
-    ./sops.nix
+    #./sops.nix
     # ./tailscale-services.nix
   ];
   # apps.beszel-agent.enable = true;
