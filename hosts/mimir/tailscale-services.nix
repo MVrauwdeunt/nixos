@@ -6,11 +6,13 @@
       "network-online.target"
       "tailscaled.service"
       "podman-jellyfin.service"
+      "podman-jellyseerr.service"
     ];
     wants = [
       "network-online.target"
       "tailscaled.service"
       "podman-jellyfin.service"
+      "podman-jellyseerr.service"
     ];
     wantedBy = [ "multi-user.target" ];
 
@@ -22,7 +24,6 @@
     script = ''
       set -eu
 
-      # Wait until Tailscale is fully available
       for i in $(seq 1 30); do
         if ${pkgs.tailscale}/bin/tailscale status >/dev/null 2>&1; then
           break
@@ -30,14 +31,18 @@
         sleep 2
       done
 
-      # Clear existing service definition to avoid stale config
       ${pkgs.tailscale}/bin/tailscale serve clear svc:jellyfin || true
+      ${pkgs.tailscale}/bin/tailscale serve clear svc:jellyseerr || true
 
-      # Configure Jellyfin service (HTTP backend)
       ${pkgs.tailscale}/bin/tailscale serve \
         --service=svc:jellyfin \
         --https=443 \
         http://127.0.0.1:8096
+
+      ${pkgs.tailscale}/bin/tailscale serve \
+        --service=svc:jellyseerr \
+        --https=443 \
+        http://127.0.0.1:5055
     '';
   };
 }
