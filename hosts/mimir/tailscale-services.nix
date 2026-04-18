@@ -2,6 +2,7 @@
 {
   systemd.services.tailscale-services = {
     description = "Configure Tailscale Services on mimir";
+
     after = [
       "network-online.target"
       "tailscaled.service"
@@ -11,7 +12,9 @@
       "podman-radarr.service"
       "podman-sonarr.service"
       "podman-bazarr.service"
+      "podman-lidarr.service"
     ];
+
     wants = [
       "network-online.target"
       "tailscaled.service"
@@ -21,7 +24,9 @@
       "podman-radarr.service"
       "podman-sonarr.service"
       "podman-bazarr.service"
+      "podman-lidarr.service"
     ];
+
     wantedBy = [ "multi-user.target" ];
 
     serviceConfig = {
@@ -32,6 +37,7 @@
     script = ''
       set -eu
 
+      # Wait for Tailscale
       for i in $(seq 1 30); do
         if ${pkgs.tailscale}/bin/tailscale status >/dev/null 2>&1; then
           break
@@ -46,6 +52,7 @@
       ${pkgs.tailscale}/bin/tailscale serve clear svc:radarr || true
       ${pkgs.tailscale}/bin/tailscale serve clear svc:sonarr || true
       ${pkgs.tailscale}/bin/tailscale serve clear svc:bazarr || true
+      ${pkgs.tailscale}/bin/tailscale serve clear svc:lidarr || true
 
       # Jellyfin
       ${pkgs.tailscale}/bin/tailscale serve \
@@ -82,6 +89,12 @@
         --service=svc:bazarr \
         --https=443 \
         http://127.0.0.1:6767
+
+      # Lidarr
+      ${pkgs.tailscale}/bin/tailscale serve \
+        --service=svc:lidarr \
+        --https=443 \
+        http://127.0.0.1:8686
     '';
   };
 }
