@@ -6,6 +6,7 @@
     ../../modules/containers/jellyfin.nix
     ../../modules/containers/seerr.nix
     ../../modules/containers/prowlarr.nix
+    ../../modules/containers/radarr.nix
 
     ./system.nix
     ./networking.nix
@@ -14,6 +15,7 @@
     ./jellyfin.nix
     ./seerr.nix
     ./prowlarr.nix
+    ./radarr.nix
   ];
   # apps.beszel-agent.enable = true;
 }
