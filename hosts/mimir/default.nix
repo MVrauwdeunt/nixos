@@ -7,7 +7,7 @@
     ../../modules/containers/seerr.nix
     ../../modules/containers/prowlarr.nix
     ../../modules/containers/radarr.nix
-    ../../modules/comtainers/sonarr.nix
+    ../../modules/containers/sonarr.nix
 
     ./system.nix
     ./networking.nix
