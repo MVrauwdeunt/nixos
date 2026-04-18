@@ -7,6 +7,7 @@
     ../../modules/containers/seerr.nix
     ../../modules/containers/prowlarr.nix
     ../../modules/containers/radarr.nix
+    ../../modules/comtainers/sonarr.nix
 
     ./system.nix
     ./networking.nix
@@ -16,6 +17,7 @@
     ./seerr.nix
     ./prowlarr.nix
     ./radarr.nix
+    ./sonarr.nix
   ];
   # apps.beszel-agent.enable = true;
 }

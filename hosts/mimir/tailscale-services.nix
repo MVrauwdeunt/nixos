@@ -9,6 +9,7 @@
       "podman-seerr.service"
       "podman-prowlarr.service"
       "podman-radarr.service"
+      "podman-sonarr.service"
     ];
     wants = [
       "network-online.target"
@@ -17,6 +18,7 @@
       "podman-seerr.service"
       "podman-prowlarr.service"
       "podman-radarr.service"
+      "podman-sonarr.service"
     ];
     wantedBy = [ "multi-user.target" ];
 
@@ -40,6 +42,7 @@
       ${pkgs.tailscale}/bin/tailscale serve clear svc:seerr || true
       ${pkgs.tailscale}/bin/tailscale serve clear svc:prowlarr || true
       ${pkgs.tailscale}/bin/tailscale serve clear svc:radarr || true
+      ${pkgs.tailscale}/bin/tailscale serve clear svc:sonarr || true
 
       # Jellyfin
       ${pkgs.tailscale}/bin/tailscale serve \
@@ -59,11 +62,17 @@
         --https=443 \
         http://127.0.0.1:9696
 
-      # Bazarr
+      # Radarr
       ${pkgs.tailscale}/bin/tailscale serve \
         --service=svc:radarr \
         --https=443 \
         http://127.0.0.1:7878
+
+      # Sonarr
+      ${pkgs.tailscale}/bin/tailscale serve \
+        --service=svc:sonarr \
+        --https=443 \
+        http://127.0.0.1:8989
     '';
   };
 }
