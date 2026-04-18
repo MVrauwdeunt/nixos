@@ -8,6 +8,7 @@
     ./system.nix
     ./networking.nix
     ./sops.nix
+    ./tailscale-services.nix
     ./jellyfin.nix
   ];
   # apps.beszel-agent.enable = true;
