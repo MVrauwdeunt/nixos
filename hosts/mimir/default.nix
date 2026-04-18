@@ -10,6 +10,7 @@
     ../../modules/containers/sonarr.nix
     ../../modules/containers/bazarr.nix
     ../../modules/containers/lidarr.nix
+    ../../modules/containers/sabnzbd.nix
 
     ./system.nix
     ./networking.nix
@@ -22,6 +23,7 @@
     ./sonarr.nix
     ./bazarr.nix
     ./lidarr.nix
+    ./sabnzbd.nix
   ];
   # apps.beszel-agent.enable = true;
 }
