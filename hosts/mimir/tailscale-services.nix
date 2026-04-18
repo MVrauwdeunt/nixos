@@ -6,13 +6,13 @@
       "network-online.target"
       "tailscaled.service"
       "podman-jellyfin.service"
-      "podman-jellyseerr.service"
+      "podman-seerr.service"
     ];
     wants = [
       "network-online.target"
       "tailscaled.service"
       "podman-jellyfin.service"
-      "podman-jellyseerr.service"
+      "podman-seerr.service"
     ];
     wantedBy = [ "multi-user.target" ];
 
@@ -32,7 +32,7 @@
       done
 
       ${pkgs.tailscale}/bin/tailscale serve clear svc:jellyfin || true
-      ${pkgs.tailscale}/bin/tailscale serve clear svc:jellyseerr || true
+      ${pkgs.tailscale}/bin/tailscale serve clear svc:seerr || true
 
       ${pkgs.tailscale}/bin/tailscale serve \
         --service=svc:jellyfin \
@@ -40,7 +40,7 @@
         http://127.0.0.1:8096
 
       ${pkgs.tailscale}/bin/tailscale serve \
-        --service=svc:jellyseerr \
+        --service=svc:seerr \
         --https=443 \
         http://127.0.0.1:5055
     '';
