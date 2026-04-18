@@ -5,7 +5,6 @@
 
     extraConfig = ''
       encode gzip
-
       header {
         Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
         X-Content-Type-Options "nosniff"
