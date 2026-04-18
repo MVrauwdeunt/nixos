@@ -7,12 +7,14 @@
       "tailscaled.service"
       "podman-jellyfin.service"
       "podman-seerr.service"
+      "podman-prowlarr.service"
     ];
     wants = [
       "network-online.target"
       "tailscaled.service"
       "podman-jellyfin.service"
       "podman-seerr.service"
+      "podman-prowlarr.service"
     ];
     wantedBy = [ "multi-user.target" ];
 
@@ -31,18 +33,28 @@
         sleep 2
       done
 
+      # Clear existing services
       ${pkgs.tailscale}/bin/tailscale serve clear svc:jellyfin || true
       ${pkgs.tailscale}/bin/tailscale serve clear svc:seerr || true
+      ${pkgs.tailscale}/bin/tailscale serve clear svc:prowlarr || true
 
+      # Jellyfin
       ${pkgs.tailscale}/bin/tailscale serve \
         --service=svc:jellyfin \
         --https=443 \
         http://127.0.0.1:8096
 
+      # Seerr
       ${pkgs.tailscale}/bin/tailscale serve \
         --service=svc:seerr \
         --https=443 \
         http://127.0.0.1:5055
+
+      # Prowlarr
+      ${pkgs.tailscale}/bin/tailscale serve \
+        --service=svc:prowlarr \
+        --https=443 \
+        http://127.0.0.1:9696
     '';
   };
 }

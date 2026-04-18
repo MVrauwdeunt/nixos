@@ -5,6 +5,7 @@
     ../../modules/users/zanbee
     ../../modules/containers/jellyfin.nix
     ../../modules/containers/seerr.nix
+    ../../modules/containers/prowlarr.nix
 
     ./system.nix
     ./networking.nix
@@ -12,6 +13,7 @@
     ./tailscale-services.nix
     ./jellyfin.nix
     ./seerr.nix
+    ./prowlarr.nix
   ];
   # apps.beszel-agent.enable = true;
 }
