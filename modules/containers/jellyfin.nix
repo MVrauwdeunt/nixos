@@ -54,6 +54,7 @@ in
         [
           "--network=bridge"
           "--group-add=303"
+          "--health-cmd=none"
         ]
         ++ lib.optionals cfg.enableHardwareAcceleration [
           "--device=/dev/dri/renderD128:/dev/dri/renderD128"

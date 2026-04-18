@@ -23,7 +23,7 @@
       sshUser = "zanbee";
       profiles.system = {
         user = "root";
-        path = deploy-rs.lib.${system}.activate.nixos self.nixosConfigurations.sif;
+        path = deploy-rs.lib.${system}.activate.nixos self.nixosConfigurations.mimir;
       };
     };
   };
