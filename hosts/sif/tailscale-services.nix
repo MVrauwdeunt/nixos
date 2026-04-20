@@ -65,6 +65,13 @@
         --service=svc:forgejo \
         --https=443 \
         http://127.0.0.1:3000
+
+      ${pkgs.tailscale}/bin/tailscale serve \
+        --service=svc:forgejo \
+        --tcp=2222 \
+        tcp://127.0.0.1:2222
+
     '';
+
   };
 }

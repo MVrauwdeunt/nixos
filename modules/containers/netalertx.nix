@@ -71,10 +71,11 @@ in
       enable = true;
       dockerCompat = true;
       defaultNetwork.settings.dns_enabled = true;
-      #autoPrune = {
-      #  enable = true;
-      #  flags = [ "--all" ];
-      #};
+      autoPrune = {
+        enable = true;
+        dates = "weekly";
+        flags = [ "--all" ];
+      };
     };
 
     systemd.tmpfiles.rules = [

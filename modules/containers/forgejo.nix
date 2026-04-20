@@ -24,7 +24,13 @@ in
     appPort = mkOption {
       type = types.port;
       default = 3000;
-      description = "Internal port used by Forgejo";
+      description = "Internal port used by Forgejo web UI";
+    };
+
+    sshPort = mkOption {
+      type = types.port;
+      default = 2222;
+      description = "Host and container SSH port used by Forgejo";
     };
 
     appUrl = mkOption {
@@ -33,10 +39,16 @@ in
       description = "Public URL advertised by Forgejo";
     };
 
+    sshDomain = mkOption {
+      type = types.str;
+      default = "forgejo.fiordland-gar.ts.net";
+      description = "Public SSH domain advertised by Forgejo";
+    };
+
     openFirewall = mkOption {
       type = types.bool;
       default = false;
-      description = "Open the Forgejo port on the host firewall";
+      description = "Open the Forgejo ports on the host firewall";
     };
   };
 
@@ -53,6 +65,10 @@ in
 
       environment = {
         FORGEJO__server__ROOT_URL = cfg.appUrl;
+        FORGEJO__server__START_SSH_SERVER = "true";
+        FORGEJO__server__SSH_DOMAIN = cfg.sshDomain;
+        FORGEJO__server__SSH_PORT = toString cfg.sshPort;
+        FORGEJO__server__SSH_LISTEN_PORT = toString cfg.sshPort;
       };
 
       volumes = [
@@ -61,6 +77,7 @@ in
 
       ports = [
         "127.0.0.1:${toString cfg.appPort}:${toString cfg.appPort}"
+        "127.0.0.1:${toString cfg.sshPort}:${toString cfg.sshPort}"
       ];
 
       extraOptions = [
@@ -70,7 +87,7 @@ in
     };
 
     networking.firewall = mkIf cfg.openFirewall {
-      allowedTCPPorts = [ cfg.appPort ];
+      allowedTCPPorts = [ cfg.appPort cfg.sshPort ];
     };
 
     systemd.services.podman-forgejo.after = [ "network-online.target" ];
