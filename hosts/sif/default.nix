@@ -5,7 +5,7 @@
     ../../modules/users/zanbee
     ../../modules/containers/unifi.nix
     ../../modules/containers/beszel.nix
-    ../../modules/containers/netalertx.nix
+#    ../../modules/containers/netalertx.nix
     ../../modules/containers/forgejo.nix
 
     ./system.nix
@@ -14,7 +14,7 @@
     ./tailscale-services.nix
     ./unifi.nix
     ./beszel.nix
-    ./netalertx.nix
+#    ./netalertx.nix
     ./forgejo.nix
   ];
   # apps.beszel-agent.enable = true;
