@@ -7,6 +7,7 @@
     ../../modules/containers/beszel.nix
     ../../modules/containers/netalertx.nix
     ../../modules/containers/forgejo.nix
+    ../../modules/containers/renovate.nix
 
     ./system.nix
     ./networking.nix
@@ -16,6 +17,7 @@
     ./beszel.nix
     ./netalertx.nix
     ./forgejo.nix
+    ./renovate.nix    
   ];
   # apps.beszel-agent.enable = true;
 }
