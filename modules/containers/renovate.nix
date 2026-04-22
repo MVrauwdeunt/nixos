@@ -75,6 +75,8 @@ in
         RENOVATE_PLATFORM = "forgejo";
         RENOVATE_ENDPOINT = cfg.endpoint;
         RENOVATE_REPOSITORIES = concatStringsSep "," cfg.repositories;
+
+        RENOVATE_USERNAME = "zanbee";
       };
 
       volumes = [
