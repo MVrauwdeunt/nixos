@@ -86,7 +86,6 @@ in
 
       volumes = [
         "${cfg.dataDir}:/tmp/renovate"
-        "${cfg.configFile}:/config/config.js:ro"
         "${cfg.tokenEnvFile}:/run/secrets/renovate-env:ro"
       ];
 
