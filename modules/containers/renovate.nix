@@ -51,12 +51,6 @@ in
       description = "Timezone for Renovate";
     };
 
-    schedule = mkOption {
-      type = types.listOf types.str;
-      default = [ "after 02:00 and before 05:00 on saturday" ];
-      description = "Renovate schedule";
-    };
-
     logLevel = mkOption {
       type = types.enum [ "trace" "debug" "info" "warn" "error" "fatal" ];
       default = "info";
@@ -86,6 +80,7 @@ in
       volumes = [
         "${cfg.dataDir}:/tmp/renovate"
         "${cfg.tokenEnvFile}:/run/secrets/renovate-env:ro"
+        "${cfg.configFile}:/config/config.js:ro"
       ];
 
       environmentFiles = [
