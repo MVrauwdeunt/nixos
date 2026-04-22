@@ -11,7 +11,7 @@ in
 
     image = mkOption {
       type = types.str;
-      default = "docker.io/renovate/renovate:latest";
+      default = "docker.io/renovate/renovate:43.139-full";
       description = "Container image for Renovate";
     };
 
@@ -95,7 +95,6 @@ in
       ];
 
       extraOptions = [
-        "--pull=always"
         "--hostname=renovate"
         "--userns=host"
       ];
