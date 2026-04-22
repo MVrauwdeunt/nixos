@@ -9,4 +9,8 @@
     path = "/run/secrets/renovate-env";
   };
 
+  sops.secrets."sif/renovate-config" = {
+    sopsFile = ../../secrets.yaml;
+    path = "/run/secrets/renovate-config.js";
+  };  
 }

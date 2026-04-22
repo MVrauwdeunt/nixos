@@ -80,7 +80,6 @@ in
         TZ = cfg.timezone;
         RENOVATE_PLATFORM = "forgejo";
         RENOVATE_ENDPOINT = cfg.endpoint;
-        RENOVATE_CONFIG_FILE = "/config/config.js";
         RENOVATE_REPOSITORIES = concatStringsSep "," cfg.repositories;
       };
 
