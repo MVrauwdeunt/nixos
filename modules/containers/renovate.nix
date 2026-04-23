@@ -73,7 +73,7 @@ in
         ''
           set -eu
 
-          TOKEN="$(sed -n 's/^RENOVATE_TOKEN=//p' ${cfg.tokenEnvFile})"
+          TOKEN="$RENOVATE_TOKEN"
 
           git config --global url."http://zanbee:$TOKEN@127.0.0.1:3000/".insteadOf "https://forgejo.fiordland-gar.ts.net/"
           git config --global url."http://zanbee:$TOKEN@127.0.0.1:3000/".insteadOf "https://$TOKEN@forgejo.fiordland-gar.ts.net/"
