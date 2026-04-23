@@ -10,8 +10,8 @@ let
 
     TOKEN="$(${pkgs.gnused}/bin/sed -n 's/^RENOVATE_TOKEN=//p' ${cfg.tokenEnvFile})"
 
-    ${pkgs.git}/bin/git config --global url."http://zanbee:${TOKEN}@127.0.0.1:3000/".insteadOf "https://forgejo.fiordland-gar.ts.net/"
-    ${pkgs.git}/bin/git config --global url."http://zanbee:${TOKEN}@127.0.0.1:3000/".insteadOf "https://${TOKEN}@forgejo.fiordland-gar.ts.net/"
+    ${pkgs.git}/bin/git config --global url."http://zanbee:$TOKEN@127.0.0.1:3000/".insteadOf "https://forgejo.fiordland-gar.ts.net/"
+    ${pkgs.git}/bin/git config --global url."http://zanbee:$TOKEN@127.0.0.1:3000/".insteadOf "https://$TOKEN@forgejo.fiordland-gar.ts.net/"
 
     exec renovate
   '';
