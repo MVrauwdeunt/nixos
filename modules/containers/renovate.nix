@@ -4,6 +4,17 @@ with lib;
 
 let
   cfg = config.apps.renovate;
+
+  renovateEntrypoint = pkgs.writeShellScript "renovate-entrypoint.sh" ''
+    set -eu
+
+    TOKEN="$(${pkgs.gnused}/bin/sed -n 's/^RENOVATE_TOKEN=//p' ${cfg.tokenEnvFile})"
+
+    ${pkgs.git}/bin/git config --global url."http://zanbee:${TOKEN}@127.0.0.1:3000/".insteadOf "https://forgejo.fiordland-gar.ts.net/"
+    ${pkgs.git}/bin/git config --global url."http://zanbee:${TOKEN}@127.0.0.1:3000/".insteadOf "https://${TOKEN}@forgejo.fiordland-gar.ts.net/"
+
+    exec renovate
+  '';
 in
 {
   options.apps.renovate = {
@@ -12,49 +23,31 @@ in
     image = mkOption {
       type = types.str;
       default = "docker.io/renovate/renovate:43.139-full";
-      description = "Container image for Renovate";
     };
 
     dataDir = mkOption {
       type = types.path;
       default = "/var/lib/renovate";
-      description = "Persistent data directory for Renovate";
-    };
-
-    configFile = mkOption {
-      type = types.path;
-      default = "/run/secrets/renovate-config.js";
-      description = "Path to the self-hosted Renovate config file";
     };
 
     tokenEnvFile = mkOption {
       type = types.path;
       default = "/run/secrets/renovate-env";
-      description = "Env file containing RENOVATE_TOKEN=...";
-    };
-
-    endpoint = mkOption {
-      type = types.str;
-      default = "https://192.168.100.150/api/v1/";
-      description = "Forgejo API endpoint";
     };
 
     repositories = mkOption {
       type = types.listOf types.str;
       default = [ "zanbee/nixos" ];
-      description = "Repositories Renovate should manage";
     };
 
     timezone = mkOption {
       type = types.str;
       default = "Europe/Amsterdam";
-      description = "Timezone for Renovate";
     };
 
     logLevel = mkOption {
       type = types.enum [ "trace" "debug" "info" "warn" "error" "fatal" ];
-      default = "info";
-      description = "Renovate log level";
+      default = "debug";
     };
   };
 
@@ -73,27 +66,25 @@ in
         LOG_LEVEL = cfg.logLevel;
         TZ = cfg.timezone;
         RENOVATE_PLATFORM = "forgejo";
-        RENOVATE_ENDPOINT = cfg.endpoint;
+        RENOVATE_ENDPOINT = "http://127.0.0.1:3000/api/v1/";
         RENOVATE_REPOSITORIES = concatStringsSep "," cfg.repositories;
-
-        RENOVATE_USERNAME = "zanbee";
       };
-
-      volumes = [
-        "${cfg.dataDir}:/tmp/renovate"
-        "${cfg.tokenEnvFile}:/run/secrets/renovate-env:ro"
-        "${cfg.configFile}:/config/config.js:ro"
-      ];
 
       environmentFiles = [
         cfg.tokenEnvFile
       ];
 
+      volumes = [
+        "${cfg.dataDir}:/tmp/renovate"
+        "${renovateEntrypoint}:/usr/local/bin/renovate-entrypoint.sh:ro"
+      ];
+
+      cmd = [ "/usr/local/bin/renovate-entrypoint.sh" ];
+
       extraOptions = [
         "--hostname=renovate"
         "--userns=host"
         "--network=host"
-
       ];
     };
 
