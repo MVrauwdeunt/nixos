@@ -4,17 +4,6 @@ with lib;
 
 let
   cfg = config.apps.renovate;
-
-  renovateEntrypoint = pkgs.writeShellScript "renovate-entrypoint.sh" ''
-    set -eu
-
-    TOKEN="$(${pkgs.gnused}/bin/sed -n 's/^RENOVATE_TOKEN=//p' ${cfg.tokenEnvFile})"
-
-    ${pkgs.git}/bin/git config --global url."http://zanbee:$TOKEN@127.0.0.1:3000/".insteadOf "https://forgejo.fiordland-gar.ts.net/"
-    ${pkgs.git}/bin/git config --global url."http://zanbee:$TOKEN@127.0.0.1:3000/".insteadOf "https://$TOKEN@forgejo.fiordland-gar.ts.net/"
-
-    exec renovate
-  '';
 in
 {
   options.apps.renovate = {
@@ -76,10 +65,22 @@ in
 
       volumes = [
         "${cfg.dataDir}:/tmp/renovate"
-        "${renovateEntrypoint}:/renovate-entrypoint.sh:ro"
       ];
 
-      cmd = [ "/renovate-entrypoint.sh" ];
+      cmd = [
+        "/bin/sh"
+        "-lc"
+        ''
+          set -eu
+
+          TOKEN="$(sed -n 's/^RENOVATE_TOKEN=//p' ${cfg.tokenEnvFile})"
+
+          git config --global url."http://zanbee:$TOKEN@127.0.0.1:3000/".insteadOf "https://forgejo.fiordland-gar.ts.net/"
+          git config --global url."http://zanbee:$TOKEN@127.0.0.1:3000/".insteadOf "https://$TOKEN@forgejo.fiordland-gar.ts.net/"
+
+          exec renovate
+        ''
+      ];
 
       extraOptions = [
         "--hostname=renovate"
