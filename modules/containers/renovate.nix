@@ -35,7 +35,7 @@ in
 
     endpoint = mkOption {
       type = types.str;
-      default = "https://forgejo.fiordland-gar.ts.net/api/v1/";
+      default = "https://192.168.100.150/api/v1/";
       description = "Forgejo API endpoint";
     };
 
@@ -92,6 +92,8 @@ in
       extraOptions = [
         "--hostname=renovate"
         "--userns=host"
+        "--network=host"
+
       ];
     };
 
