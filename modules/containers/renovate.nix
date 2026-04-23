@@ -72,7 +72,7 @@ in
       environment = {
         LOG_LEVEL = cfg.logLevel;
         TZ = cfg.timezone;
-        RENOVATE_PLATFORM = "fatalorgejo";
+        RENOVATE_PLATFORM = "forgejo";
         RENOVATE_ENDPOINT = cfg.endpoint;
         RENOVATE_REPOSITORIES = concatStringsSep "," cfg.repositories;
 

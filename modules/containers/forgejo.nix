@@ -7,6 +7,7 @@ let
 in
 {
   options.apps.forgejo = {
+
     enable = mkEnableOption "Forgejo container stack";
 
     image = mkOption {
@@ -83,6 +84,7 @@ in
       extraOptions = [
         "--hostname=forgejo"
         "--userns=host"
+        
       ];
     };
 
