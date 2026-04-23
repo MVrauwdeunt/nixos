@@ -76,10 +76,10 @@ in
 
       volumes = [
         "${cfg.dataDir}:/tmp/renovate"
-        "${renovateEntrypoint}:/usr/local/bin/renovate-entrypoint.sh:ro"
+        "${renovateEntrypoint}:/renovate-entrypoint.sh:ro"
       ];
 
-      cmd = [ "/usr/local/bin/renovate-entrypoint.sh" ];
+      cmd = [ "/renovate-entrypoint.sh" ];
 
       extraOptions = [
         "--hostname=renovate"
