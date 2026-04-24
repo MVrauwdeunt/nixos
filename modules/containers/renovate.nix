@@ -1,3 +1,4 @@
+
 { config, lib, pkgs, ... }:
 
 with lib;
@@ -44,7 +45,8 @@ in
     virtualisation.oci-containers.backend = "podman";
 
     systemd.tmpfiles.rules = [
-      "d ${cfg.dataDir} 0750 root root - -"
+      "d ${cfg.dataDir} 0750 12021 root - -"
+      "z ${cfg.dataDir} 0750 12021 root - -"
     ];
 
     virtualisation.oci-containers.containers.renovate = {
