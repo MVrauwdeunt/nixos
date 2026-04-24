@@ -4,6 +4,6 @@
     enable = true;
     tokenEnvFile = "/run/secrets/renovate-env";
     repositories = [ "zanbee/nixos" ];
-    logLevel = "info";
+    logLevel = "debug";
   };
 }
