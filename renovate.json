@@ -1,9 +1,15 @@
 {
     "$schema": "https://docs.renovatebot.com/renovate-schema.json",
     "extends": ["config:recommended"],
-    "nix": {
+    "enabledManagers": ["nix", "docker"],
+    "nix": {      
       "enabled": true
     },
+    
+    "docker": {
+      "enabled": true
+    }
+
     "labels": ["dependencies"],
     "prHourlyLimit": 2,
     "prConcurrentLimit": 5,
