@@ -1,11 +1,13 @@
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 {
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
   # VM-friendly
   services.qemuGuest.enable = true;
   boot.initrd.availableKernelModules = [ "virtio_pci" "virtio_scsi" "virtio_blk" "virtio_net" ];
-
+  boot.kernelPackages = lib.mkIf (lib.versionOlder pkgs.linux.version "6.18.22") (
+    lib.mkDefault pkgs.linuxPackages_6_18
+  );
   time.timeZone = "Europe/Amsterdam";
   networking.firewall.enable = true;
 
