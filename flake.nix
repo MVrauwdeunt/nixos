@@ -2,10 +2,7 @@
   description = "Declarative NixOS configuration managed via flakes";
 
   inputs = {
-    #nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
-    # TODO(copy.fail): revert to nixos-25.11 once the channel promotes the
-    # 6.12.85 kernel bump (PR 515037, currently only in release-25.11).
-    nixpkgs.url = "github:nixos/nixpkgs/release-25.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
     disko.url = "github:nix-community/disko";
     sops-nix.url = "github:Mic92/sops-nix";
     deploy-rs.url = "github:serokell/deploy-rs";
@@ -14,6 +11,10 @@
     home-manager.url = "github:nix-community/home-manager/release-25.11";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
   };
+  
+  boot.kernelPackages = lib.mkIf (lib.versionOlder pkgs.linux.version "6.18.22") (
+    lib.mkDefault pkgs.linuxPackages_6_18
+  );
 
   outputs = { self, nixpkgs, disko, sops-nix, home-manager, deploy-rs, ... }:
   let
