@@ -12,6 +12,7 @@
   # Not useful in containers
   services.fstrim.enable = lib.mkForce false;
   services.qemuGuest.enable = lib.mkForce false;
+  systemd.oomd.enable = false;
 
   # --------------------------------------------------
   # TEMPORARY SSH BOOTSTRAP CONFIG
