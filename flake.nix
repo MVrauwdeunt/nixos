@@ -2,7 +2,10 @@
   description = "Declarative NixOS configuration managed via flakes";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+    #nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+    # TODO(copy.fail): revert to nixos-25.11 once the channel promotes the
+    # 6.12.85 kernel bump (PR 515037, currently only in release-25.11).
+    nixpkgs.url = "github:nixos/nixpkgs/release-25.11";
     disko.url = "github:nix-community/disko";
     sops-nix.url = "github:Mic92/sops-nix";
     deploy-rs.url = "github:serokell/deploy-rs";
