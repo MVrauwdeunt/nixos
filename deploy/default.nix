@@ -2,11 +2,12 @@
 {
   nodes = {
     sif = {
-      hostname = "sif.fiordland-gar.ts.net";
+      hostname = "192.168.100.150";
       sshUser = "zanbee";
       profiles.system = {
         user = "root";
         path = deploy-rs.lib.${system}.activate.nixos self.nixosConfigurations.sif;
+        magicRollback = false;
       };
     };
 
