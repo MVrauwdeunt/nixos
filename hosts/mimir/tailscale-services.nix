@@ -14,6 +14,8 @@
       "podman-bazarr.service"
       "podman-lidarr.service"
       "podman-sabnzbd.service"
+      "podman-soularr.service"
+      "podman-slskd.service"
     ];
 
     wants = [
@@ -27,6 +29,8 @@
       "podman-bazarr.service"
       "podman-lidarr.service"
       "podman-sabnzbd.service"
+      "podman-soularr.service"
+      "podman-slskd.service"
     ];
 
     wantedBy = [ "multi-user.target" ];
@@ -56,6 +60,8 @@
       ${pkgs.tailscale}/bin/tailscale serve clear svc:bazarr || true
       ${pkgs.tailscale}/bin/tailscale serve clear svc:lidarr || true
       ${pkgs.tailscale}/bin/tailscale serve clear svc:sabnzbd || true
+      ${pkgs.tailscale}/bin/tailscale serve clear svc:soularr || true
+      ${pkgs.tailscale}/bin/tailscale serve clear svc:slskd || true
 
       # Jellyfin
       ${pkgs.tailscale}/bin/tailscale serve \
@@ -104,6 +110,18 @@
         --service=svc:sabnzbd \
         --https=443 \
         http://127.0.0.1:8081
+
+      # Soularr
+      ${pkgs.tailscale}/bin/tailscale serve \
+        --service=svc:soularr \
+        --https=443 \
+        http://127.0.0.1:8265
+
+      # slskd
+      ${pkgs.tailscale}/bin/tailscale serve \
+        --service=svc:slskd \
+        --https=443 \
+        http://127.0.0.1:5030
     '';
   };
 }
