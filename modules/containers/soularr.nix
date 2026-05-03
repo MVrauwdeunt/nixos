@@ -1,66 +1,84 @@
 { config, lib, ... }:
 
+with lib;
+
 let
   cfg = config.apps.soularr;
 in
 {
   options.apps.soularr = {
-    enable = lib.mkEnableOption "Soularr container";
+    enable = mkEnableOption "Soularr container";
 
-    dataDir = lib.mkOption {
-      type = lib.types.str;
+    image = mkOption {
+      type = types.str;
+      default = "docker.io/mrusse08/soularr:latest";
+      description = "Soularr container image.";
+    };
+
+    dataDir = mkOption {
+      type = types.str;
       default = "/var/lib/soularr";
+      description = "Soularr application data directory.";
     };
 
-    downloadsDir = lib.mkOption {
-      type = lib.types.str;
+    downloadsDir = mkOption {
+      type = types.str;
       default = "/mnt/shares/Downloads/Muziek/soularr";
+      description = "Host directory used by Soularr for downloads.";
     };
 
-    port = lib.mkOption {
-      type = lib.types.port;
+    configFile = mkOption {
+      type = types.path;
+      description = "Path to Soularr config.ini.";
+    };
+
+    port = mkOption {
+      type = types.port;
       default = 8265;
+      description = "Soularr web UI port.";
     };
 
-    openFirewall = lib.mkOption {
-      type = lib.types.bool;
+    openFirewall = mkOption {
+      type = types.bool;
       default = false;
+      description = "Open the Soularr web UI port in the firewall.";
     };
   };
 
-  config = lib.mkIf cfg.enable {
+  config = mkIf cfg.enable {
     virtualisation.oci-containers.containers.soularr = {
-      image = "mrusse08/soularr:latest";
+      image = cfg.image;
 
-      ports = [ "${toString cfg.port}:8265" ];
+      ports = [
+        "${toString cfg.port}:8265"
+      ];
 
       volumes = [
         "${cfg.dataDir}:/data"
+        "${cfg.configFile}:/data/config.ini:ro"
         "${cfg.downloadsDir}:/downloads"
       ];
 
       environment = {
         TZ = "Europe/Amsterdam";
-        PUID = "1000";
-        PGID = "1000";
-        SCRIPT_INTERVAL = "300";
-        WEBUI_ENABLED = "true";
-        WEBUI_PORT = "8265";
       };
 
       extraOptions = [
+        "--user=1000:1000"
         "--network=bridge"
         "--health-cmd=none"
-        "--user=1000:1000"
       ];
     };
 
     systemd.tmpfiles.rules = [
       "d ${cfg.dataDir} 0755 1000 1000 -"
       "d ${cfg.downloadsDir} 0755 1000 1000 -"
+      "d ${cfg.downloadsDir}/complete 0755 1000 1000 -"
+      "d ${cfg.downloadsDir}/incomplete 0755 1000 1000 -"
+      "d ${cfg.downloadsDir}/failed_imports 0755 1000 1000 -"
     ];
 
-    networking.firewall = lib.mkIf cfg.openFirewall {
+    networking.firewall = mkIf cfg.openFirewall {
       allowedTCPPorts = [ cfg.port ];
     };
   };

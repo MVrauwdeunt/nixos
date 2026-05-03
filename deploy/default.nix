@@ -25,6 +25,7 @@
       profiles.system = {
         user = "root";
         path = deploy-rs.lib.${system}.activate.nixos self.nixosConfigurations.mimir;
+        magicRollback = false;
       };
     };
   };

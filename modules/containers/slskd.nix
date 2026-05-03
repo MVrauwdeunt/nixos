@@ -31,9 +31,8 @@ in
   };
 
   config = mkIf cfg.enable {
-
     virtualisation.oci-containers.containers.slskd = {
-      image = "slskd/slskd:latest";
+      image = "docker.io/slskd/slskd:latest";
 
       ports = [ "${toString cfg.port}:5030" ];
 
@@ -49,8 +48,10 @@ in
     };
 
     systemd.tmpfiles.rules = [
-      "d ${cfg.dataDir} 0755 1000 1000 -"
-      "d ${cfg.downloadsDir} 0755 1000 1000 -"
+      "d ${cfg.dataDir} 0775 zanbee users -"
+      "d ${cfg.downloadsDir} 0775 zanbee users -"
+      "d ${cfg.downloadsDir}/incomplete 0775 zanbee users -"
+      "d ${cfg.downloadsDir}/complete 0775 zanbee users -"
     ];
 
     networking.firewall = mkIf cfg.openFirewall {

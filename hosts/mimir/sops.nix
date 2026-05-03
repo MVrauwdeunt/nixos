@@ -4,11 +4,11 @@
     sopsFile = ../../secrets.yaml;
   };
 
-  sops.secrets."mimir/soularr/config.ini" = {
+  sops.secrets."mimir/soularr/config_ini" = {
     sopsFile = ../../secrets.yaml;
     path = "/var/lib/soularr/config.ini";
-    owner = "1000";
-    group = "1000";
+    owner = "zanbee";
+    group = "users";
     mode = "0400";
   };
 
