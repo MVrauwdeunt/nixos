@@ -11,5 +11,11 @@
     group = "users";
     mode = "0400";
   };
-
+  sops.secrets."mimir/lidify/env" = {
+    sopsFile = ../../secrets.yaml;
+    path = "/var/lib/lidify/lidify.env";
+    owner = "zanbee";
+    group = "users";
+    mode = "0400";
+  };
 }
