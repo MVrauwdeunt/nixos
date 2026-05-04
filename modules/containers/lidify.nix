@@ -70,7 +70,6 @@ in
       };
 
       extraOptions = [
-        "--user=1000:1000"
         "--network=bridge"
         "--health-cmd=none"
       ];
