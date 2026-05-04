@@ -13,6 +13,7 @@
       "podman-sonarr.service"
       "podman-bazarr.service"
       "podman-lidarr.service"
+      "podman-lidify.service"
       "podman-sabnzbd.service"
       "podman-soularr.service"
       "podman-slskd.service"
@@ -28,6 +29,7 @@
       "podman-sonarr.service"
       "podman-bazarr.service"
       "podman-lidarr.service"
+      "podman-lidify.service"
       "podman-sabnzbd.service"
       "podman-soularr.service"
       "podman-slskd.service"
@@ -59,6 +61,7 @@
       ${pkgs.tailscale}/bin/tailscale serve clear svc:sonarr || true
       ${pkgs.tailscale}/bin/tailscale serve clear svc:bazarr || true
       ${pkgs.tailscale}/bin/tailscale serve clear svc:lidarr || true
+      ${pkgs.tailscale}/bin/tailscale serve clear svc:lidify || true
       ${pkgs.tailscale}/bin/tailscale serve clear svc:sabnzbd || true
       ${pkgs.tailscale}/bin/tailscale serve clear svc:soularr || true
       ${pkgs.tailscale}/bin/tailscale serve clear svc:slskd || true
@@ -104,6 +107,12 @@
         --service=svc:lidarr \
         --https=443 \
         http://127.0.0.1:8686
+
+      # Lidify
+      ${pkgs.tailscale}/bin/tailscale serve \
+        --service=svc:lidify \
+        --https=443 \
+        http://127.0.0.1:5000
 
       # SABnzbd
       ${pkgs.tailscale}/bin/tailscale serve \
