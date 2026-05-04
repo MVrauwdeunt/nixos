@@ -66,7 +66,7 @@ in
         root_folder_path = "/music";
 
         search_for_missing_albums = "False";
-        dry_run_adding_to_lidarr = "True";
+        dry_run_adding_to_lidarr = "False";
       };
 
       extraOptions = [
