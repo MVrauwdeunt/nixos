@@ -1,23 +1,59 @@
-virtualisation.oci-containers.containers.profilarr = {
-  image = "docker.io/santiagosayshey/profilarr:latest";
+{ config, lib, ... }:
 
-  ports = [
-    "127.0.0.1:${toString cfg.port}:6868"
-  ];
+let
+  cfg = config.apps.profilarr;
+in
+{
+  options.apps.profilarr = {
+    enable = lib.mkEnableOption "Profilarr container";
 
-  volumes = [
-    "${cfg.dataDir}:/config"
-  ];
+    dataDir = lib.mkOption {
+      type = lib.types.str;
+      default = "/var/lib/profilarr";
+    };
 
-  environment = {
-    PUID = "1000";
-    PGID = "1000";
-    UMASK = "022";
-    TZ = "Europe/Amsterdam";
+    port = lib.mkOption {
+      type = lib.types.port;
+      default = 6868;
+    };
+
+    openFirewall = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+    };
   };
 
-  extraOptions = [
-    "--network=bridge"
-    "--health-cmd=none"
-  ];
-};
+  config = lib.mkIf cfg.enable {
+    virtualisation.oci-containers.containers.profilarr = {
+      image = "docker.io/santiagosayshey/profilarr:latest";
+
+      ports = [
+        "127.0.0.1:${toString cfg.port}:6868"
+      ];
+
+      volumes = [
+        "${cfg.dataDir}:/config"
+      ];
+
+      environment = {
+        PUID = "1000";
+        PGID = "1000";
+        UMASK = "022";
+        TZ = "Europe/Amsterdam";
+      };
+
+      extraOptions = [
+        "--network=bridge"
+        "--health-cmd=none"
+      ];
+    };
+
+    systemd.tmpfiles.rules = [
+      "d ${cfg.dataDir} 0755 1000 1000 -"
+    ];
+
+    networking.firewall = lib.mkIf cfg.openFirewall {
+      allowedTCPPorts = [ cfg.port ];
+    };
+  };
+}
