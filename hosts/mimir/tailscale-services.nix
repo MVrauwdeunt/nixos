@@ -1,4 +1,5 @@
 { pkgs, ... }:
+
 {
   systemd.services.tailscale-services = {
     description = "Configure Tailscale Services on mimir";
@@ -6,6 +7,7 @@
     after = [
       "network-online.target"
       "tailscaled.service"
+
       "podman-jellyfin.service"
       "podman-seerr.service"
       "podman-prowlarr.service"
@@ -13,15 +15,16 @@
       "podman-sonarr.service"
       "podman-bazarr.service"
       "podman-lidarr.service"
-      "podman-lidify.service"
       "podman-sabnzbd.service"
       "podman-soularr.service"
       "podman-slskd.service"
+      "podman-profilarr.service"
     ];
 
     wants = [
       "network-online.target"
       "tailscaled.service"
+
       "podman-jellyfin.service"
       "podman-seerr.service"
       "podman-prowlarr.service"
@@ -29,10 +32,10 @@
       "podman-sonarr.service"
       "podman-bazarr.service"
       "podman-lidarr.service"
-      "podman-lidify.service"
       "podman-sabnzbd.service"
       "podman-soularr.service"
       "podman-slskd.service"
+      "podman-profilarr.service"
     ];
 
     wantedBy = [ "multi-user.target" ];
@@ -43,15 +46,7 @@
     };
 
     script = ''
-      set -eu
-
-      # Wait for Tailscale
-      for i in $(seq 1 30); do
-        if ${pkgs.tailscale}/bin/tailscale status >/dev/null 2>&1; then
-          break
-        fi
-        sleep 2
-      done
+      sleep 10
 
       # Clear existing services
       ${pkgs.tailscale}/bin/tailscale serve clear svc:jellyfin || true
@@ -61,10 +56,10 @@
       ${pkgs.tailscale}/bin/tailscale serve clear svc:sonarr || true
       ${pkgs.tailscale}/bin/tailscale serve clear svc:bazarr || true
       ${pkgs.tailscale}/bin/tailscale serve clear svc:lidarr || true
-      ${pkgs.tailscale}/bin/tailscale serve clear svc:lidify || true
       ${pkgs.tailscale}/bin/tailscale serve clear svc:sabnzbd || true
       ${pkgs.tailscale}/bin/tailscale serve clear svc:soularr || true
       ${pkgs.tailscale}/bin/tailscale serve clear svc:slskd || true
+      ${pkgs.tailscale}/bin/tailscale serve clear svc:profilarr || true
 
       # Jellyfin
       ${pkgs.tailscale}/bin/tailscale serve \
@@ -108,29 +103,29 @@
         --https=443 \
         http://127.0.0.1:8686
 
-      # Lidify
-      ${pkgs.tailscale}/bin/tailscale serve \
-        --service=svc:lidify \
-        --https=443 \
-        http://127.0.0.1:5000
-
       # SABnzbd
       ${pkgs.tailscale}/bin/tailscale serve \
         --service=svc:sabnzbd \
         --https=443 \
-        http://127.0.0.1:8081
+        http://127.0.0.1:8080
 
       # Soularr
       ${pkgs.tailscale}/bin/tailscale serve \
         --service=svc:soularr \
         --https=443 \
-        http://127.0.0.1:8265
+        http://127.0.0.1:5030
 
       # slskd
       ${pkgs.tailscale}/bin/tailscale serve \
         --service=svc:slskd \
         --https=443 \
-        http://127.0.0.1:5030
+        http://127.0.0.1:5031
+
+      # Profilarr
+      ${pkgs.tailscale}/bin/tailscale serve \
+        --service=svc:profilarr \
+        --https=443 \
+        http://127.0.0.1:6868
     '';
   };
 }

@@ -14,6 +14,7 @@
     ../../modules/containers/soularr.nix
     ../../modules/containers/slskd.nix
     ../../modules/containers/lidify.nix
+    ../../modules/containers/profilarr.nix
 
     ./system.nix
     ./networking.nix
@@ -30,6 +31,8 @@
     ./soularr.nix
     ./slskd.nix
     ./lidify.nix
+    ./profilarr.nix
   ];
+  
   # apps.beszel-agent.enable = true;
 }
