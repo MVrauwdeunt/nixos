@@ -15,6 +15,7 @@
     ../../modules/containers/slskd.nix
     ../../modules/containers/lidify.nix
     ../../modules/containers/profilarr.nix
+    ../../modules/containers/newtarr.nix
 
     ./system.nix
     ./networking.nix
@@ -32,6 +33,7 @@
     ./slskd.nix
     ./lidify.nix
     ./profilarr.nix
+    ./newtarr.nix
   ];
   
   # apps.beszel-agent.enable = true;

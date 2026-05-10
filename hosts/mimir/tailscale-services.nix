@@ -7,7 +7,6 @@
     after = [
       "network-online.target"
       "tailscaled.service"
-
       "podman-jellyfin.service"
       "podman-seerr.service"
       "podman-prowlarr.service"
@@ -18,13 +17,12 @@
       "podman-sabnzbd.service"
       "podman-soularr.service"
       "podman-slskd.service"
-      "podman-profilarr.service"
+      "podman-newtarr.service"
     ];
 
     wants = [
       "network-online.target"
       "tailscaled.service"
-
       "podman-jellyfin.service"
       "podman-seerr.service"
       "podman-prowlarr.service"
@@ -35,7 +33,7 @@
       "podman-sabnzbd.service"
       "podman-soularr.service"
       "podman-slskd.service"
-      "podman-profilarr.service"
+      "podman-newtarr.service"
     ];
 
     wantedBy = [ "multi-user.target" ];
@@ -46,7 +44,15 @@
     };
 
     script = ''
-      sleep 10
+      set -eu
+
+      # Wait for Tailscale
+      for i in $(seq 1 30); do
+        if ${pkgs.tailscale}/bin/tailscale status >/dev/null 2>&1; then
+          break
+        fi
+        sleep 2
+      done
 
       # Clear existing services
       ${pkgs.tailscale}/bin/tailscale serve clear svc:jellyfin || true
@@ -59,7 +65,7 @@
       ${pkgs.tailscale}/bin/tailscale serve clear svc:sabnzbd || true
       ${pkgs.tailscale}/bin/tailscale serve clear svc:soularr || true
       ${pkgs.tailscale}/bin/tailscale serve clear svc:slskd || true
-      ${pkgs.tailscale}/bin/tailscale serve clear svc:profilarr || true
+      ${pkgs.tailscale}/bin/tailscale serve clear svc:newtarr || true
 
       # Jellyfin
       ${pkgs.tailscale}/bin/tailscale serve \
@@ -107,25 +113,25 @@
       ${pkgs.tailscale}/bin/tailscale serve \
         --service=svc:sabnzbd \
         --https=443 \
-        http://127.0.0.1:8080
+        http://127.0.0.1:8081
 
       # Soularr
       ${pkgs.tailscale}/bin/tailscale serve \
         --service=svc:soularr \
         --https=443 \
-        http://127.0.0.1:5030
+        http://127.0.0.1:8265
 
       # slskd
       ${pkgs.tailscale}/bin/tailscale serve \
         --service=svc:slskd \
         --https=443 \
-        http://127.0.0.1:5031
+        http://127.0.0.1:5030
 
-      # Profilarr
+      # NewtArr
       ${pkgs.tailscale}/bin/tailscale serve \
-        --service=svc:profilarr \
+        --service=svc:newtarr \
         --https=443 \
-        http://127.0.0.1:6868
+        http://127.0.0.1:9705
     '';
   };
 }
