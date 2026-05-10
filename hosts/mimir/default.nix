@@ -7,7 +7,7 @@
     ./system.nix
     ./networking.nix
     ./sops.nix
-    ./tailscale-services.nix
+    ../../modules/tailscale-services.nix
     ./apps.nix
     #./containers
 

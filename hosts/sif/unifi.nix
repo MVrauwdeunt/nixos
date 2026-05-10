@@ -14,7 +14,7 @@
     timezone = "Europe/Amsterdam";
 
     image = "lscr.io/linuxserver/unifi-network-application:10.1.89";
-    mongoImage = "docker.io/mongo:8.0";
+    mongoImage = "docker.io/mongo:8.0.4";
 
     mongoUser = "unifi";
     mongoPassword = "vervang-dit-met-een-goed-wachtwoord";

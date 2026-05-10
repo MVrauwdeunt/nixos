@@ -7,8 +7,13 @@ let
 in
 {
   options.apps.forgejo = {
-
     enable = mkEnableOption "Forgejo container stack";
+
+    tailscale.enable = mkOption {
+      type = types.bool;
+      default = true;
+      description = "Expose this app through Tailscale Serve.";
+    };
 
     image = mkOption {
       type = types.str;
@@ -22,16 +27,22 @@ in
       description = "Base data directory for Forgejo";
     };
 
-    appPort = mkOption {
+    port = mkOption {
       type = types.port;
       default = 3000;
-      description = "Internal port used by Forgejo web UI";
+      description = "Forgejo web UI port.";
     };
 
     sshPort = mkOption {
       type = types.port;
       default = 2222;
       description = "Host and container SSH port used by Forgejo";
+    };
+
+    tailscale.tcpPorts = mkOption {
+      type = types.listOf types.port;
+      default = [ 2222 ];
+      description = "TCP ports to expose through Tailscale Serve.";
     };
 
     appUrl = mkOption {
@@ -77,19 +88,18 @@ in
       ];
 
       ports = [
-        "127.0.0.1:${toString cfg.appPort}:${toString cfg.appPort}"
+        "127.0.0.1:${toString cfg.port}:${toString cfg.port}"
         "127.0.0.1:${toString cfg.sshPort}:${toString cfg.sshPort}"
       ];
 
       extraOptions = [
         "--hostname=forgejo"
         "--userns=host"
-        
       ];
     };
 
     networking.firewall = mkIf cfg.openFirewall {
-      allowedTCPPorts = [ cfg.appPort cfg.sshPort ];
+      allowedTCPPorts = [ cfg.port cfg.sshPort ];
     };
 
     systemd.services.podman-forgejo.after = [ "network-online.target" ];

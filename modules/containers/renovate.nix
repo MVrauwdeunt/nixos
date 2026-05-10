@@ -9,6 +9,12 @@ in
   options.apps.renovate = {
     enable = mkEnableOption "Renovate bot container";
 
+    tailscale.enable = mkOption {
+      type = types.bool;
+      default = false;
+      description = "Expose Renovate through Tailscale Serve.";
+    };
+
     image = mkOption {
       type = types.str;
       default = "docker.io/renovate/renovate:43.139-full";
@@ -32,6 +38,12 @@ in
     timezone = mkOption {
       type = types.str;
       default = "Europe/Amsterdam";
+    };
+
+    openFirewall = mkOption {
+      type = types.bool;
+      default = false;
+      description = "Open firewall ports for Renovate. Renovate has no web UI, so this normally stays false.";
     };
 
     logLevel = mkOption {

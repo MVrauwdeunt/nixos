@@ -34,6 +34,18 @@ in
   options.apps.unifi = {
     enable = mkEnableOption "UniFi Network Application container stack";
 
+    tailscale.enable = mkOption {
+      type = types.bool;
+      default = true;
+      description = "Expose UniFi through Tailscale Serve.";
+    };
+
+    tailscale.scheme = mkOption {
+      type = types.enum [ "http" "https" "https+insecure" ];
+      default = "https+insecure";
+      description = "Scheme used by Tailscale Serve upstream.";
+    };
+
     image = mkOption {
       type = types.str;
       default = "lscr.io/linuxserver/unifi-network-application:10.1.89";
@@ -42,7 +54,7 @@ in
 
     mongoImage = mkOption {
       type = types.str;
-      default = "docker.io/mongo:8.0";
+      default = "docker.io/mongo:8.0.4";
       description = "MongoDB container image";
     };
 
@@ -118,6 +130,12 @@ in
       description = "JVM startup memory for UniFi";
     };
 
+    port = mkOption {
+      type = types.port;
+      default = 8443;
+      description = "UniFi web UI HTTPS port.";
+    };
+
     openFirewall = mkOption {
       type = types.bool;
       default = true;
@@ -191,7 +209,7 @@ in
     };
 
     networking.firewall = mkIf cfg.openFirewall {
-      allowedTCPPorts = [ 8443 8080 8843 8880 6789 ];
+      allowedTCPPorts = [ cfg.port 8080 8843 8880 6789 ];
       allowedUDPPorts = [ 3478 10001 1900 5514 ];
     };
   };

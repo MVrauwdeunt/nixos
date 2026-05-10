@@ -9,6 +9,12 @@ in
   options.apps.beszel = {
     enable = mkEnableOption "Beszel hub container stack";
 
+    tailscale.enable = mkOption {
+      type = types.bool;
+      default = true;
+      description = "Expose this app through Tailscale Serve.";
+    };
+
     image = mkOption {
       type = types.str;
       default = "docker.io/henrygd/beszel:latest";
@@ -21,10 +27,10 @@ in
       description = "Base data directory for Beszel";
     };
 
-    appPort = mkOption {
+    port = mkOption {
       type = types.port;
       default = 8090;
-      description = "Internal port used by the Beszel hub";
+      description = "Port used by the Beszel hub";
     };
 
     appUrl = mkOption {
@@ -61,7 +67,7 @@ in
       ];
 
       ports = [
-        "127.0.0.1:${toString cfg.appPort}:${toString cfg.appPort}"
+        "127.0.0.1:${toString cfg.port}:${toString cfg.port}"
       ];
 
       extraOptions = [
@@ -71,7 +77,7 @@ in
     };
 
     networking.firewall = mkIf cfg.openFirewall {
-      allowedTCPPorts = [ cfg.appPort ];
+      allowedTCPPorts = [ cfg.port ];
     };
 
     systemd.services.podman-beszel.after = [ "network-online.target" ];
