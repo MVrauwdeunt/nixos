@@ -7,6 +7,12 @@ in
   options.apps.jellyfin = {
     enable = lib.mkEnableOption "Jellyfin container";
 
+    tailscale.enable = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Expose Jellyfin through Tailscale Serve.";
+    };
+
     dataDir = lib.mkOption {
       type = lib.types.str;
       default = "/var/lib/jellyfin";
@@ -15,6 +21,12 @@ in
     mediaDir = lib.mkOption {
       type = lib.types.str;
       default = "/mnt/shares/Media";
+    };
+
+    port = lib.mkOption {
+      type = lib.types.port;
+      default = 8096;
+      description = "Jellyfin web UI port.";
     };
 
     openFirewall = lib.mkOption {
@@ -39,7 +51,7 @@ in
     virtualisation.oci-containers.containers.jellyfin = {
       image = "docker.io/jellyfin/jellyfin:latest";
 
-      ports = [ "8096:8096" ];
+      ports = [ "${toString cfg.port}:8096" ];
 
       volumes = [
         "${cfg.dataDir}:/config"
@@ -62,8 +74,7 @@ in
     };
 
     networking.firewall = lib.mkIf cfg.openFirewall {
-      allowedTCPPorts = [ 8096 ];
+      allowedTCPPorts = [ cfg.port ];
     };
   };
 }
-

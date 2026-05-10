@@ -7,6 +7,12 @@ in
   options.apps.lidarr = {
     enable = lib.mkEnableOption "Lidarr container";
 
+    tailscale.enable = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Expose Sonarr through Tailscale Serve.";
+    };
+
     dataDir = lib.mkOption {
       type = lib.types.str;
       default = "/var/lib/lidarr";

@@ -9,6 +9,12 @@ in
   options.apps.soularr = {
     enable = mkEnableOption "Soularr container";
 
+    tailscale.enable = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Expose Sonarr through Tailscale Serve.";
+    };
+
     image = mkOption {
       type = types.str;
       default = "docker.io/mrusse08/soularr:latest";

@@ -1,5 +1,32 @@
-{ pkgs, ... }:
+{ config, lib, pkgs, ... }:
 
+let
+  exposedApps =
+    builtins.filter
+      (name:
+        config.apps.${name}.enable
+        && config.apps.${name}.tailscale.enable
+      )
+      (builtins.attrNames config.apps);
+
+  podmanUnits =
+    map (name: "podman-${name}.service") exposedApps;
+
+  clearCommands =
+    lib.concatMapStringsSep "\n" (name: ''
+      ${pkgs.tailscale}/bin/tailscale serve clear svc:${name} || true
+    '') exposedApps;
+
+  serveCommands =
+    lib.concatMapStringsSep "\n" (name: ''
+      # ${name}
+      ${pkgs.tailscale}/bin/tailscale serve \
+        --service=svc:${name} \
+        --https=443 \
+        http://127.0.0.1:${toString config.apps.${name}.port}
+    '') exposedApps;
+
+in
 {
   systemd.services.tailscale-services = {
     description = "Configure Tailscale Services on mimir";
@@ -7,34 +34,12 @@
     after = [
       "network-online.target"
       "tailscaled.service"
-      "podman-jellyfin.service"
-      "podman-seerr.service"
-      "podman-prowlarr.service"
-      "podman-radarr.service"
-      "podman-sonarr.service"
-      "podman-bazarr.service"
-      "podman-lidarr.service"
-      "podman-sabnzbd.service"
-      "podman-soularr.service"
-      "podman-slskd.service"
-      "podman-newtarr.service"
-    ];
+    ] ++ podmanUnits;
 
     wants = [
       "network-online.target"
       "tailscaled.service"
-      "podman-jellyfin.service"
-      "podman-seerr.service"
-      "podman-prowlarr.service"
-      "podman-radarr.service"
-      "podman-sonarr.service"
-      "podman-bazarr.service"
-      "podman-lidarr.service"
-      "podman-sabnzbd.service"
-      "podman-soularr.service"
-      "podman-slskd.service"
-      "podman-newtarr.service"
-    ];
+    ] ++ podmanUnits;
 
     wantedBy = [ "multi-user.target" ];
 
@@ -55,83 +60,10 @@
       done
 
       # Clear existing services
-      ${pkgs.tailscale}/bin/tailscale serve clear svc:jellyfin || true
-      ${pkgs.tailscale}/bin/tailscale serve clear svc:seerr || true
-      ${pkgs.tailscale}/bin/tailscale serve clear svc:prowlarr || true
-      ${pkgs.tailscale}/bin/tailscale serve clear svc:radarr || true
-      ${pkgs.tailscale}/bin/tailscale serve clear svc:sonarr || true
-      ${pkgs.tailscale}/bin/tailscale serve clear svc:bazarr || true
-      ${pkgs.tailscale}/bin/tailscale serve clear svc:lidarr || true
-      ${pkgs.tailscale}/bin/tailscale serve clear svc:sabnzbd || true
-      ${pkgs.tailscale}/bin/tailscale serve clear svc:soularr || true
-      ${pkgs.tailscale}/bin/tailscale serve clear svc:slskd || true
-      ${pkgs.tailscale}/bin/tailscale serve clear svc:newtarr || true
+      ${clearCommands}
 
-      # Jellyfin
-      ${pkgs.tailscale}/bin/tailscale serve \
-        --service=svc:jellyfin \
-        --https=443 \
-        http://127.0.0.1:8096
-
-      # Seerr
-      ${pkgs.tailscale}/bin/tailscale serve \
-        --service=svc:seerr \
-        --https=443 \
-        http://127.0.0.1:5055
-
-      # Prowlarr
-      ${pkgs.tailscale}/bin/tailscale serve \
-        --service=svc:prowlarr \
-        --https=443 \
-        http://127.0.0.1:9696
-
-      # Radarr
-      ${pkgs.tailscale}/bin/tailscale serve \
-        --service=svc:radarr \
-        --https=443 \
-        http://127.0.0.1:7878
-
-      # Sonarr
-      ${pkgs.tailscale}/bin/tailscale serve \
-        --service=svc:sonarr \
-        --https=443 \
-        http://127.0.0.1:8989
-
-      # Bazarr
-      ${pkgs.tailscale}/bin/tailscale serve \
-        --service=svc:bazarr \
-        --https=443 \
-        http://127.0.0.1:6767
-
-      # Lidarr
-      ${pkgs.tailscale}/bin/tailscale serve \
-        --service=svc:lidarr \
-        --https=443 \
-        http://127.0.0.1:8686
-
-      # SABnzbd
-      ${pkgs.tailscale}/bin/tailscale serve \
-        --service=svc:sabnzbd \
-        --https=443 \
-        http://127.0.0.1:8081
-
-      # Soularr
-      ${pkgs.tailscale}/bin/tailscale serve \
-        --service=svc:soularr \
-        --https=443 \
-        http://127.0.0.1:8265
-
-      # slskd
-      ${pkgs.tailscale}/bin/tailscale serve \
-        --service=svc:slskd \
-        --https=443 \
-        http://127.0.0.1:5030
-
-      # NewtArr
-      ${pkgs.tailscale}/bin/tailscale serve \
-        --service=svc:newtarr \
-        --https=443 \
-        http://127.0.0.1:9705
+      # Configure services
+      ${serveCommands}
     '';
   };
 }

@@ -7,6 +7,12 @@ in
   options.apps.jellyseerr = {
     enable = lib.mkEnableOption "Jellyseerr container";
 
+    tailscale.enable = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Expose Sonarr through Tailscale Serve.";
+    };
+
     dataDir = lib.mkOption {
       type = lib.types.str;
       default = "/var/lib/jellyseerr";

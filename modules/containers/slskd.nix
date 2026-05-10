@@ -9,6 +9,12 @@ in
   options.apps.slskd = {
     enable = mkEnableOption "slskd container";
 
+    tailscale.enable = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Expose Sonarr through Tailscale Serve.";
+    };
+
     dataDir = mkOption {
       type = types.str;
       default = "/var/lib/slskd";

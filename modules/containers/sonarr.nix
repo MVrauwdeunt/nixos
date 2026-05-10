@@ -7,6 +7,12 @@ in
   options.apps.sonarr = {
     enable = lib.mkEnableOption "Sonarr container";
 
+    tailscale.enable = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Expose Sonarr through Tailscale Serve.";
+    };
+
     dataDir = lib.mkOption {
       type = lib.types.str;
       default = "/var/lib/sonarr";
