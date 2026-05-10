@@ -12,9 +12,9 @@ let
     "sabnzbd"
     "soularr"
     "slskd"
-    "lidify.nix"
-    "profilarr.nix"
-    "newtarr.nix"
+    "lidify"
+    "profilarr"
+    "newtarr"
   ];
   
   mkContainerImports = name: [
