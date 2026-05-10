@@ -4,3 +4,5 @@ result
 .envrc
 # eventuele secretsmap, als je die later gebruikt
 secrets/
+result
+result-*
