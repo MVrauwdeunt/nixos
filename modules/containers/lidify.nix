@@ -21,9 +21,10 @@ in
       description = "Lidify application data directory.";
     };
 
-    configFile = mkOption {
-      type = types.path;
-      description = "SOPS-provided env file for Lidify.";
+    secretName = mkOption {
+      type = types.str;
+      default = "mimir/lidify/env";
+      description = "SOPS secret name for the Lidify environment file.";
     };
 
     port = mkOption {
@@ -53,18 +54,16 @@ in
       ];
 
       environmentFiles = [
-        cfg.configFile
+        config.sops.secrets.${cfg.secretName}.path
       ];
 
       environment = {
         TZ = "Europe/Amsterdam";
         PUID = "1000";
         PGID = "1000";
-
         mode = "LastFM";
         lidarr_address = "http://192.168.178.240:8686";
         root_folder_path = "/music";
-
         search_for_missing_albums = "False";
         dry_run_adding_to_lidarr = "False";
       };

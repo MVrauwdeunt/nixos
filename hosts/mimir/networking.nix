@@ -4,6 +4,9 @@
   networking.useDHCP = lib.mkForce false;
   networking.useNetworkd = lib.mkForce true;
 
+
+  networking.hostName = "mimir";
+
   systemd.network.enable = true;
   systemd.network.networks."10-eth0" = {
     matchConfig.Name = "eth0";

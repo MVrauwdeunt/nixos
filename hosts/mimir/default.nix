@@ -8,8 +8,8 @@
     ./networking.nix
     ./sops.nix
     ./tailscale-services.nix
-
-    ./containers
+    ./apps.nix
+    #./containers
 
   ];
   

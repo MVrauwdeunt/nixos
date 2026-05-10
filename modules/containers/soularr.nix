@@ -27,9 +27,10 @@ in
       description = "Host directory used by Soularr for downloads.";
     };
 
-    configFile = mkOption {
-      type = types.path;
-      description = "Path to Soularr config.ini.";
+    configSecretName = mkOption {
+      type = types.str;
+      default = "mimir/soularr/config_ini";
+      description = "SOPS secret name for the Soularr config.ini.";
     };
 
     port = mkOption {
@@ -55,7 +56,7 @@ in
 
       volumes = [
         "${cfg.dataDir}:/data"
-        "${cfg.configFile}:/data/config.ini:ro"
+        "${config.sops.secrets.${cfg.configSecretName}.path}:/data/config.ini:ro"
         "${cfg.downloadsDir}:/downloads"
       ];
 
