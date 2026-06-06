@@ -14,6 +14,7 @@ let
     "lidify"
     "profilarr"
     "newtarr"
+    "gluetun"
   ];
 
   specialApps = [

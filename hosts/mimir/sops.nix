@@ -18,4 +18,12 @@
     group = "users";
     mode = "0400";
   };
+  sops.secrets."mimir/gluetun/airvpn_env" = {
+    sopsFile = ../../secrets.yaml;
+    path = "/var/lib/gluetun/airvpn.env";
+    owner = "root";
+    group = "root";
+    mode = "0400";
+  };
+
 }
