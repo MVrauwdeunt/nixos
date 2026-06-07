@@ -24,7 +24,10 @@ in
       type = types.str;
       default = "/mnt/shares/Downloads/Muziek/soularr";
     };
-
+    mediaDir = mkOption {
+      type = types.str;
+      default = "/mnt/shares/Media/Muziek";
+    };
     port = mkOption {
       type = types.port;
       default = 5030;
@@ -45,6 +48,7 @@ in
       volumes = [
         "${cfg.dataDir}:/app"
         "${cfg.downloadsDir}:/downloads"
+        "${cfg.mediaDir}:/music:ro"
       ];
 
       environment = {
