@@ -25,5 +25,18 @@
     group = "root";
     mode = "0400";
   };
-
+  sops.secrets."mimir/gluetun/auth_config" = {
+    sopsFile = ../../secrets.yaml;
+    path = "/var/lib/gluetun/auth/config.toml";
+    owner = "root";
+    group = "root";
+    mode = "0400";
+  };
+  sops.secrets."mimir/gluetun/control_env" = {
+    sopsFile = ../../secrets.yaml;
+    path = "/var/lib/gluetun/control.env";
+    owner = "root";
+    group = "root";
+    mode = "0400";
+  };
 }
