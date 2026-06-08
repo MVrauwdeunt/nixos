@@ -6,7 +6,7 @@
   proxmoxLXC = {
     manageNetwork = false;
     manageHostName = false;
-    privileged = true;
+    privileged = false;
   };
 
   # Not useful in containers

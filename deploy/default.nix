@@ -28,13 +28,13 @@
         path = deploy-rs.lib.${system}.activate.nixos self.nixosConfigurations.mimir;
         magicRollback = false;
       };
-    }:  
+    };  
     vili = {
       hostname = "192.168.100.151";
-      sshUser = "zanbee";
+      sshUser = "root";
       profiles.system = {
         user = "root";
-        path = deploy-rs.lib.${system}.activate.nixos self.nixosConfigurations.mimir;
+        path = deploy-rs.lib.${system}.activate.nixos self.nixosConfigurations.vili;
         magicRollback = false;
       };
     };
