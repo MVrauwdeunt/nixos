@@ -28,8 +28,9 @@
         path = deploy-rs.lib.${system}.activate.nixos self.nixosConfigurations.mimir;
         magicRollback = false;
       };
+    }:  
     vili = {
-      hostname = "192.168.178.240";
+      hostname = "192.168.100.151";
       sshUser = "zanbee";
       profiles.system = {
         user = "root";
