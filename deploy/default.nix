@@ -30,8 +30,8 @@
       };
     };  
     vili = {
-      hostname = "192.168.100.151";
-      sshUser = "root";
+      hostname = "100.78.198.109";
+      sshUser = "zanbee";
       profiles.system = {
         user = "root";
         path = deploy-rs.lib.${system}.activate.nixos self.nixosConfigurations.vili;
