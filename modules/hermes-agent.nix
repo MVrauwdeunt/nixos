@@ -34,8 +34,8 @@
 
     settings = {
       model = {
-        provider = "openai";
-        default = "gpt-5.1";
+        provider = "openai-api";
+        default = "gpt-5.5";
       };
     };
   };
