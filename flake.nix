@@ -2,14 +2,14 @@
   description = "Declarative NixOS configuration managed via flakes";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
     disko.url = "github:nix-community/disko";
     sops-nix.url = "github:Mic92/sops-nix";
     deploy-rs.url = "github:serokell/deploy-rs";
     hermes-agent.url = "github:NousResearch/hermes-agent";
 
     # Home Manager
-    home-manager.url = "github:nix-community/home-manager/release-25.11";
+    home-manager.url = "github:nix-community/home-manager/release-26.05";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
   };
 

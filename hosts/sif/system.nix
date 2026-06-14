@@ -25,11 +25,12 @@
     PermitEmptyPasswords = lib.mkForce true;
   };
 
-  # DNS caching
-  services.resolved.extraConfig = ''
-    Cache=true
-    CacheFromLocalhost=true
-  '';
+  services.resolved.settings = {
+    Resolve = {
+      Cache = true;
+      CacheFromLocalhost = true;
+    };
+  };
 
   # --------------------------------------------------
   # System

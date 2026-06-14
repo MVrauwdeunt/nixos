@@ -27,7 +27,7 @@
   # NetworkManager for WiFi
   networking.networkmanager.enable = true;
   # The installer profile may enable networking.wireless by default; disable it to avoid conflicts
-  networking.wireless.enable = false;
+  networking.wireless.enable = lib.mkForce false;
 
   # SSH access (key-only)
   services.openssh.enable = true;
