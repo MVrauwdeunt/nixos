@@ -11,9 +11,8 @@
 
   environment.systemPackages = [
     pkgs.podman
-    config.services.hermes-agent.package
 
-    (pkgs.writeShellScriptBin "hermes-container" ''
+    (pkgs.writeShellScriptBin "hermes" ''
       exec sudo ${pkgs.podman}/bin/podman exec -it hermes-agent \
         env HERMES_HOME=/data/.hermes HOME=/home/hermes \
         /data/current-package/bin/hermes "$@"
