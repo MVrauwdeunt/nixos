@@ -14,7 +14,7 @@
     config.services.hermes-agent.package
 
     (pkgs.writeShellScriptBin "hermes-container" ''
-      exec ${pkgs.podman}/bin/podman exec -it hermes-agent \
+      exec sudo ${pkgs.podman}/bin/podman exec -it hermes-agent \
         env HERMES_HOME=/data/.hermes HOME=/home/hermes \
         /data/current-package/bin/hermes "$@"
     '')
