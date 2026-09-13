@@ -2,6 +2,7 @@
 
 let
   enabledApps = [
+    "mazanoke"
   ];
 
   appModules =

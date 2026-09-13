@@ -31,10 +31,10 @@
     };  
     saga = {
       hostname = "192.168.178.10";
-      sshUser = "root";
+      sshUser = "zanbee";
       profiles.system = {
         user = "root";
-        path = deploy-rs.lib.${system}.activate.nixos self.nixosConfigurations.mimir;
+        path = deploy-rs.lib.${system}.activate.nixos self.nixosConfigurations.saga;
         magicRollback = false;
       };
     };    
