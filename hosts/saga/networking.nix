@@ -5,7 +5,7 @@
   networking.useNetworkd = lib.mkForce true;
 
 
-  networking.hostName = "saga2";
+  networking.hostName = lib.mkForce "saga2";
 
   systemd.network.enable = true;
   systemd.network.networks."10-eth0" = {
