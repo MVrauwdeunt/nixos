@@ -3,6 +3,7 @@
 let
   enabledApps = [
     "mazanoke"
+    "pdf"
   ];
 
   appModules =
