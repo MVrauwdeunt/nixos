@@ -3,9 +3,13 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
     disko.url = "github:nix-community/disko";
     sops-nix.url = "github:Mic92/sops-nix";
-    deploy-rs.url = "github:serokell/deploy-rs";
+    deploy-rs = {
+      url = "github:serokell/deploy-rs";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     hermes-agent.url = "github:NousResearch/hermes-agent";
 
     # Home Manager
@@ -14,7 +18,7 @@
   };
 
   outputs =
-    inputs@{ self, nixpkgs, disko, sops-nix, home-manager, deploy-rs, hermes-agent, ... }:
+    inputs@{ self, nixpkgs, nixpkgs-unstable, disko, sops-nix, home-manager, deploy-rs, hermes-agent, ... }:
     let
       lib = nixpkgs.lib;
       system = "x86_64-linux";

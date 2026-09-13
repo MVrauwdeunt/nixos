@@ -1,23 +1,19 @@
 { lib, ... }:
 
 let
-  enabledApps = [
-    "beszel"
-    "forgejo"
-    "netalertx"
-    "renovate"
-    "unifi"
+  enabledModules = [
+    "hermes-agent"
+    "signal-cli"
   ];
 
-  appModules =
-    map (name: ../../modules/containers/${name}.nix) enabledApps;
+  modules =
+    map (name: ../../modules/${name}.nix) enabledModules;
 in
 {
-  imports = appModules;
+  imports = modules;
 
-  apps =
-    lib.genAttrs enabledApps (_: {
-      enable = true;
-      openFirewall = false;
-    });
+  services.signalCli = {
+    enable = true;
+    httpPort = 8080;
+  };
 }
