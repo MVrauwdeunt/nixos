@@ -36,7 +36,7 @@
   # --------------------------------------------------
   # System
   # --------------------------------------------------
-  system.stateVersion = lib.mkForce "25.11";
+  system.stateVersion = lib.mkForce "26.05";
 
   systemd.suppressedSystemUnits = [
     "sys-kernel-debug.mount"
