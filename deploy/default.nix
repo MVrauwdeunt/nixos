@@ -29,6 +29,15 @@
         magicRollback = false;
       };
     };  
+    saga = {
+      hostname = "192.168.178.10";
+      sshUser = "root";
+      profiles.system = {
+        user = "root";
+        path = deploy-rs.lib.${system}.activate.nixos self.nixosConfigurations.mimir;
+        magicRollback = false;
+      };
+    };    
     vili = {
       hostname = "100.78.198.109";
       sshUser = "zanbee";

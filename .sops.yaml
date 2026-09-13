@@ -6,6 +6,7 @@ keys:
   - &sif     age1ecrvy5zc9xgmzhk2s4yu333nfqwgy4an73cp74wjrt93y6c32urslz8kyz
   - &mimir   age1aj3zl3yrvwyuglc5p933mr3cpspq5sdzzu4kk5rkyxgahl5u63fq6mpyz2
   - &vili    age1a070n8p5zr0s5df7e9xpphhn73zjl5yjq4u3kqd7ctr0ch9dvaxqnnh54z
+  - &saga age1jcrngnfgn7l8zuqhh99rfh057k4mlswy5pvleyjf4p06q3cvdeeqzgzmxq
 
 creation_rules:
   - path_regex: secrets\.yaml$
@@ -17,6 +18,7 @@ creation_rules:
           - *sif
           - *mimir
           - *vili
+          - *saga
 
     # Installer secrets: decryptable by you + the USB installer key
   - path_regex: hosts/installer\secrets\.yaml$
