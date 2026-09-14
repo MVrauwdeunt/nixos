@@ -14,19 +14,24 @@ let
     map (name: "podman-${name}.service") exposedApps;
 
   clearCommands =
-    lib.concatMapStringsSep "\n" (name: ''
-      ${pkgs.tailscale}/bin/tailscale serve clear svc:${name} || true
-    '') exposedApps;
+    lib.concatMapStringsSep "\n" (name:
+      let
+        serviceName = config.apps.${name}.tailscale.serviceName or name;
+      in ''
+        ${pkgs.tailscale}/bin/tailscale serve clear svc:${serviceName} || true
+      ''
+    ) exposedApps;
 
   httpCommands =
     lib.concatMapStringsSep "\n" (name:
       let
         scheme = config.apps.${name}.tailscale.scheme or "http";
         port = toString config.apps.${name}.port;
+        serviceName = config.apps.${name}.tailscale.serviceName or name;
       in ''
-        # ${name} https
+        # ${name} HTTPS
         ${pkgs.tailscale}/bin/tailscale serve \
-          --service=svc:${name} \
+          --service=svc:${serviceName} \
           --https=443 \
           ${scheme}://127.0.0.1:${port}
       ''
@@ -36,11 +41,12 @@ let
     lib.concatMapStringsSep "\n" (name:
       let
         tcpPorts = config.apps.${name}.tailscale.tcpPorts or [];
+        serviceName = config.apps.${name}.tailscale.serviceName or name;
       in
         lib.concatMapStringsSep "\n" (port: ''
-          # ${name} tcp ${toString port}
+          # ${name} TCP ${toString port}
           ${pkgs.tailscale}/bin/tailscale serve \
-            --service=svc:${name} \
+            --service=svc:${serviceName} \
             --tcp=${toString port} \
             tcp://127.0.0.1:${toString port}
         '') tcpPorts
@@ -70,7 +76,7 @@ in
     script = ''
       set -eu
 
-      # Wait for Tailscale
+      # Wait for Tailscale.
       for i in $(seq 1 30); do
         if ${pkgs.tailscale}/bin/tailscale status >/dev/null 2>&1; then
           break
@@ -78,13 +84,13 @@ in
         sleep 2
       done
 
-      # Clear existing services
+      # Clear existing services.
       ${clearCommands}
 
-      # Configure HTTPS services
+      # Configure HTTPS services.
       ${httpCommands}
 
-      # Configure TCP services
+      # Configure TCP services.
       ${tcpCommands}
     '';
   };

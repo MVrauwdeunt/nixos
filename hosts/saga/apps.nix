@@ -13,6 +13,7 @@ let
     "karakeep"
     "mealie"
     "adventurelog"
+    "immich"
   ];
 
   appModules =
