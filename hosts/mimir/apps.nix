@@ -19,11 +19,13 @@ let
 
   specialApps = [
     "jellyfin"
+    "mediamtx"
   ];
 
   appModules =
     map (name: ../../modules/containers/${name}.nix)
       (enabledApps ++ specialApps);
+
 in
 {
   imports = appModules;
@@ -40,6 +42,15 @@ in
         dataDir = "/var/lib/jellyfin";
         mediaDir = "/mnt/shares/Media";
         enableHardwareAcceleration = true;
+      };
+
+      mediamtx = {
+        enable = true;
+        openFirewall = true;
+
+        webrtcAdditionalHosts = [
+          "100.68.37.68"
+        ];
       };
     };
 }
