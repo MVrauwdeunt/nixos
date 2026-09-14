@@ -6,6 +6,7 @@ let
     "pdf"
     "paperless"
     "dawarich"
+    "wanderer"
   ];
 
   appModules =
