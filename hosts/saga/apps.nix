@@ -8,6 +8,7 @@ let
     "dawarich"
     "wanderer"
     "filebrowser"
+    "spoolman"
   ];
 
   appModules =
