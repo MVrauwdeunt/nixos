@@ -16,6 +16,7 @@ in
     openFirewall = lib.mkOption {
       type = lib.types.bool;
       default = false;
+      description = "Open the File Browser port in the firewall.";
     };
 
     tailscale.enable = lib.mkOption {
@@ -36,12 +37,15 @@ in
       image = "docker.io/filebrowser/filebrowser:latest";
 
       ports = [
-        "127.0.0.1:${toString cfg.port}:80"
+        "127.0.0.1:${toString cfg.port}:8080"
       ];
 
       environment = {
         PUID = "1000";
         PGID = "1000";
+
+        # Use an unprivileged port inside the container.
+        FB_PORT = "8080";
       };
 
       volumes = [
