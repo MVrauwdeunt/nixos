@@ -143,7 +143,7 @@ in
         ];
 
         ports = [
-          "127.0.0.1:${toString cfg.port}:3000"
+          "127.0.0.1:${toString cfg.port}:3001"
         ];
 
         volumes = [
