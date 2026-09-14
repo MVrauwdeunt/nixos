@@ -10,6 +10,7 @@ let
     "filebrowser"
     "spoolman"
     "tasktrove"
+    "karakeep"
   ];
 
   appModules =
