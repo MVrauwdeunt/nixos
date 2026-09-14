@@ -28,12 +28,21 @@ in
   config = lib.mkIf cfg.enable {
 
     #
+    # Secret
+    #
+    sops.secrets."saga/paperless_secret_key" = {};
+
+    sops.templates."paperless.env".content = ''
+      PAPERLESS_SECRET_KEY=${config.sops.placeholder."saga/paperless_secret_key"}
+    '';
+
+    #
     # Persistent directories
     #
     systemd.tmpfiles.rules = [
       "d /var/lib/paperless 0755 root root -"
-      "d /var/lib/paperless/database 0755 root root -"
-      "d /var/lib/paperless/data 0755 root root -"
+      "d /var/lib/paperless/database 0755 - - -"
+      "d /var/lib/paperless/data 0755 - - -"
     ];
 
     #
@@ -62,7 +71,7 @@ in
     };
 
     #
-    # Make all Paperless containers depend on the network.
+    # Ensure network exists before containers start
     #
     systemd.services.podman-paperless-db = {
       requires = [ "paperless-network.service" ];
@@ -84,6 +93,9 @@ in
     #
     virtualisation.oci-containers.containers = {
 
+      #
+      # MariaDB
+      #
       paperless-db = {
         image = "docker.io/library/mariadb:11";
 
@@ -104,6 +116,9 @@ in
         ];
       };
 
+      #
+      # Redis
+      #
       paperless-redis = {
         image = "docker.io/library/redis:8";
 
@@ -113,6 +128,9 @@ in
         ];
       };
 
+      #
+      # Paperless-ngx
+      #
       paperless = {
         image = "ghcr.io/paperless-ngx/paperless-ngx:latest";
 
@@ -145,12 +163,19 @@ in
           PAPERLESS_DBPORT = "3306";
         };
 
+        environmentFiles = [
+          config.sops.templates."paperless.env".path
+        ];
+
         extraOptions = [
           "--network=paperless"
         ];
       };
     };
 
+    #
+    # Normally closed because access goes through Tailscale
+    #
     networking.firewall = lib.mkIf cfg.openFirewall {
       allowedTCPPorts = [ cfg.port ];
     };
