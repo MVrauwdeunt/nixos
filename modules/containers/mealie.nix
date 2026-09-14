@@ -37,7 +37,7 @@ in
     ];
 
     virtualisation.oci-containers.containers.mealie = {
-      image = "ghcr.io/mealie-recipes/mealie:v3.24.0";
+      image = "ghcr.io/mealie-recipes/mealie:v2.8.0";
 
       ports = [
         "127.0.0.1:${toString cfg.port}:9000"
