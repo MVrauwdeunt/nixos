@@ -4,6 +4,7 @@ let
   enabledApps = [
     "mazanoke"
     "pdf"
+    "paperless"
   ];
 
   appModules =
