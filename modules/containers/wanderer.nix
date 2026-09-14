@@ -105,7 +105,7 @@ in
       };
 
       wanderer-db = {
-        image = "docker.io/flomp/wanderer-db:v0.19.3";
+        image = "docker.io/flomp/wanderer-db:v0.20.0";
 
         dependsOn = [
           "wanderer-search"
@@ -117,6 +117,7 @@ in
 
         volumes = [
           "/var/lib/wanderer/pb_data:/pb_data"
+          "/var/lib/wanderer/plugins:/data/plugins"
         ];
 
         environment = {
@@ -135,7 +136,7 @@ in
       };
 
       wanderer = {
-        image = "docker.io/flomp/wanderer-web:v0.19.3";
+        image = "docker.io/flomp/wanderer-web:v0.20.0";
 
         dependsOn = [
           "wanderer-search"
