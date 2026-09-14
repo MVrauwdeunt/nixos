@@ -11,6 +11,7 @@ let
     "spoolman"
     "tasktrove"
     "karakeep"
+    "mealie"
   ];
 
   appModules =
