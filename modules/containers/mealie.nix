@@ -37,7 +37,7 @@ in
     ];
 
     virtualisation.oci-containers.containers.mealie = {
-      image = "ghcr.io/mealie-recipes/mealie:v2.8.0";
+      image = "ghcr.io/mealie-recipes/mealie:v3.24.0";
 
       ports = [
         "127.0.0.1:${toString cfg.port}:9000"
@@ -49,7 +49,7 @@ in
         PGID = "1000";
 
         # Keep the existing timezone during migration.
-        TZ = "America/New_York";
+        TZ = "Europe/Amsterdam";
 
         BASE_URL = "https://mealie.fiordland-gar.ts.net";
       };
