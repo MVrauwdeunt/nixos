@@ -9,6 +9,7 @@ let
     "wanderer"
     "filebrowser"
     "spoolman"
+    "tasktrove"
   ];
 
   appModules =
