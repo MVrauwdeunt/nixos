@@ -12,6 +12,7 @@ let
     "tasktrove"
     "karakeep"
     "mealie"
+    "adventurelog"
   ];
 
   appModules =
