@@ -9,7 +9,7 @@ in
 
     port = lib.mkOption {
       type = lib.types.port;
-      default = 3000;
+      default = 3001;
     };
 
     openFirewall = lib.mkOption {
@@ -143,7 +143,7 @@ in
         ];
 
         ports = [
-          "127.0.0.1:${toString cfg.port}:3001"
+          "127.0.0.1:${toString cfg.port}:3000"
         ];
 
         volumes = [
