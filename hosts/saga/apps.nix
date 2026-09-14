@@ -7,6 +7,7 @@ let
     "paperless"
     "dawarich"
     "wanderer"
+    "filebrowser"
   ];
 
   appModules =
