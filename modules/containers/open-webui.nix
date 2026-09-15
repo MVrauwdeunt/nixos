@@ -25,6 +25,12 @@ in
       default = true;
       description = "Expose Open WebUI through Tailscale Services.";
     };
+
+    tailscale.serviceName = lib.mkOption {
+      type = lib.types.str;
+      default = "openwebui";
+      description = "Tailscale Service name.";
+    };
   };
 
   config = lib.mkIf cfg.enable {
