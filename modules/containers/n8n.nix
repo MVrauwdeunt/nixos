@@ -1,4 +1,3 @@
-cat > modules/containers/n8n.nix <<'EOF'
 { config, lib, pkgs, ... }:
 
 let
