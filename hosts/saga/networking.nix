@@ -4,9 +4,6 @@
   networking.useDHCP = lib.mkForce false;
   networking.useNetworkd = lib.mkForce true;
 
-
-  networking.hostName = lib.mkForce "saga2";
-
   systemd.network.enable = true;
   systemd.network.networks."10-eth0" = {
     matchConfig.Name = "eth0";
