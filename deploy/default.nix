@@ -30,7 +30,7 @@
       };
     };  
     saga = {
-      hostname = "192.168.178.10";
+      hostname = "192.168.178.250";
       sshUser = "zanbee";
       profiles.system = {
         user = "root";
