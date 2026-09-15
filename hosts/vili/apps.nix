@@ -4,6 +4,7 @@ let
   enabledModules = [
     "hermes-agent"
     "signal-cli"
+    "open-webui"
   ];
 
   modules =
