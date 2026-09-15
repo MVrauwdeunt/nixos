@@ -7,6 +7,7 @@ let
     "netalertx"
     "renovate"
     "unifi"
+    "n8n"
   ];
 
   appModules =
