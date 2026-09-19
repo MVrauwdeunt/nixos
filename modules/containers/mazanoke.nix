@@ -28,7 +28,8 @@ in
   config = lib.mkIf cfg.enable {
     virtualisation.oci-containers.containers.mazanoke = {
       image = "ghcr.io/civilblur/mazanoke:latest";
-
+      pull = "always";
+      
       ports = [
         "${toString cfg.port}:80"
       ];

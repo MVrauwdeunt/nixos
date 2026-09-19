@@ -90,6 +90,7 @@ in
 
       dawarich-db = {
         image = "docker.io/postgis/postgis:17-3.5-alpine";
+        pull = "always";
 
         volumes = [
           "/var/lib/dawarich/db:/var/lib/postgresql/data"
@@ -113,6 +114,7 @@ in
 
       dawarich-redis = {
         image = "docker.io/library/redis:7.4-alpine";
+        pull = "always";
 
         extraOptions = [
           "--network=dawarich"
@@ -122,7 +124,8 @@ in
 
       dawarich = {
         image = "docker.io/freikin/dawarich:latest";
-
+        pull = "always";
+        
         dependsOn = [
           "dawarich-db"
           "dawarich-redis"

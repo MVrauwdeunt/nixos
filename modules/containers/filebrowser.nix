@@ -35,7 +35,8 @@ in
 
     virtualisation.oci-containers.containers.filebrowser = {
       image = "docker.io/filebrowser/filebrowser:latest";
-
+      pull = "always";
+      
       ports = [
         "127.0.0.1:${toString cfg.port}:8080"
       ];

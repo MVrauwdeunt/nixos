@@ -82,6 +82,7 @@ in
     virtualisation.oci-containers.containers = {
       karakeep-app = {
         image = "ghcr.io/karakeep-app/karakeep:release";
+        pull = "always";
 
         dependsOn = [
           "karakeep-chrome"
@@ -120,6 +121,7 @@ in
 
       karakeep-chrome = {
         image = "ghcr.io/karakeep-app/karakeep-chrome:release";
+        pull = "always";
 
         cmd = [
           "--disable-gpu"
@@ -137,6 +139,7 @@ in
 
       karakeep-meilisearch = {
         image = "docker.io/getmeili/meilisearch:v1.13.3";
+        pull = "always";
 
         environment = {
           MEILI_NO_ANALYTICS = "true";

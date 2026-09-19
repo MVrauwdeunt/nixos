@@ -33,7 +33,8 @@ in
 
     virtualisation.oci-containers.containers.tasktrove = {
       image = "ghcr.io/dohsimpson/tasktrove:latest";
-
+      pull = "always";
+      
       ports = [
         "127.0.0.1:${toString cfg.port}:3000"
       ];

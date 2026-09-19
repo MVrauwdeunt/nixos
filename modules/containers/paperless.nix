@@ -106,7 +106,8 @@ in
       #
       paperless-db = {
         image = "docker.io/library/mariadb:11";
-
+        pull = "always";
+        
         volumes = [
           "/var/lib/paperless/database:/var/lib/mysql"
         ];
@@ -131,7 +132,8 @@ in
       #
       paperless-redis = {
         image = "docker.io/library/redis:8";
-
+        pull = "always";
+        
         extraOptions = [
           "--network=paperless"
           "--network-alias=broker"
@@ -143,7 +145,8 @@ in
       #
       paperless = {
         image = "ghcr.io/paperless-ngx/paperless-ngx:latest";
-
+        pull = "always";
+        
         dependsOn = [
           "paperless-db"
           "paperless-redis"

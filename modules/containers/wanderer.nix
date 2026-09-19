@@ -84,6 +84,7 @@ in
     virtualisation.oci-containers.containers = {
       wanderer-search = {
         image = "docker.io/getmeili/meilisearch:v1.11.3";
+        pull = "always";
 
         volumes = [
           "/var/lib/wanderer/data.ms:/meili_data/data.ms"
@@ -105,7 +106,8 @@ in
       };
 
       wanderer-db = {
-        image = "docker.io/flomp/wanderer-db:v0.20.0";
+        image = "docker.io/flomp/wanderer-db:latest";
+        pull = "always";
 
         dependsOn = [
           "wanderer-search"
@@ -136,7 +138,8 @@ in
       };
 
       wanderer = {
-        image = "docker.io/flomp/wanderer-web:v0.20.0";
+        image = "docker.io/flomp/wanderer-web:latest";
+        pull = "always";
 
         dependsOn = [
           "wanderer-search"

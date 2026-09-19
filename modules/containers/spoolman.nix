@@ -32,7 +32,8 @@ in
 
     virtualisation.oci-containers.containers.spoolman = {
       image = "ghcr.io/donkie/spoolman:latest";
-
+      pull = "always";
+      
       ports = [
         "127.0.0.1:${toString cfg.port}:8000"
       ];
