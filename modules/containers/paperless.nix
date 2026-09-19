@@ -28,12 +28,20 @@ in
   config = lib.mkIf cfg.enable {
 
     #
-    # Secret
+    # Secrets
     #
     sops.secrets."saga/paperless_secret_key" = {};
+    sops.secrets."saga/paperless_db_password" = {};
+    sops.secrets."saga/paperless_db_root_password" = {};
+
+    sops.templates."paperless-db.env".content = ''
+      MARIADB_PASSWORD=${config.sops.placeholder."saga/paperless_db_password"}
+      MARIADB_ROOT_PASSWORD=${config.sops.placeholder."saga/paperless_db_root_password"}
+    '';
 
     sops.templates."paperless.env".content = ''
       PAPERLESS_SECRET_KEY=${config.sops.placeholder."saga/paperless_secret_key"}
+      PAPERLESS_DBPASS=${config.sops.placeholder."saga/paperless_db_password"}
     '';
 
     #
@@ -106,9 +114,11 @@ in
         environment = {
           MARIADB_DATABASE = "paperless";
           MARIADB_USER = "paperless";
-          MARIADB_PASSWORD = "paperless";
-          MARIADB_ROOT_PASSWORD = "paperless";
         };
+
+        environmentFiles = [
+          config.sops.templates."paperless-db.env".path
+        ];
 
         extraOptions = [
           "--network=paperless"
@@ -159,7 +169,6 @@ in
           PAPERLESS_DBENGINE = "mariadb";
           PAPERLESS_DBHOST = "db";
           PAPERLESS_DBUSER = "paperless";
-          PAPERLESS_DBPASS = "paperless";
           PAPERLESS_DBPORT = "3306";
         };
 
