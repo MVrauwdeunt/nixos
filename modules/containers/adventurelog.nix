@@ -136,8 +136,12 @@ in
 
         dependsOn = [ "adventurelog-db" ];
 
+        # IMPORTANT:
+        # Expose the backend container's nginx on port 80.
+        # nginx handles protected media and proxies API traffic
+        # internally to Gunicorn on port 8000.
         ports = [
-          "127.0.0.1:${toString apiCfg.port}:8000"
+          "127.0.0.1:${toString apiCfg.port}:80"
         ];
 
         environment = {
@@ -167,6 +171,7 @@ in
           FRONTEND_URL =
             "https://adventurelog.fiordland-gar.ts.net";
 
+          # This is the externally exposed backend port.
           BACKEND_PORT = toString apiCfg.port;
         };
 
@@ -194,7 +199,11 @@ in
         ];
 
         environment = {
+          # Keep this on :8000.
+          # The frontend talks directly to Gunicorn over the internal
+          # Podman network.
           PUBLIC_SERVER_URL = "http://adventureapi:8000";
+
           ORIGIN = "https://adventurelog.fiordland-gar.ts.net";
           BODY_SIZE_LIMIT = "Infinity";
 
