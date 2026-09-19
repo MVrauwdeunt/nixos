@@ -63,6 +63,7 @@ in
 
     sops.templates."adventurelog-api.env".content = ''
       POSTGRES_PASSWORD=${config.sops.placeholder."saga/adventurelog_db_password"}
+      PGPASSWORD=${config.sops.placeholder."saga/adventurelog_db_password"}
       SECRET_KEY=${config.sops.placeholder."saga/adventurelog_secret_key"}
       DJANGO_ADMIN_PASSWORD=${config.sops.placeholder."saga/adventurelog_admin_password"}
     '';
@@ -110,7 +111,7 @@ in
       adventurelog-db = {
         image = "docker.io/postgis/postgis:16-3.5";
         pull = "always";
-        
+
         environment = {
           POSTGRES_DB = "database";
           POSTGRES_USER = "adventure";
@@ -147,6 +148,12 @@ in
           DJANGO_ADMIN_EMAIL = "adventurelog@openmailbox.nl";
 
           PGHOST = "adventurelog-db";
+
+          # Legacy/split deployment variable names.
+          PGDATABASE = "database";
+          PGUSER = "adventure";
+
+          # Current AdventureLog variable names.
           POSTGRES_DB = "database";
           POSTGRES_USER = "adventure";
 
@@ -179,7 +186,7 @@ in
       adventurelog = {
         image = "ghcr.io/seanmorley15/adventurelog-frontend:latest";
         pull = "always";
-        
+
         dependsOn = [ "adventureapi" ];
 
         ports = [
