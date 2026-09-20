@@ -55,7 +55,6 @@ in
     mongoImage = mkOption {
       type = types.str;
       default = "docker.io/mongo:8.0";
-      pull = "always";
       description = "MongoDB container image";
     };
 
@@ -157,6 +156,7 @@ in
       unifi-db = {
         image = cfg.mongoImage;
         autoStart = true;
+        pull = "always";
 
         environment = {
           MONGO_INITDB_ROOT_USERNAME = cfg.mongoRootUser;
@@ -179,6 +179,7 @@ in
         image = cfg.image;
         autoStart = true;
         dependsOn = [ "unifi-db" ];
+        pull = "always";
 
         environment = {
           PUID = toString cfg.uid;
