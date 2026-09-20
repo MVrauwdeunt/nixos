@@ -1,22 +1,18 @@
 {
-    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-    "extends": ["config:recommended"],
-    "enabledManagers": ["nix", "docker"],
-    "nix": {      
-      "enabled": true
-    },
-    
-    "docker": {
-      "enabled": true
-    },
-
-    "labels": ["dependencies"],
-    "prHourlyLimit": 2,
-    "prConcurrentLimit": 5,
-    "packageRules": [
-      {
-        "matchManagers": ["nix"],
-        "groupName": "flake inputs"
-      }
-    ]
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "enabledManagers": ["nix"],
+  "nix": {
+  "enabled": true
+  },
+  "labels": ["dependencies"],
+  "prHourlyLimit": 2,
+  "prConcurrentLimit": 5,
+  "packageRules": [
+  {
+  "matchManagers": ["nix"],
+  "groupName": "flake inputs"
   }
+  ]
+  }
+  
