@@ -51,8 +51,16 @@ let
             tcp://127.0.0.1:${toString port}
         '') tcpPorts
     ) exposedApps;
+
 in
 {
+  # Keep tailscaled running during NixOS switches.
+  #
+  # deploy-rs connects to remote hosts over Tailscale. Restarting
+  # tailscaled during activation would terminate the SSH connection
+  # and cause deploy-rs to treat the deployment as failed.
+  systemd.services.tailscaled.restartIfChanged = false;
+
   systemd.services.tailscale-services = {
     description = "Configure Tailscale Services";
 
