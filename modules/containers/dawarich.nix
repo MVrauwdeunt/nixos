@@ -165,7 +165,7 @@ in
           MIN_MINUTES_SPENT_IN_CITY = "60";
 
           APPLICATION_HOSTS =
-            "localhost,dawarich.fiordland-gar.ts.net";
+            "localhost,dawarich.fiordland-gar.ts.net,dawarich.gladsheimr.nl";
 
           TIME_ZONE = "Europe/Amsterdam";
           APPLICATION_PROTOCOL = "http";

@@ -52,7 +52,7 @@ in
         # Keep the existing timezone during migration.
         TZ = "Europe/Amsterdam";
 
-        BASE_URL = "https://mealie.fiordland-gar.ts.net";
+        BASE_URL = "https://mealie.gladsheimr.nl";
       };
 
       environmentFiles = [
