@@ -36,7 +36,8 @@ let
   caddyfilePath = "/etc/caddy/Caddyfile";
   dataDir = cfg.dataDir;
 
-in {
+in
+{
   options.apps.caddy = {
     enable = mkOption {
       type = types.bool;
@@ -111,6 +112,7 @@ in {
     # Run Caddy as a Podman container.
     virtualisation.oci-containers.containers.caddy = {
       image = cfg.image;
+      pull = "always";
 
       extraOptions = [
         "--network=host"
