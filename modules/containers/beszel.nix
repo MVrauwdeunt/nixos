@@ -57,7 +57,7 @@ in
     virtualisation.oci-containers.containers.beszel = {
       image = cfg.image;
       autoStart = true;
-
+      pull = "always";
       environment = {
         APP_URL = cfg.appUrl;
       };
