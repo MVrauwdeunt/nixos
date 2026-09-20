@@ -32,7 +32,7 @@ in
   config = lib.mkIf cfg.enable {
     virtualisation.oci-containers.containers.bazarr = {
       image = "lscr.io/linuxserver/bazarr:latest";
-
+      pull = "always";
       ports = [ "${toString cfg.port}:6767" ];
 
       volumes = [

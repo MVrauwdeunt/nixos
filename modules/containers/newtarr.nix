@@ -32,7 +32,7 @@ in
   config = lib.mkIf cfg.enable {
     virtualisation.oci-containers.containers.newtarr = {
       image = "ghcr.io/elfhosted/newtarr:v1.0.0";
-
+      pull = "always";
       ports = [
         "${toString cfg.port}:9705"
       ];

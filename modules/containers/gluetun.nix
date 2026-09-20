@@ -53,7 +53,7 @@ in
 
     virtualisation.oci-containers.containers.gluetun = {
       image = "docker.io/qmcgaw/gluetun:latest";
-
+      pull = "always";
       ports = [
         "8000:8000"
       ];

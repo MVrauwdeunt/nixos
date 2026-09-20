@@ -49,7 +49,7 @@ in
 
     virtualisation.oci-containers.containers.jellyseerr = {
       image = "ghcr.io/seerr-team/seerr:latest";
-
+      pull = "always";
       ports = [ "${toString cfg.port}:5055" ];
 
       volumes = [

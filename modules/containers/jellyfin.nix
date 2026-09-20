@@ -50,7 +50,7 @@ in
 
     virtualisation.oci-containers.containers.jellyfin = {
       image = "docker.io/jellyfin/jellyfin:latest";
-
+      pull = "always";
       ports = [ "${toString cfg.port}:8096" ];
 
       volumes = [

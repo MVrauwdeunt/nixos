@@ -49,7 +49,7 @@ in
   config = mkIf cfg.enable {
     virtualisation.oci-containers.containers.lidify = {
       image = cfg.image;
-
+      pull = "always";
       ports = [
         "${toString cfg.port}:5000"
       ];
