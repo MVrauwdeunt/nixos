@@ -54,7 +54,7 @@ in
 
     mongoImage = mkOption {
       type = types.str;
-      default = "docker.io/mongo:8.0";
+      default = "docker.io/mongo:8.0.4";
       description = "MongoDB container image.";
     };
 
@@ -177,7 +177,7 @@ in
 
       unifi = {
         image = cfg.image;
-        pull = "always";
+        pull = "missing";
         autoStart = true;
         dependsOn = [ "unifi-db" ];
 
