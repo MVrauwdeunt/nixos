@@ -49,85 +49,85 @@ in
     image = mkOption {
       type = types.str;
       default = "lscr.io/linuxserver/unifi-network-application:10.6.106";
-      description = "Container image for UniFi Network Application";
+      description = "Container image for UniFi Network Application.";
     };
 
     mongoImage = mkOption {
       type = types.str;
       default = "docker.io/mongo:8.0";
-      description = "MongoDB container image";
+      description = "MongoDB container image.";
     };
 
     dataDir = mkOption {
       type = types.path;
       default = "/var/lib/unifi";
-      description = "Base data directory for UniFi";
+      description = "Base data directory for UniFi.";
     };
 
     uid = mkOption {
       type = types.int;
       default = 1000;
-      description = "UID used inside the UniFi container";
+      description = "UID used inside the UniFi container.";
     };
 
     gid = mkOption {
       type = types.int;
       default = 1000;
-      description = "GID used inside the UniFi container";
+      description = "GID used inside the UniFi container.";
     };
 
     timezone = mkOption {
       type = types.str;
       default = "Europe/Amsterdam";
-      description = "Timezone for the containers";
+      description = "Timezone for the containers.";
     };
 
     mongoDbName = mkOption {
       type = types.str;
       default = "unifi";
-      description = "MongoDB database name";
+      description = "MongoDB database name.";
     };
 
     mongoUser = mkOption {
       type = types.str;
       default = "unifi";
-      description = "MongoDB username";
+      description = "MongoDB username.";
     };
 
     mongoPassword = mkOption {
       type = types.str;
       default = "changeme";
-      description = "MongoDB password";
+      description = "MongoDB password.";
     };
 
     mongoRootUser = mkOption {
       type = types.str;
       default = "root";
-      description = "MongoDB root username";
+      description = "MongoDB root username.";
     };
 
     mongoRootPassword = mkOption {
       type = types.str;
       default = "changeme-root";
-      description = "MongoDB root password";
+      description = "MongoDB root password.";
     };
 
     mongoAuthSource = mkOption {
       type = types.str;
       default = "admin";
-      description = "MongoDB auth source";
+      description = "MongoDB auth source.";
     };
 
     memLimit = mkOption {
       type = types.str;
       default = "1024";
-      description = "JVM memory limit for UniFi";
+      description = "JVM memory limit for UniFi.";
     };
 
     memStartup = mkOption {
       type = types.str;
       default = "1024";
-      description = "JVM startup memory for UniFi";
+      description = "JVM startup memory for UniFi.";
     };
 
     port = mkOption {
@@ -139,7 +139,7 @@ in
     openFirewall = mkOption {
       type = types.bool;
       default = true;
-      description = "Open UniFi ports in the firewall";
+      description = "Open UniFi ports in the firewall.";
     };
   };
 
@@ -155,8 +155,8 @@ in
     virtualisation.oci-containers.containers = {
       unifi-db = {
         image = cfg.mongoImage;
-        autoStart = true;
         pull = "always";
+        autoStart = true;
 
         environment = {
           MONGO_INITDB_ROOT_USERNAME = cfg.mongoRootUser;
@@ -177,9 +177,9 @@ in
 
       unifi = {
         image = cfg.image;
+        pull = "always";
         autoStart = true;
         dependsOn = [ "unifi-db" ];
-        pull = "always";
 
         environment = {
           PUID = toString cfg.uid;
@@ -211,8 +211,20 @@ in
     };
 
     networking.firewall = mkIf cfg.openFirewall {
-      allowedTCPPorts = [ cfg.port 8080 8843 8880 6789 ];
-      allowedUDPPorts = [ 3478 10001 1900 5514 ];
+      allowedTCPPorts = [
+        cfg.port
+        8080
+        8843
+        8880
+        6789
+      ];
+
+      allowedUDPPorts = [
+        3478
+        10001
+        1900
+        5514
+      ];
     };
   };
 }
