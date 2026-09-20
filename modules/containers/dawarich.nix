@@ -165,7 +165,7 @@ in
           MIN_MINUTES_SPENT_IN_CITY = "60";
 
           APPLICATION_HOSTS =
-            "localhost,dawarich.fiordland-gar.ts.net,dawarich.gladsheimr.nl";
+            "localhost,dawarich.fiordland-gar.ts.net";
 
           TIME_ZONE = "Europe/Amsterdam";
           APPLICATION_PROTOCOL = "http";
@@ -189,7 +189,8 @@ in
 
       dawarich-sidekiq = {
         image = "docker.io/freikin/dawarich:latest";
-
+        pull = "always";
+        
         dependsOn = [
           "dawarich-db"
           "dawarich-redis"
