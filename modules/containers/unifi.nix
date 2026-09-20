@@ -48,13 +48,15 @@ in
 
     image = mkOption {
       type = types.str;
-      default = "lscr.io/linuxserver/unifi-network-application:10.1.89";
+      default = "lscr.io/linuxserver/unifi-network-application:10.6.106";
+      pull = "always";
       description = "Container image for UniFi Network Application";
     };
 
     mongoImage = mkOption {
       type = types.str;
-      default = "docker.io/mongo:8.0.4";
+      default = "docker.io/mongo:8.0";
+      pull = "always";
       description = "MongoDB container image";
     };
 
