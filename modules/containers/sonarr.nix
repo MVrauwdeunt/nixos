@@ -32,7 +32,7 @@ in
   config = lib.mkIf cfg.enable {
     virtualisation.oci-containers.containers.sonarr = {
       image = "lscr.io/linuxserver/sonarr:latest";
-
+      pull = "always";
       ports = [ "${toString cfg.port}:8989" ];
 
       volumes = [

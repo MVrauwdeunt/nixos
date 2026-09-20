@@ -32,7 +32,7 @@ in
   config = lib.mkIf cfg.enable {
     virtualisation.oci-containers.containers.radarr = {
       image = "lscr.io/linuxserver/radarr:latest";
-
+      pull = "always";
       ports = [ "${toString cfg.port}:7878" ];
 
       volumes = [

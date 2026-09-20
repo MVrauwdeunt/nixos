@@ -32,7 +32,7 @@ in
   config = lib.mkIf cfg.enable {
     virtualisation.oci-containers.containers.sabnzbd = {
       image = "lscr.io/linuxserver/sabnzbd:latest";
-
+      pull = "always";
       ports = [ "${toString cfg.port}:8080" ];
 
       volumes = [

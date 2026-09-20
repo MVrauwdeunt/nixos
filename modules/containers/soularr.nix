@@ -55,7 +55,7 @@ in
   config = mkIf cfg.enable {
     virtualisation.oci-containers.containers.soularr = {
       image = cfg.image;
-
+      pull = "always";
       ports = [
         "${toString cfg.port}:8265"
       ];

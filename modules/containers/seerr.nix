@@ -32,7 +32,7 @@ in
   config = lib.mkIf cfg.enable {
     virtualisation.oci-containers.containers.seerr = {
       image = "ghcr.io/seerr-team/seerr:latest";
-
+      pull = "always";
       ports = [ "${toString cfg.port}:5055" ];
 
       volumes = [

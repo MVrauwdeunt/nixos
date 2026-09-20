@@ -32,7 +32,7 @@ in
   config = lib.mkIf cfg.enable {
     virtualisation.oci-containers.containers.profilarr = {
       image = "docker.io/santiagosayshey/profilarr:latest";
-
+      pull = "always";      
       ports = [
         "127.0.0.1:${toString cfg.port}:6868"
       ];

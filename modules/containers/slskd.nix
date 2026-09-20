@@ -42,7 +42,7 @@ in
   config = mkIf cfg.enable {
     virtualisation.oci-containers.containers.slskd = {
       image = "docker.io/slskd/slskd:latest";
-
+      pull = "always";
       ports = [ "${toString cfg.port}:5030" ];
 
       volumes = [

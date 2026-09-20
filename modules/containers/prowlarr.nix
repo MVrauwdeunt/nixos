@@ -32,7 +32,7 @@ in
   config = lib.mkIf cfg.enable {
     virtualisation.oci-containers.containers.prowlarr = {
       image = "lscr.io/linuxserver/prowlarr:latest";
-
+      pull = "always";
       ports = [ "${toString cfg.port}:9696" ];
 
       volumes = [
