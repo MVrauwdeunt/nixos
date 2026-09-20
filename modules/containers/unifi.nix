@@ -49,7 +49,6 @@ in
     image = mkOption {
       type = types.str;
       default = "lscr.io/linuxserver/unifi-network-application:10.6.106";
-      pull = "always";
       description = "Container image for UniFi Network Application";
     };
 
