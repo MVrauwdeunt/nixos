@@ -17,7 +17,7 @@ in
 
     image = mkOption {
       type = types.str;
-      default = "codeberg.org/forgejo/forgejo:14";
+      default = "codeberg.org/forgejo/forgejo:15";
       description = "Container image for Forgejo";
     };
 
@@ -74,7 +74,8 @@ in
     virtualisation.oci-containers.containers.forgejo = {
       image = cfg.image;
       autoStart = true;
-
+      pull = "always";
+      
       environment = {
         FORGEJO__server__ROOT_URL = cfg.appUrl;
         FORGEJO__server__START_SSH_SERVER = "true";
