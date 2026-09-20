@@ -54,7 +54,7 @@ in
 
     mongoImage = mkOption {
       type = types.str;
-      default = "docker.io/mongo:8.0.4";
+      default = "docker.io/mongo:8.0";
       description = "MongoDB container image.";
     };
 

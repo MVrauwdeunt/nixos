@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, ... }:
 
 with lib;
 
@@ -12,19 +12,19 @@ in
     tailscale.enable = mkOption {
       type = types.bool;
       default = true;
-      description = "Expose this app through Tailscale Serve.";
+      description = "Expose Forgejo through Tailscale Serve.";
     };
 
     image = mkOption {
       type = types.str;
       default = "codeberg.org/forgejo/forgejo:15";
-      description = "Container image for Forgejo";
+      description = "Container image for Forgejo.";
     };
 
     dataDir = mkOption {
       type = types.path;
       default = "/var/lib/forgejo";
-      description = "Base data directory for Forgejo";
+      description = "Base data directory for Forgejo.";
     };
 
     port = mkOption {
@@ -36,7 +36,7 @@ in
     sshPort = mkOption {
       type = types.port;
       default = 2222;
-      description = "Host and container SSH port used by Forgejo";
+      description = "Host and container SSH port used by Forgejo.";
     };
 
     tailscale.tcpPorts = mkOption {
@@ -48,19 +48,19 @@ in
     appUrl = mkOption {
       type = types.str;
       default = "https://forgejo.fiordland-gar.ts.net";
-      description = "Public URL advertised by Forgejo";
+      description = "Public URL advertised by Forgejo.";
     };
 
     sshDomain = mkOption {
       type = types.str;
       default = "forgejo.fiordland-gar.ts.net";
-      description = "Public SSH domain advertised by Forgejo";
+      description = "Public SSH domain advertised by Forgejo.";
     };
 
     openFirewall = mkOption {
       type = types.bool;
       default = false;
-      description = "Open the Forgejo ports on the host firewall";
+      description = "Open the Forgejo ports on the host firewall.";
     };
   };
 
@@ -73,9 +73,9 @@ in
 
     virtualisation.oci-containers.containers.forgejo = {
       image = cfg.image;
-      autoStart = true;
       pull = "always";
-      
+      autoStart = true;
+
       environment = {
         FORGEJO__server__ROOT_URL = cfg.appUrl;
         FORGEJO__server__START_SSH_SERVER = "true";
@@ -100,10 +100,15 @@ in
     };
 
     networking.firewall = mkIf cfg.openFirewall {
-      allowedTCPPorts = [ cfg.port cfg.sshPort ];
+      allowedTCPPorts = [
+        cfg.port
+        cfg.sshPort
+      ];
     };
 
-    systemd.services.podman-forgejo.after = [ "network-online.target" ];
-    systemd.services.podman-forgejo.wants = [ "network-online.target" ];
+    systemd.services.podman-forgejo = {
+      after = [ "network-online.target" ];
+      wants = [ "network-online.target" ];
+    };
   };
 }
