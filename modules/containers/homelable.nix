@@ -7,6 +7,49 @@ let
     PROXMOX_TOKEN_ID=${config.sops.placeholder."sif/homelable_proxmox_token_id"}
     PROXMOX_TOKEN_SECRET=${config.sops.placeholder."sif/homelable_proxmox_token_secret"}
   '';
+
+  generateScannerEnv = pkgs.writeShellScript "homelable-generate-scanner-env" ''
+    set -euo pipefail
+
+    ${pkgs.coreutils}/bin/mkdir -p /run/homelable
+
+    # Static networks defined in Nix.
+    static_ranges='${builtins.toJSON cfg.scannerRanges}'
+
+    # Dynamic Tailscale peers.
+    tailscale_ranges='[]'
+
+    if status_json="$(${pkgs.tailscale}/bin/tailscale status --json 2>/dev/null)"; then
+      tailscale_ranges="$(
+        printf '%s' "$status_json" |
+          ${pkgs.jq}/bin/jq -c '
+            [
+              .Self.TailscaleIPs[]?,
+              (.Peer[]?.TailscaleIPs[]?)
+            ]
+            | map(select(startswith("100.")))
+            | map(. + "/32")
+            | unique
+          '
+      )"
+    else
+      echo "Warning: unable to read Tailscale status; using static scanner ranges only."
+    fi
+
+    combined="$(
+      ${pkgs.jq}/bin/jq -cn \
+        --argjson static "$static_ranges" \
+        --argjson tailscale "$tailscale_ranges" \
+        '$static + $tailscale | unique'
+    )"
+
+    printf 'SCANNER_RANGES=%s\n' "$combined" \
+      > /run/homelable/scanner.env
+
+    echo "Generated Homelable scanner ranges:"
+    echo "$combined" | ${pkgs.jq}/bin/jq .
+  '';
+
 in
 {
   options.apps.homelable = {
@@ -50,11 +93,17 @@ in
 
     scannerRanges = lib.mkOption {
       type = lib.types.listOf lib.types.str;
+
       default = [
+        "192.168.30.0/24"
         "192.168.100.0/24"
         "192.168.178.0/24"
       ];
-      description = "CIDR ranges Homelable may scan.";
+
+      description = ''
+        Static CIDR ranges Homelable may scan.
+        Current Tailscale IPv4 peers are automatically added as /32 ranges.
+      '';
     };
 
     statusCheckerInterval = lib.mkOption {
@@ -119,6 +168,10 @@ in
       "d ${cfg.dataDir} 0755 root root - -"
     ];
 
+    #
+    # Podman network
+    #
+
     systemd.services.homelable-network = {
       description = "Create Homelable Podman network";
       wantedBy = [ "multi-user.target" ];
@@ -139,27 +192,61 @@ in
       '';
     };
 
+    #
+    # Backend
+    #
+    # The ExecStartPre script regenerates SCANNER_RANGES on every
+    # backend start. This merges the static LAN ranges above with all
+    # current Tailscale IPv4 addresses returned by:
+    #
+    #   tailscale status --json
+    #
+
     systemd.services.podman-homelable-backend = {
-      requires = [ "homelable-network.service" ];
-      after = [
-        "network-online.target"
+      requires = [
         "homelable-network.service"
       ];
-      wants = [ "network-online.target" ];
+
+      after = [
+        "network-online.target"
+        "tailscaled.service"
+        "homelable-network.service"
+      ];
+
+      wants = [
+        "network-online.target"
+        "tailscaled.service"
+      ];
+
+      serviceConfig.ExecStartPre = [
+        "${generateScannerEnv}"
+      ];
     };
+
+    #
+    # Frontend
+    #
 
     systemd.services.podman-homelable = {
       requires = [
         "homelable-network.service"
         "podman-homelable-backend.service"
       ];
+
       after = [
         "network-online.target"
         "homelable-network.service"
         "podman-homelable-backend.service"
       ];
-      wants = [ "network-online.target" ];
+
+      wants = [
+        "network-online.target"
+      ];
     };
+
+    #
+    # Containers
+    #
 
     virtualisation.oci-containers.containers = {
       homelable-backend = {
@@ -171,16 +258,19 @@ in
           CORS_ORIGINS = builtins.toJSON [ cfg.url ];
           AUTH_MODE = "local";
           AUTH_USERNAME = cfg.authUsername;
-          SCANNER_RANGES = builtins.toJSON cfg.scannerRanges;
           STATUS_CHECKER_INTERVAL = toString cfg.statusCheckerInterval;
         } // lib.optionalAttrs cfg.proxmox.enable {
           PROXMOX_HOST = cfg.proxmox.host;
           PROXMOX_PORT = toString cfg.proxmox.port;
-          PROXMOX_VERIFY_TLS = if cfg.proxmox.verifyTLS then "true" else "false";
+          PROXMOX_VERIFY_TLS =
+            if cfg.proxmox.verifyTLS
+            then "true"
+            else "false";
         };
 
         environmentFiles = [
           config.sops.templates."homelable.env".path
+          "/run/homelable/scanner.env"
         ];
 
         volumes = [
@@ -195,8 +285,9 @@ in
         ];
       };
 
-      # Keep this container named exactly "homelable": tailscale-services.nix
-      # waits for podman-homelable.service for apps.homelable.
+      # Keep this container named exactly "homelable":
+      # tailscale-services.nix waits for podman-homelable.service
+      # for apps.homelable.
       homelable = {
         image = cfg.frontendImage;
         pull = "always";
