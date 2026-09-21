@@ -8,6 +8,7 @@ let
     "renovate"
     "unifi"
     "n8n"
+    "homelable"
   ];
 
   appModules =
