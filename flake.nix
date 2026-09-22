@@ -12,6 +12,12 @@
     };
     hermes-agent.url = "github:NousResearch/hermes-agent";
 
+    # Mailserver
+    nixos-mailserver = {
+      url = "gitlab:simple-nixos-mailserver/nixos-mailserver/nixos-26.05";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # Home Manager
     home-manager.url = "github:nix-community/home-manager/release-26.05";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
@@ -29,6 +35,7 @@
         { name = "mimir"; platform = "proxmox"; firmware = "bios"; disk = "/dev/sda"; useDisko = false; }
         { name = "vili"; platform = "proxmox"; firmware = "bios"; disk = "/dev/sda"; useDisko = false; }
         { name = "saga"; platform = "proxmox"; firmware = "bios"; disk = "/dev/sda"; useDisko = false; }
+        { name = "ratatosk"; platform = "hetzner"; firmware = "bios"; disk = "/dev/sda"; useDisko = true; }
         { name = "vm"; platform = "qemu"; firmware = "uefi"; disk = "/dev/vda"; useDisko = false; }
         { name = "proxmox-vm"; platform = "proxmox"; firmware = "uefi"; disk = "/dev/vda"; useDisko = true; }
       ];

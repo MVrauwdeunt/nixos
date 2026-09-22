@@ -20,6 +20,15 @@
         magicRollback = false;
       };
     };
+    ratatosk = {
+      hostname = "ratatosk.fiordland-gar.ts.net";
+      sshUser = "zanbee";
+      profiles.system = {
+        user = "root";
+        path = deploy-rs.lib.${system}.activate.nixos self.nixosConfigurations.ratatosk;
+        magicRollback = false;
+      };
+    };    
     mimir = {
       hostname = "192.168.178.240";
       sshUser = "zanbee";
