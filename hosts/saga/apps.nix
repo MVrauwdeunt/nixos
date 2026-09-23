@@ -28,8 +28,8 @@ let
 
     tailscale.enable = true;
 
-  sopsFile = ../../secrets.yaml;
-};
+    sopsFile = ../../secrets.yaml;
+  };
 
   appModules =
     map (name: ../../modules/containers/${name}.nix) enabledApps;
