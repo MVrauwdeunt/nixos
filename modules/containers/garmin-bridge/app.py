@@ -19,6 +19,16 @@ def get_gear_name(gear):
     )
 
 
+def to_float(value):
+    if value is None:
+        return None
+
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global garmin
@@ -58,6 +68,9 @@ def activities(
 
         result = []
 
+        # Voorkom meerdere identieke Garmin calls voor dezelfde fiets.
+        stats_cache = {}
+
         for activity in garmin_activities:
             activity_id = activity.get("activityId")
 
@@ -81,6 +94,45 @@ def activities(
                 None,
             )
 
+            gear_data = None
+
+            if bike:
+                gear_uuid = bike.get("uuid")
+                stats = {}
+
+                if gear_uuid:
+                    if gear_uuid not in stats_cache:
+                        try:
+                            stats_cache[gear_uuid] = (
+                                garmin.get_gear_stats(gear_uuid) or {}
+                            )
+                        except Exception as exc:
+                            print(
+                                f"Gear stats lookup failed for {gear_uuid}: {exc}"
+                            )
+                            stats_cache[gear_uuid] = {}
+
+                    stats = stats_cache[gear_uuid]
+
+                total_distance_m = to_float(stats.get("totalDistance"))
+
+                gear_data = {
+                    "uuid": gear_uuid,
+                    "pk": bike.get("gearPk"),
+                    "name": get_gear_name(bike),
+                    "total_distance_m": (
+                        round(total_distance_m, 1)
+                        if total_distance_m is not None
+                        else None
+                    ),
+                    "total_distance_km": (
+                        round(total_distance_m / 1000, 3)
+                        if total_distance_m is not None
+                        else None
+                    ),
+                    "total_activities": stats.get("totalActivities"),
+                }
+
             distance_m = activity.get("distance") or 0
 
             result.append(
@@ -90,15 +142,7 @@ def activities(
                     "date": activity.get("startTimeLocal"),
                     "distance_m": round(distance_m, 1),
                     "distance_km": round(distance_m / 1000, 3),
-                    "gear": (
-                        {
-                            "uuid": bike.get("uuid"),
-                            "pk": bike.get("gearPk"),
-                            "name": get_gear_name(bike),
-                        }
-                        if bike
-                        else None
-                    ),
+                    "gear": gear_data,
                 }
             )
 
@@ -115,6 +159,36 @@ def activities(
 def activity_gear(activity_id: int):
     try:
         return garmin.get_activity_gear(activity_id)
+
+    except Exception as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Garmin error: {exc}",
+        )
+
+
+@app.get("/gear/{gear_uuid}/stats")
+def gear_stats(gear_uuid: str):
+    try:
+        stats = garmin.get_gear_stats(gear_uuid)
+
+        total_distance_m = to_float(stats.get("totalDistance"))
+
+        return {
+            "uuid": gear_uuid,
+            "total_distance_m": (
+                round(total_distance_m, 1)
+                if total_distance_m is not None
+                else None
+            ),
+            "total_distance_km": (
+                round(total_distance_m / 1000, 3)
+                if total_distance_m is not None
+                else None
+            ),
+            "total_activities": stats.get("totalActivities"),
+            "raw": stats,
+        }
 
     except Exception as exc:
         raise HTTPException(
