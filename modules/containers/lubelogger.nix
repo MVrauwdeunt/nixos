@@ -21,7 +21,7 @@ in
 
     port = lib.mkOption {
       type = lib.types.port;
-      default = 8080;
+      default = 8082;
       description = "LubeLogger web UI port";
     };
 
