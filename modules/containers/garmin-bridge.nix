@@ -1,17 +1,23 @@
-{ config, lib, ... }:
+{ config, lib, pkgs, ... }:
 
 let
   cfg = config.apps.garmin-bridge;
+
+  source = ./garmin-bridge;
+
+  sourceHash = builtins.substring 0 12 (
+    builtins.hashString "sha256" (
+      builtins.readFile ./garmin-bridge/app.py
+      + builtins.readFile ./garmin-bridge/requirements.txt
+      + builtins.readFile ./garmin-bridge/Containerfile
+    )
+  );
+
+  image = "localhost/garmin-bridge:${sourceHash}";
 in
 {
   options.apps.garmin-bridge = {
     enable = lib.mkEnableOption "Garmin Connect bridge";
-
-    image = lib.mkOption {
-      type = lib.types.str;
-      default = "localhost/garmin-bridge:test";
-      description = "Garmin Bridge OCI image";
-    };
 
     dataDir = lib.mkOption {
       type = lib.types.path;
@@ -28,13 +34,11 @@ in
     openFirewall = lib.mkOption {
       type = lib.types.bool;
       default = false;
-      description = "Open Garmin Bridge port in firewall";
     };
 
     tailscale.enable = lib.mkOption {
       type = lib.types.bool;
       default = false;
-      description = "Expose Garmin Bridge through Tailscale";
     };
   };
 
@@ -46,12 +50,49 @@ in
       "d ${cfg.dataDir}/tokens 0700 root root -"
     ];
 
+    systemd.services.garmin-bridge-image = {
+      description = "Build Garmin Bridge OCI image";
+
+      wantedBy = [ "multi-user.target" ];
+
+      before = [
+        "podman-garmin-bridge.service"
+      ];
+
+      after = [
+        "network-online.target"
+      ];
+
+      wants = [
+        "network-online.target"
+      ];
+
+      path = [
+        pkgs.podman
+      ];
+
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+      };
+
+      script = ''
+        if ! podman image exists ${image}; then
+          echo "Building ${image}"
+
+          podman build \
+            --tag ${image} \
+            --file ${source}/Containerfile \
+            ${source}
+        else
+          echo "${image} already exists"
+        fi
+      '';
+    };
+
     virtualisation.oci-containers.containers.garmin-bridge = {
-      image = cfg.image;
-
-      # Image is built locally for now.
+      image = image;
       pull = "never";
-
       autoStart = true;
 
       ports = [
@@ -68,18 +109,15 @@ in
       ];
     };
 
-    # n8n.nix creates this Podman network.
     systemd.services.podman-garmin-bridge = {
       requires = [
+        "garmin-bridge-image.service"
         "podman-network-n8n.service"
       ];
 
       after = [
-        "network-online.target"
+        "garmin-bridge-image.service"
         "podman-network-n8n.service"
-      ];
-
-      wants = [
         "network-online.target"
       ];
     };
