@@ -14,6 +14,7 @@ let
     "mealie"
     "adventurelog"
     "immich"
+    "manyfold"
   ];
 
   appModules =
