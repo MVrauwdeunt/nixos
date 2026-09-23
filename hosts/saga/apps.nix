@@ -15,6 +15,7 @@ let
     "adventurelog"
     "immich"
     "manyfold"
+    "lubelogger"
   ];
 
   appModules =
