@@ -10,34 +10,21 @@ in
     image = lib.mkOption {
       type = lib.types.str;
       default = "ghcr.io/manyfold3d/manyfold-solo:latest";
-      description = "Manyfold container image";
     };
 
     dataDir = lib.mkOption {
       type = lib.types.str;
       default = "/var/lib/manyfold";
-      description = "Persistent Manyfold configuration and database";
     };
 
     libraryDir = lib.mkOption {
       type = lib.types.str;
       default = "/mnt/Volume2/3d-models";
-      description = "Host directory containing the 3D model library";
     };
 
     port = lib.mkOption {
       type = lib.types.port;
       default = 3214;
-    };
-
-    puid = lib.mkOption {
-      type = lib.types.int;
-      default = 1000;
-    };
-
-    pgid = lib.mkOption {
-      type = lib.types.int;
-      default = 1000;
     };
 
     openFirewall = lib.mkOption {
@@ -48,38 +35,22 @@ in
     tailscale.enable = lib.mkOption {
       type = lib.types.bool;
       default = true;
-      description = "Expose Manyfold through Tailscale Serve";
-    };
-
-    sopsFile = lib.mkOption {
-      type = lib.types.nullOr lib.types.path;
-      default = null;
-      description = "SOPS file containing manyfold/secret_key_base";
     };
   };
 
   config = lib.mkIf cfg.enable {
-    assertions = [
-      {
-        assertion = cfg.sopsFile != null;
-        message = "apps.manyfold.sopsFile must be set";
-      }
-    ];
-
     virtualisation.oci-containers.backend = "podman";
 
-    sops.secrets."manyfold/secret_key_base" = {
-      sopsFile = cfg.sopsFile;
-    };
+    sops.secrets."saga/manyfold/secret_key_base" = {};
 
     sops.templates."manyfold-env" = {
       content = ''
-        SECRET_KEY_BASE=${config.sops.placeholder."manyfold/secret_key_base"}
+        SECRET_KEY_BASE=${config.sops.placeholder."saga/manyfold/secret_key_base"}
       '';
     };
 
     systemd.tmpfiles.rules = [
-      "d ${cfg.dataDir} 0750 ${toString cfg.puid} ${toString cfg.pgid} -"
+      "d ${cfg.dataDir} 0750 1000 1000 -"
     ];
 
     virtualisation.oci-containers.containers.manyfold = {
@@ -96,8 +67,8 @@ in
       ];
 
       environment = {
-        PUID = toString cfg.puid;
-        PGID = toString cfg.pgid;
+        PUID = "1000";
+        PGID = "1000";
         TZ = "Europe/Amsterdam";
       };
 
