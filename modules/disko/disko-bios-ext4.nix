@@ -10,7 +10,7 @@
 
         partitions = {
           boot = {
-            size = "1MiB";
+            size = "1M";
             type = "EF02";
           };
 
