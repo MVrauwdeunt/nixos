@@ -7,7 +7,7 @@ let
 
   # Temporary hostname while Mail-in-a-Box still uses box.openmailbox.nl.
   # Change this to box.openmailbox.nl during the final migration.
-  mailHost = "box2.openmailbox.nl";
+  mailHost = "ratatosk-test.openmailbox.nl";
 in
 {
   imports = [
