@@ -5,8 +5,8 @@
 let
   mailDomain = "openmailbox.nl";
 
-  # Temporary hostname while Mail-in-a-Box still uses box.openmailbox.nl.
-  # Change this to box.openmailbox.nl during the final migration.
+  # Temporary hostname for the Ratatosk test server.
+  # Change this to ratatosk.openmailbox.nl during the final migration.
   mailHost = "ratatosk-test.openmailbox.nl";
 in
 {
@@ -14,6 +14,12 @@ in
     ../../modules/users/zanbee
     inputs.nixos-mailserver.nixosModules.default
   ];
+
+  # Hetzner Rescue exposes the interface as eth0,
+  # but the installed NixOS system renames it to enp1s0.
+  # Override the shared Hetzner network module for Ratatosk only.
+  systemd.network.networks."10-wan".matchConfig.Name =
+    lib.mkForce "enp1s0";
 
   nix.settings.trusted-users = [
     "root"
