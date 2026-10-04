@@ -15,6 +15,7 @@ let
     "profilarr"
     "newtarr"
     "gluetun"
+    "arr-dashboard"
   ];
 
   specialApps = [
