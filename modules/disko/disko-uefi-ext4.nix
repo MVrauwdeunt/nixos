@@ -8,7 +8,7 @@
         type = "gpt";
         partitions = {
           ESP = {
-            size = "512MiB"; type = "EF00";
+            size = "512M"; type = "EF00";
             content = {
               type = "filesystem"; format = "vfat";
               mountpoint = "/boot"; mountOptions = [ "umask=0077" ];
