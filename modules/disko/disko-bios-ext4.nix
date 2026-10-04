@@ -4,12 +4,19 @@
     disk.main = {
       type = "disk";
       device = lib.mkDefault "/dev/sda";
+
       content = {
         type = "gpt";
+
         partitions = {
-          boot = { size = "1MiB"; type = "EF02"; };
+          boot = {
+            size = "1MiB";
+            type = "EF02";
+          };
+
           root = {
             size = "100%";
+
             content = {
               type = "filesystem";
               format = "ext4";
@@ -21,6 +28,8 @@
       };
     };
   };
-  boot.loader.grub = { enable = true; device = lib.mkDefault "/dev/sda"; };
+
+  boot.loader.grub.enable = true;
+
   fileSystems."/".neededForBoot = true;
 }
