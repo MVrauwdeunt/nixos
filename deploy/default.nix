@@ -21,7 +21,7 @@
       };
     };
     ratatosk = {
-      hostname = "ratatosk.fiordland-gar.ts.net";
+      hostname = "78.46.246.115";
       sshUser = "zanbee";
       profiles.system = {
         user = "root";
