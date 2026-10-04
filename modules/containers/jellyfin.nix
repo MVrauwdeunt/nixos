@@ -56,6 +56,7 @@ in
       volumes = [
         "${cfg.dataDir}:/config"
         "${cfg.mediaDir}:/media:ro"
+        "${cfg.mediaDir}/Discover:/media/Discover:rw"
       ];
 
       environment = {
