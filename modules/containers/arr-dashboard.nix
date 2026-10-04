@@ -1,17 +1,27 @@
-# modules/containers/arr-dashboard.nix
 { config, lib, ... }:
 
 let
   cfg = config.apps.arr-dashboard;
+
+  publicHost = "${cfg.tailscale.serviceName}.fiordland-gar.ts.net";
+  publicUrl = "https://${publicHost}";
 in
 {
   options.apps.arr-dashboard = {
     enable = lib.mkEnableOption "Arr Dashboard container";
 
-    tailscale.enable = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Expose Arr Dashboard through Tailscale Serve.";
+    tailscale = {
+      enable = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Expose Arr Dashboard through Tailscale Serve.";
+      };
+
+      serviceName = lib.mkOption {
+        type = lib.types.str;
+        default = "arr-dashboard";
+        description = "Tailscale service name.";
+      };
     };
 
     dataDir = lib.mkOption {
@@ -44,8 +54,21 @@ in
       ];
 
       environment = {
+        TZ = "Europe/Amsterdam";
+
         PUID = "1000";
         PGID = "1000";
+
+        # Public URL behind Tailscale Serve
+        APP_URL = publicUrl;
+
+        # Browser/API origin
+        API_CORS_ORIGIN = publicUrl;
+
+        # Passkeys / WebAuthn
+        WEBAUTHN_RP_NAME = "Arr Dashboard";
+        WEBAUTHN_RP_ID = publicHost;
+        WEBAUTHN_ORIGIN = publicUrl;
       };
 
       extraOptions = [
