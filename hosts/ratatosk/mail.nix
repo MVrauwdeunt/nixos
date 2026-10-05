@@ -30,10 +30,14 @@ in
           config.sops.secrets."ratatosk/mail/m-vrauwdeunt-password".path;
 
         aliases = [
-          "zanbee@openmailbox.nl"
           "postmaster@openmailbox.nl"
           "abuse@openmailbox.nl"
         ];
+      };
+
+      "zanbee@openmailbox.nl" = {
+        passwordFile =
+          config.sops.secrets."ratatosk/mail/zanbee-password".path;
       };
 
       "paperless@openmailbox.nl" = {
