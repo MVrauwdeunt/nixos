@@ -1,0 +1,742 @@
+Here is imapsync 2.314 /nix/store/3czm0kfk91j9d9db84r5ql5nah1wpjyf-imapsync-2.314/bin/.imapsync-wrapped on host michel-framework, a linux system with 41.1/60.6 free GiB of RAM, 14.45% used by processes.
+with Perl 5.42.3 and Mail::IMAPClient 3.43
+Transfer started at Tuesday 06 October 2026-10-06 16:51:33 +0200 CEST
+PID is 486364 my PPID is 134145
+Log file is LOG_imapsync/2026_10_06_16_51_33_277_m_vrauwdeunt_openmailbox_nl_m_vrauwdeunt_openmailbox_nl.txt ( to change it, use --logfile path ; or use --nolog to turn off logging )
+Load is 1.03 1.08 1.31 3/1591 on 16 cores
+Real user id is zanbee (uid 1001)
+Effective user id is zanbee (euid 1001)
+$RCSfile: imapsync,v $ $Revision: 2.314 $ $Date: 2025/09/23 16:55:17 $ 
+Command line used, run by /nix/store/8g4dmf7l8q1mf9w4wfmlcl8gvdgmhb8v-perl-5.42.3/bin/perl:
+/nix/store/3czm0kfk91j9d9db84r5ql5nah1wpjyf-imapsync-2.314/bin/.imapsync-wrapped --host1 box.openmailbox.nl --user1 m.vrauwdeunt@openmailbox.nl --ssl1 --host2 ratatosk-test.openmailbox.nl --user2 m.vrauwdeunt@openmailbox.nl --ssl2
+Current directory is /home/zanbee/Repos/nixos
+Temp directory is /home/zanbee/tmp ( to change it use --tmpdir dirpath )
+Creating temp directory /home/zanbee/tmp
+kill -QUIT 486364 # special behavior: call to sub catch_exit
+kill -TERM 486364 # special behavior: call to sub catch_exit
+kill -INT 486364 # special behavior: call to sub catch_reconnect
+kill -HUP 486364 # special behavior: call to sub catch_print
+kill -USR1 486364 # special behavior: call to sub toggle_sleep
+Logging to a logfile by default. To turn off logging, use --nolog
+Directory LOG_imapsync is writable and readable and gointoable. Good.
+File /home/zanbee/tmp/imapsync.pid does not exist
+PID file is /home/zanbee/tmp/imapsync.pid ( to change it, use --pidfile filepath ; to avoid it use --pidfile "" )
+Writing my PID 486364 in /home/zanbee/tmp/imapsync.pid
+Writing also my logfile name in /home/zanbee/tmp/imapsync.pid : LOG_imapsync/2026_10_06_16_51_33_277_m_vrauwdeunt_openmailbox_nl_m_vrauwdeunt_openmailbox_nl.txt
+Modules version list ( use --no-modulesversion to turn off printing this Perl modules list ):
+Authen::NTLM         1.09
+CGI                  4.59
+Compress::Zlib       2.221
+Crypt::OpenSSL::RSA  0.41
+Digest::HMAC_MD5     1.05
+Digest::HMAC_SHA1    1.05
+Digest::MD5          2.59
+Digest::SHA          6.04
+Encode               3.21
+Encode::IMAPUTF7     1.05
+File::Copy::Recursive 0.45
+File::Spec           3.94
+Getopt::Long         2.58
+HTML::Entities       3.85
+IO::Socket           1.55
+IO::Socket::INET     1.55
+IO::Socket::INET6    2.73
+IO::Socket::IP       0.43
+IO::Socket::SSL      2.083
+IO::Tee              0.65
+JSON                 4.10
+JSON::WebToken       0.10
+LWP                  6.83
+MIME::Base64         3.16_01
+Mail::IMAPClient     3.43
+Net::Ping            2.76
+Net::SSLeay          1.92
+Term::ReadKey        2.38
+Test::MockObject     1.20200122
+Time::HiRes          1.9778
+Unicode::String      2.10
+
+Info: will resync flags for already transferred messages. Use --noresyncflags to not resync flags.
+SSL debug mode level is --debugssl 1 (can be set from 0 meaning no debug to 4 meaning max debug)
+Host1: SSL default mode is like --sslargs1 "SSL_verify_mode=0", meaning for host1 SSL_VERIFY_NONE, ie, do not check the server certificate.
+Host1: Use --sslargs1 SSL_verify_mode=1 to have SSL_VERIFY_PEER, ie, check the server certificate. of host1
+Host2: SSL default mode is like --sslargs2 "SSL_verify_mode=0", meaning for host2 SSL_VERIFY_NONE, ie, do not check the server certificate.
+Host2: Use --sslargs2 SSL_verify_mode=1 to have SSL_VERIFY_PEER, ie, check the server certificate. of host2
+Info: turned ON syncinternaldates, will set the internal dates (arrival dates) on host2 same as host1.
+Host1: will try to use LOGIN authentication on host1
+Host2: will try to use LOGIN authentication on host2
+Host1: imap connection timeout is 120 seconds
+Host2: imap connection timeout is 120 seconds
+Host1: imap connection keepalive is on on host1. Use --nokeepalive1 to disable it.
+Host2: imap connection keepalive is on on host2. Use --nokeepalive2 to disable it.
+Host1: IMAP server [box.openmailbox.nl] port [993] user [m.vrauwdeunt@openmailbox.nl]
+Host2: IMAP server [ratatosk-test.openmailbox.nl] port [993] user [m.vrauwdeunt@openmailbox.nl]
+
+If you are afraid of giving password on the command line arguments, you can put the
+password of user1 in a file named file1 and use "--passfile1 file1" instead of typing it.
+Then give this file restrictive permissions with the command "chmod 600 file1".
+An other solution is to set the environment variable IMAPSYNC_PASSWORD1
+What's the password for m.vrauwdeunt@openmailbox.nl at box.openmailbox.nl? (not visible while you type, then enter RETURN) 
+Got it
+
+If you are afraid of giving password on the command line arguments, you can put the
+password of user2 in a file named file2 and use "--passfile2 file2" instead of typing it.
+Then give this file restrictive permissions with the command "chmod 600 file2".
+An other solution is to set the environment variable IMAPSYNC_PASSWORD2
+What's the password for m.vrauwdeunt@openmailbox.nl at ratatosk-test.openmailbox.nl? (not visible while you type, then enter RETURN) 
+Got it
+Host1: connecting and login on host1 [box.openmailbox.nl] port [993] with user [m.vrauwdeunt@openmailbox.nl]
+Host1 IP address: 168.119.229.56 Local IP address: 192.168.178.16
+Host1 banner: * OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE LITERAL+ AUTH=PLAIN AUTH=LOGIN] Dovecot (Ubuntu) ready.
+Host1 capability before authentication: IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE LITERAL+ AUTH=PLAIN AUTH=LOGIN AUTH
+Host1: box.openmailbox.nl says it has CAPABILITY for AUTHENTICATE LOGIN
+Host1: success login on [box.openmailbox.nl] with user [m.vrauwdeunt@openmailbox.nl] auth [LOGIN] or [LOGIN]
+Host2: connecting and login on host2 [ratatosk-test.openmailbox.nl] port [993] with user [m.vrauwdeunt@openmailbox.nl]
+Host2 IP address: 78.46.246.115 Local IP address: 192.168.178.16
+Host2 banner: * OK [CAPABILITY IMAP4rev1 LOGIN-REFERRALS ID ENABLE IDLE SASL-IR LITERAL+ AUTH=PLAIN AUTH=LOGIN] Dovecot ready.
+Host2 capability before authentication: IMAP4rev1 LOGIN-REFERRALS ID ENABLE IDLE SASL-IR LITERAL+ AUTH=PLAIN AUTH=LOGIN AUTH
+Host2: ratatosk-test.openmailbox.nl says it has CAPABILITY for AUTHENTICATE LOGIN
+Host2: success login on [ratatosk-test.openmailbox.nl] with user [m.vrauwdeunt@openmailbox.nl] auth [LOGIN] or [LOGIN]
+Host1: state Authenticated
+Host2: state Authenticated
+Host1 capability once authenticated: IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE SORT SORT=DISPLAY THREAD=REFERENCES THREAD=REFS THREAD=ORDEREDSUBJECT MULTIAPPEND URL-PARTIAL CATENATE UNSELECT CHILDREN NAMESPACE UIDPLUS LIST-EXTENDED I18NLEVEL=1 CONDSTORE QRESYNC ESEARCH ESORT SEARCHRES WITHIN CONTEXT=SEARCH LIST-STATUS BINARY MOVE SNIPPET=FUZZY PREVIEW=FUZZY PREVIEW STATUS=SIZE SAVEDATE LITERAL+ NOTIFY SPECIAL-USE QUOTA THREAD I18NLEVEL CONTEXT SNIPPET PREVIEW STATUS
+Host2 capability once authenticated: IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE SORT SORT=DISPLAY THREAD=REFERENCES THREAD=REFS THREAD=ORDEREDSUBJECT MULTIAPPEND URL-PARTIAL CATENATE UNSELECT CHILDREN NAMESPACE UIDPLUS LIST-EXTENDED I18NLEVEL=1 CONDSTORE QRESYNC ESEARCH ESORT SEARCHRES WITHIN CONTEXT=SEARCH LIST-STATUS BINARY MOVE REPLACE SNIPPET=FUZZY PREVIEW=FUZZY PREVIEW SPECIAL-USE STATUS=SIZE SAVEDATE COMPRESS=DEFLATE INPROGRESS NOTIFY LITERAL+ QUOTA THREAD I18NLEVEL CONTEXT SNIPPET PREVIEW STATUS COMPRESS
+Host1: found ID capability. Sending/receiving ID, presented in raw IMAP for now.
+In order to avoid sending/receiving ID, use option --noid
+Sending: 4 ID ("name" "imapsync" "version" "2.314" "os" "linux" "vendor" "Gilles LAMIRAL" "support-url" "https://imapsync.lamiral.info/" "date" "23-Sep-2025 16:55:17 +0000" "side" "host1")
+Sent 181 bytes
+Read: 	* ID ("name" "Dovecot")
+  	4 OK ID completed (0.001 + 0.000 secs).
+Host2: found ID capability. Sending/receiving ID, presented in raw IMAP for now.
+In order to avoid sending/receiving ID, use option --noid
+Sending: 4 ID ("name" "imapsync" "version" "2.314" "os" "linux" "vendor" "Gilles LAMIRAL" "support-url" "https://imapsync.lamiral.info/" "date" "23-Sep-2025 16:55:17 +0000" "side" "host2")
+Sent 181 bytes
+Read: 	* ID ("name" "Dovecot")
+  	4 OK ID completed (0.001 + 0.000 secs).
+
+Host2: QUOTA capability found, presented in raw IMAP on next lines
+Sending: 5 GETQUOTAROOT INBOX
+Sent 22 bytes
+Read: 	5 OK No quota (0.018 + 0.000 + 0.017 secs).
+
+Host2: Quota current storage is 0 bytes. Limit is 0 bytes. So 0 % full
+Host1: Compression is off. Use --compress1 to allow compression on host1
+Host2: Compression is off. Use --compress2 to allow compression on host2
+Compression often generates annoying errors, especially with SSL connexions, Gmail, Office365. So, avoid it.
+Host1: found 23 folders.
+Host2: found 24 folders.
+Host1: guessing separator from folder listing: [.]
+Host1: separator given by NAMESPACE: [.]
+Host2: guessing separator from folder listing: [.]
+Host2: separator given by NAMESPACE: [.]
+Host1: guessing prefix from folder listing: []
+Host1: prefix given by NAMESPACE: []
+Host2: guessing prefix from folder listing: []
+Host2: prefix given by NAMESPACE: []
+Host1: separator and prefix: [.][]
+Host2: separator and prefix: [.][]
+Looking at INBOX or Inbox on both sides and deciding of the mapping to apply. Use --nofixInboxINBOX to avoid this behavior.
+INBOX INBOX on both sides so no mapping applied.
+Including all folders found by default. Use --subscribed or --folder or --folderrec or --include to select specific folders. Use --exclude to unselect specific folders.
+Host1: Checking wanted folders exist. Use --nocheckfoldersexist to avoid this check (shared of public namespace targeted).
+Host1: Checking wanted folders are selectable. Use --nocheckselectable to avoid this check.
+Turned off automapping folders ( use --automap to turn on automapping )
+
+++++ Listing folders
+All foldernames are presented between brackets like [X] where X is the foldername.
+When a foldername contains non-ASCII characters it is presented in the form
+[X] = [Y] where
+X is the imap foldername you have to use in command line options and
+Y is the utf8 output just printed for convenience, to recognize it.
+
+Host1: folders list (first the raw imap format then the [X] = [Y]):
+* LIST (\HasNoChildren \Junk) "." Spam
+* LIST (\HasNoChildren) "." Iwell
+* LIST (\HasNoChildren) "." CBR
+* LIST (\HasNoChildren \Archive) "." Archive
+* LIST (\HasNoChildren) "." "Call log"
+* LIST (\HasNoChildren) "." SMS
+* LIST (\HasNoChildren \Trash) "." Trash
+* LIST (\HasNoChildren) "." Prullenbak
+* LIST (\HasNoChildren) "." Vanad
+* LIST (\HasNoChildren) "." Verzonden
+* LIST (\HasNoChildren) "." "Deurwaarders Ma"
+* LIST (\HasNoChildren) "." sollicitaties
+* LIST (\HasNoChildren) "." Conduent
+* LIST (\HasNoChildren) "." Concepten
+* LIST (\HasNoChildren \Sent) "." Sent
+* LIST (\HasNoChildren) "." "Flanders gravel"
+* LIST (\HasChildren \UnMarked) "." Archives
+* LIST (\HasNoChildren) "." Archives.2023
+* LIST (\HasNoChildren) "." Archives.2020
+* LIST (\HasNoChildren \UnMarked) "." Archives.2022
+* LIST (\HasNoChildren) "." Archives.2021
+* LIST (\HasNoChildren \Drafts) "." Drafts
+* LIST (\HasNoChildren) "." INBOX
+32 OK List completed (0.001 + 0.000 secs).
+
+[Archive]
+[Archives]
+[Archives.2020]
+[Archives.2021]
+[Archives.2022]
+[Archives.2023]
+[CBR]
+[Call log]
+[Concepten]
+[Conduent]
+[Deurwaarders Ma]
+[Drafts]
+[Flanders gravel]
+[INBOX]
+[Iwell]
+[Prullenbak]
+[SMS]
+[Sent]
+[Spam]
+[Trash]
+[Vanad]
+[Verzonden]
+[sollicitaties]
+
+Host2: folders list (first the raw imap format then the [X] = [Y]):
+* LIST (\HasNoChildren \UnMarked) "." sollicitaties
+* LIST (\HasNoChildren \UnMarked) "." Verzonden
+* LIST (\HasNoChildren \UnMarked) "." Vanad
+* LIST (\HasNoChildren \UnMarked \Trash) "." Trash
+* LIST (\HasNoChildren \UnMarked) "." Spam
+* LIST (\HasNoChildren \UnMarked) "." SMS
+* LIST (\HasNoChildren \UnMarked) "." Prullenbak
+* LIST (\HasNoChildren \UnMarked) "." Iwell
+* LIST (\HasNoChildren \UnMarked) "." "Flanders gravel"
+* LIST (\HasNoChildren \UnMarked) "." "Deurwaarders Ma"
+* LIST (\HasNoChildren \UnMarked) "." Conduent
+* LIST (\HasNoChildren \UnMarked) "." Concepten
+* LIST (\HasNoChildren \UnMarked) "." "Call log"
+* LIST (\HasNoChildren \UnMarked) "." CBR
+* LIST (\HasChildren \UnMarked) "." Archives
+* LIST (\HasNoChildren \UnMarked) "." Archives.2023
+* LIST (\HasNoChildren \UnMarked) "." Archives.2022
+* LIST (\HasNoChildren \UnMarked) "." Archives.2021
+* LIST (\HasNoChildren \UnMarked) "." Archives.2020
+* LIST (\HasNoChildren \UnMarked) "." Archive
+* LIST (\HasNoChildren \UnMarked \Sent) "." Sent
+* LIST (\HasNoChildren \UnMarked \Drafts) "." Drafts
+* LIST (\HasNoChildren \Marked \Junk) "." Junk
+* LIST (\HasNoChildren) "." INBOX
+10 OK List completed (0.001 + 0.000 secs).
+
+[Archive]
+[Archives]
+[Archives.2020]
+[Archives.2021]
+[Archives.2022]
+[Archives.2023]
+[CBR]
+[Call log]
+[Concepten]
+[Conduent]
+[Deurwaarders Ma]
+[Drafts]
+[Flanders gravel]
+[INBOX]
+[Iwell]
+[Junk]
+[Prullenbak]
+[SMS]
+[Sent]
+[Spam]
+[Trash]
+[Vanad]
+[Verzonden]
+[sollicitaties]
+
+Folders in host2 not in host1:
+[Junk]
+
+Checking SEARCH ALL works on both accounts. To avoid that check, use --nochecknoabletosearch
+Host1: checking if SEARCH ALL works on INBOX
+Host1: folder [INBOX] has 11049 messages mentioned by SELECT
+Host1: folder [INBOX] has 11049 messages found by SEARCH ALL
+Host1: folder [INBOX] has the same messages count (11049) by SELECT and SEARCH ALL
+Host2: checking if SEARCH ALL works on INBOX
+Host2: folder [INBOX] has 11051 messages mentioned by SELECT
+Host2: folder [INBOX] has 11051 messages found by SEARCH ALL
+Host2: folder [INBOX] has the same messages count (11051) by SELECT and SEARCH ALL
+Good! SEARCH ALL works on both accounts.
+
+Folders sizes before the synchronization. It can take some time. Be patient.
+You can remove foldersizes listings by using "--nofoldersizes" and "--nofoldersizesatend"
+but then you will also lose the ETA (Estimation Time of Arrival) given after each message copy.
+Host1 folder    1/23 [Archive]                           Size:   8278214 Messages:    59 Biggest:   3025923
+Host2 folder    1/23 [Archive]                           Size:   8278214 Messages:    59 Biggest:   3025923
+Host2-Host1                                                            0               0                  0
+
+Host1 folder    2/23 [Archives]                          Size:         0 Messages:     0 Biggest:         0
+Host2 folder    2/23 [Archives]                          Size:         0 Messages:     0 Biggest:         0
+Host2-Host1                                                            0               0                  0
+
+Host1 folder    3/23 [Archives.2020]                     Size:   1493309 Messages:     7 Biggest:   1245863
+Host2 folder    3/23 [Archives.2020]                     Size:   1493309 Messages:     7 Biggest:   1245863
+Host2-Host1                                                            0               0                  0
+
+Host1 folder    4/23 [Archives.2021]                     Size:   6800839 Messages:    53 Biggest:   1186774
+Host2 folder    4/23 [Archives.2021]                     Size:   6800839 Messages:    53 Biggest:   1186774
+Host2-Host1                                                            0               0                  0
+
+Host1 folder    5/23 [Archives.2022]                     Size:         0 Messages:     0 Biggest:         0
+Host2 folder    5/23 [Archives.2022]                     Size:         0 Messages:     0 Biggest:         0
+Host2-Host1                                                            0               0                  0
+
+Host1 folder    6/23 [Archives.2023]                     Size:     21940 Messages:     1 Biggest:     21940
+Host2 folder    6/23 [Archives.2023]                     Size:     21940 Messages:     1 Biggest:     21940
+Host2-Host1                                                            0               0                  0
+
+Host1 folder    7/23 [CBR]                               Size:    448933 Messages:     7 Biggest:    182129
+Host2 folder    7/23 [CBR]                               Size:    448933 Messages:     7 Biggest:    182129
+Host2-Host1                                                            0               0                  0
+
+Host1 folder    8/23 [Call log]                          Size:    642615 Messages:   947 Biggest:       697
+Host2 folder    8/23 [Call log]                          Size:    641942 Messages:   946 Biggest:       697
+Host2-Host1                                                         -673              -1                  0
+
+Host1 folder    9/23 [Concepten]                         Size:     35835 Messages:     3 Biggest:     18264
+Host2 folder    9/23 [Concepten]                         Size:     35835 Messages:     3 Biggest:     18264
+Host2-Host1                                                            0               0                  0
+
+Host1 folder   10/23 [Conduent]                          Size:   2886079 Messages:    18 Biggest:    569215
+Host2 folder   10/23 [Conduent]                          Size:   2886079 Messages:    18 Biggest:    569215
+Host2-Host1                                                            0               0                  0
+
+Host1 folder   11/23 [Deurwaarders Ma]                   Size:   7221174 Messages:     9 Biggest:   7097867
+Host2 folder   11/23 [Deurwaarders Ma]                   Size:   7221174 Messages:     9 Biggest:   7097867
+Host2-Host1                                                            0               0                  0
+
+Host1 folder   12/23 [Drafts]                            Size:   7254797 Messages:    17 Biggest:   4578864
+Host2 folder   12/23 [Drafts]                            Size:   7254797 Messages:    17 Biggest:   4578864
+Host2-Host1                                                            0               0                  0
+
+Host1 folder   13/23 [Flanders gravel]                   Size:    560467 Messages:    23 Biggest:     54496
+Host2 folder   13/23 [Flanders gravel]                   Size:    560467 Messages:    23 Biggest:     54496
+Host2-Host1                                                            0               0                  0
+
+Host1 folder   14/23 [INBOX]                             Size: 838457679 Messages: 11049 Biggest:  10140919
+Host2 folder   14/23 [INBOX]                             Size: 838420644 Messages: 11051 Biggest:  10140919
+Host2-Host1                                                       -37035               2                  0
+
+Host1 folder   15/23 [Iwell]                             Size:   1480444 Messages:    14 Biggest:    914985
+Host2 folder   15/23 [Iwell]                             Size:   1480444 Messages:    14 Biggest:    914985
+Host2-Host1                                                            0               0                  0
+
+Host1 folder   16/23 [Prullenbak]                        Size:  73961167 Messages:   212 Biggest:  29206315
+Host2 folder   16/23 [Prullenbak]                        Size:  73961167 Messages:   212 Biggest:  29206315
+Host2-Host1                                                            0               0                  0
+
+Host1 folder   17/23 [SMS]                               Size:     16625 Messages:    20 Biggest:      2496
+Host2 folder   17/23 [SMS]                               Size:     16625 Messages:    20 Biggest:      2496
+Host2-Host1                                                            0               0                  0
+
+Host1 folder   18/23 [Sent]                              Size: 395062318 Messages:   126 Biggest: 100611574
+Host2 folder   18/23 [Sent]                              Size: 395062318 Messages:   126 Biggest: 100611574
+Host2-Host1                                                            0               0                  0
+
+Host1 folder   19/23 [Spam]                              Size:  20726356 Messages:   330 Biggest:   2831403
+Host2 folder   19/23 [Spam]                              Size:  20763382 Messages:   331 Biggest:   2831403
+Host2-Host1                                                        37026               1                  0
+
+Host1 folder   20/23 [Trash]                             Size:  22621431 Messages:   274 Biggest:   2227829
+Host2 folder   20/23 [Trash]                             Size:  22621431 Messages:   274 Biggest:   2227829
+Host2-Host1                                                            0               0                  0
+
+Host1 folder   21/23 [Vanad]                             Size:   4731813 Messages:    20 Biggest:   3056528
+Host2 folder   21/23 [Vanad]                             Size:   4731813 Messages:    20 Biggest:   3056528
+Host2-Host1                                                            0               0                  0
+
+Host1 folder   22/23 [Verzonden]                         Size:  51961653 Messages:     9 Biggest:  29206476
+Host2 folder   22/23 [Verzonden]                         Size:  51961653 Messages:     9 Biggest:  29206476
+Host2-Host1                                                            0               0                  0
+
+Host1 folder   23/23 [sollicitaties]                     Size:    152817 Messages:     9 Biggest:     38883
+Host2 folder   23/23 [sollicitaties]                     Size:    152817 Messages:     9 Biggest:     38883
+Host2-Host1                                                            0               0                  0
+
+Host1 Nb folders:                    23 folders
+Host2 Nb folders:                    23 folders
+
+Host1 Nb messages:                13207 messages
+Host2 Nb messages:                13209 messages
+
+Host1 Total size:            1444816505 bytes (1.346 GiB)
+Host2 Total size:            1444815823 bytes (1.346 GiB)
+
+Host1 Biggest message:        100611574 bytes (95.951 MiB)
+Host2 Biggest message:        100611574 bytes (95.951 MiB)
+
+Time spent on sizing:       192.9 seconds
+++++ Looping on each one of 23 folders to sync
+ETA: Tuesday 06 October 2026-10-06 16:54:46 +0200 CEST  0 s  13207/13207 msgs left
+Folder    1/23 [Archive]                           -> [Archive]                          
+Host1: folder [Archive] has 59 messages in total (mentioned by SELECT)
+Host2: folder [Archive] has 59 messages in total (mentioned by SELECT)
+Host2: folder [Archive] permanentflags: 
+Host1: folder [Archive] considering 59 messages
+Host2: folder [Archive] considering 59 messages
+Host1: folder [Archive] selected 59 messages, duplicates 0
+Host2: folder [Archive] selected 59 messages, duplicates 0
+ETA: Tuesday 06 October 2026-10-06 18:03:16 +0200 CEST  4110 s  13148/13207 msgs left
+Folder    2/23 [Archives]                          -> [Archives]                         
+Host1: folder [Archives] has 0 messages in total (mentioned by SELECT)
+Host2: folder [Archives] has 0 messages in total (mentioned by SELECT)
+Host2: folder [Archives] permanentflags: 
+Host1: folder [Archives] considering 0 messages
+Host2: folder [Archives] considering 0 messages
+Host1: folder [Archives] selected 0 messages, duplicates 0
+Host2: folder [Archives] selected 0 messages, duplicates 0
+ETA: Tuesday 06 October 2026-10-06 18:29:47 +0200 CEST  5701 s  13148/13207 msgs left
+Folder    3/23 [Archives.2020]                     -> [Archives.2020]                    
+Host1: folder [Archives.2020] has 7 messages in total (mentioned by SELECT)
+Host2: folder [Archives.2020] has 7 messages in total (mentioned by SELECT)
+Host2: folder [Archives.2020] permanentflags: 
+Host1: folder [Archives.2020] considering 7 messages
+Host2: folder [Archives.2020] considering 7 messages
+Host1: folder [Archives.2020] selected 7 messages, duplicates 0
+Host2: folder [Archives.2020] selected 7 messages, duplicates 0
+ETA: Tuesday 06 October 2026-10-06 19:18:47 +0200 CEST  8641 s  13141/13207 msgs left
+Folder    4/23 [Archives.2021]                     -> [Archives.2021]                    
+Host1: folder [Archives.2021] has 53 messages in total (mentioned by SELECT)
+Host2: folder [Archives.2021] has 53 messages in total (mentioned by SELECT)
+Host2: folder [Archives.2021] permanentflags: 
+Host1: folder [Archives.2021] considering 53 messages
+Host2: folder [Archives.2021] considering 53 messages
+Host1: folder [Archives.2021] selected 53 messages, duplicates 0
+Host2: folder [Archives.2021] selected 53 messages, duplicates 0
+ETA: Tuesday 06 October 2026-10-06 20:16:58 +0200 CEST  12132 s  13088/13207 msgs left
+Folder    5/23 [Archives.2022]                     -> [Archives.2022]                    
+Host1: folder [Archives.2022] has 0 messages in total (mentioned by SELECT)
+Host2: folder [Archives.2022] has 0 messages in total (mentioned by SELECT)
+Host2: folder [Archives.2022] permanentflags: 
+Host1: folder [Archives.2022] considering 0 messages
+Host2: folder [Archives.2022] considering 0 messages
+Host1: folder [Archives.2022] selected 0 messages, duplicates 0
+Host2: folder [Archives.2022] selected 0 messages, duplicates 0
+ETA: Tuesday 06 October 2026-10-06 20:43:08 +0200 CEST  13701 s  13088/13207 msgs left
+Folder    6/23 [Archives.2023]                     -> [Archives.2023]                    
+Host1: folder [Archives.2023] has 1 messages in total (mentioned by SELECT)
+Host2: folder [Archives.2023] has 1 messages in total (mentioned by SELECT)
+Host2: folder [Archives.2023] permanentflags: 
+Host1: folder [Archives.2023] considering 1 messages
+Host2: folder [Archives.2023] considering 1 messages
+Host1: folder [Archives.2023] selected 1 messages, duplicates 0
+Host2: folder [Archives.2023] selected 1 messages, duplicates 0
+ETA: Tuesday 06 October 2026-10-06 21:31:18 +0200 CEST  16591 s  13087/13207 msgs left
+Folder    7/23 [CBR]                               -> [CBR]                              
+Host1: folder [CBR] has 7 messages in total (mentioned by SELECT)
+Host2: folder [CBR] has 7 messages in total (mentioned by SELECT)
+Host2: folder [CBR] permanentflags: 
+Host1: folder [CBR] considering 7 messages
+Host2: folder [CBR] considering 7 messages
+Host1: folder [CBR] selected 7 messages, duplicates 0
+Host2: folder [CBR] selected 7 messages, duplicates 0
+ETA: Tuesday 06 October 2026-10-06 22:21:43 +0200 CEST  19616 s  13080/13207 msgs left
+Folder    8/23 [Call log]                          -> [Call log]                         
+Host1: folder [Call log] has 947 messages in total (mentioned by SELECT)
+Host2: folder [Call log] has 946 messages in total (mentioned by SELECT)
+Host2: folder [Call log] permanentflags: 
+Host1: folder [Call log] considering 947 messages
+Host2: folder [Call log] considering 946 messages
+Host1: folder [Call log] selected 947 messages, duplicates 1
+Host2: folder [Call log] selected 946 messages, duplicates 0
+ETA: Wednesday 07 October 2026-10-07 00:42:54 +0200 CEST  28086 s  12133/13207 msgs left
+Folder    9/23 [Concepten]                         -> [Concepten]                        
+Host1: folder [Concepten] has 3 messages in total (mentioned by SELECT)
+Host2: folder [Concepten] has 3 messages in total (mentioned by SELECT)
+Host2: folder [Concepten] permanentflags: 
+Host1: folder [Concepten] considering 3 messages
+Host2: folder [Concepten] considering 3 messages
+Host1: folder [Concepten] selected 3 messages, duplicates 0
+Host2: folder [Concepten] selected 3 messages, duplicates 0
+ETA: Wednesday 07 October 2026-10-07 01:29:02 +0200 CEST  30854 s  12130/13207 msgs left
+Folder   10/23 [Conduent]                          -> [Conduent]                         
+Host1: folder [Conduent] has 18 messages in total (mentioned by SELECT)
+Host2: folder [Conduent] has 18 messages in total (mentioned by SELECT)
+Host2: folder [Conduent] permanentflags: 
+Host1: folder [Conduent] considering 18 messages
+Host2: folder [Conduent] considering 18 messages
+Host1: folder [Conduent] selected 18 messages, duplicates 0
+Host2: folder [Conduent] selected 18 messages, duplicates 0
+ETA: Wednesday 07 October 2026-10-07 02:17:10 +0200 CEST  33741 s  12112/13207 msgs left
+Folder   11/23 [Deurwaarders Ma]                   -> [Deurwaarders Ma]                  
+Host1: folder [Deurwaarders Ma] has 9 messages in total (mentioned by SELECT)
+Host2: folder [Deurwaarders Ma] has 9 messages in total (mentioned by SELECT)
+Host2: folder [Deurwaarders Ma] permanentflags: 
+Host1: folder [Deurwaarders Ma] considering 9 messages
+Host2: folder [Deurwaarders Ma] considering 9 messages
+Host1: folder [Deurwaarders Ma] selected 9 messages, duplicates 0
+Host2: folder [Deurwaarders Ma] selected 9 messages, duplicates 0
+ETA: Wednesday 07 October 2026-10-07 03:03:49 +0200 CEST  36541 s  12103/13207 msgs left
+Folder   12/23 [Drafts]                            -> [Drafts]                           
+Host1: folder [Drafts] has 17 messages in total (mentioned by SELECT)
+Host2: folder [Drafts] has 17 messages in total (mentioned by SELECT)
+Host2: folder [Drafts] permanentflags: 
+Host1: folder [Drafts] considering 17 messages
+Host2: folder [Drafts] considering 17 messages
+Host1: folder [Drafts] selected 17 messages, duplicates 0
+Host2: folder [Drafts] selected 17 messages, duplicates 0
+ETA: Wednesday 07 October 2026-10-07 03:49:53 +0200 CEST  39304 s  12086/13207 msgs left
+Folder   13/23 [Flanders gravel]                   -> [Flanders gravel]                  
+Host1: folder [Flanders gravel] has 23 messages in total (mentioned by SELECT)
+Host2: folder [Flanders gravel] has 23 messages in total (mentioned by SELECT)
+Host2: folder [Flanders gravel] permanentflags: 
+Host1: folder [Flanders gravel] considering 23 messages
+Host2: folder [Flanders gravel] considering 23 messages
+Host1: folder [Flanders gravel] selected 23 messages, duplicates 0
+Host2: folder [Flanders gravel] selected 23 messages, duplicates 0
+ETA: Wednesday 07 October 2026-10-07 04:37:16 +0200 CEST  42147 s  12063/13207 msgs left
+Folder   14/23 [INBOX]                             -> [INBOX]                            
+Host1: folder [INBOX] has 11049 messages in total (mentioned by SELECT)
+Host2: folder [INBOX] has 11051 messages in total (mentioned by SELECT)
+Host2: folder [INBOX] permanentflags: 
+Host1: folder [INBOX] considering 11049 messages
+Host2: folder [INBOX] considering 11051 messages
+Host1: parsing headers of folder [INBOX]. It can take time for huge folders. Be patient.
+Host1: folder [INBOX] selected 11049 messages, duplicates 0
+Host2: parsing headers of folder [INBOX]. It can take time for huge folders. Be patient.
+Host2: folder [INBOX] selected 11051 messages, duplicates 0
+msg INBOX/25638 {37026}       copied to INBOX/11053      0.08 msgs/s  2.751 KiB/s 36.158 KiB copied ETA: Tuesday 06 October 2026-10-06 20:52:41 +0200 CEST  14262 s  1085/13207 msgs left
+msg INBOX/25713 {153832}      copied to INBOX/11054      0.15 msgs/s  13.918 KiB/s 186.385 KiB copied ETA: Tuesday 06 October 2026-10-06 18:48:49 +0200 CEST  6830 s  1020/13207 msgs left
+msg INBOX/25714 {83940}       copied to INBOX/11055      0.22 msgs/s  19.820 KiB/s 268.357 KiB copied ETA: Tuesday 06 October 2026-10-06 18:11:38 +0200 CEST  4599 s  1019/13207 msgs left
+msg INBOX/25715 {5429}        copied to INBOX/11056      0.29 msgs/s  20.090 KiB/s 273.659 KiB copied ETA: Tuesday 06 October 2026-10-06 17:52:46 +0200 CEST  3467 s  1018/13207 msgs left
+msg INBOX/25716 {16308}       copied to INBOX/11057      0.36 msgs/s  21.121 KiB/s 289.585 KiB copied ETA: Tuesday 06 October 2026-10-06 17:41:28 +0200 CEST  2789 s  1017/13207 msgs left
+msg INBOX/25717 {18072}       copied to INBOX/11058      0.43 msgs/s  22.228 KiB/s 307.233 KiB copied ETA: Tuesday 06 October 2026-10-06 17:34:00 +0200 CEST  2341 s  1016/13207 msgs left
+msg INBOX/25718 {43184}       copied to INBOX/11059      0.50 msgs/s  25.076 KiB/s 349.405 KiB copied ETA: Tuesday 06 October 2026-10-06 17:28:40 +0200 CEST  2020 s  1015/13207 msgs left
+msg INBOX/25719 {134238}      copied to INBOX/11060      0.57 msgs/s  34.084 KiB/s 480.497 KiB copied ETA: Tuesday 06 October 2026-10-06 17:24:47 +0200 CEST  1787 s  1014/13207 msgs left
+ETA: Tuesday 06 October 2026-10-06 17:25:08 +0200 CEST  1808 s  1014/13207 msgs left
+Folder   15/23 [Iwell]                             -> [Iwell]                            
+Host1: folder [Iwell] has 14 messages in total (mentioned by SELECT)
+Host2: folder [Iwell] has 14 messages in total (mentioned by SELECT)
+Host2: folder [Iwell] permanentflags: 
+Host1: folder [Iwell] considering 14 messages
+Host2: folder [Iwell] considering 14 messages
+Host1: folder [Iwell] selected 14 messages, duplicates 0
+Host2: folder [Iwell] selected 14 messages, duplicates 0
+ETA: Tuesday 06 October 2026-10-06 17:25:13 +0200 CEST  1813 s  1000/13207 msgs left
+Folder   16/23 [Prullenbak]                        -> [Prullenbak]                       
+Host1: folder [Prullenbak] has 212 messages in total (mentioned by SELECT)
+Host2: folder [Prullenbak] has 212 messages in total (mentioned by SELECT)
+Host2: folder [Prullenbak] permanentflags: 
+Host1: folder [Prullenbak] considering 212 messages
+Host2: folder [Prullenbak] considering 212 messages
+Host1: folder [Prullenbak] selected 212 messages, duplicates 0
+Host2: folder [Prullenbak] selected 212 messages, duplicates 0
+ETA: Tuesday 06 October 2026-10-06 17:19:31 +0200 CEST  1471 s  788/13207 msgs left
+Folder   17/23 [SMS]                               -> [SMS]                              
+Host1: folder [SMS] has 20 messages in total (mentioned by SELECT)
+Host2: folder [SMS] has 20 messages in total (mentioned by SELECT)
+Host2: folder [SMS] permanentflags: 
+Host1: folder [SMS] considering 20 messages
+Host2: folder [SMS] considering 20 messages
+Host1: folder [SMS] selected 20 messages, duplicates 0
+Host2: folder [SMS] selected 20 messages, duplicates 0
+ETA: Tuesday 06 October 2026-10-06 17:19:16 +0200 CEST  1456 s  768/13207 msgs left
+Folder   18/23 [Sent]                              -> [Sent]                             
+Host1: folder [Sent] has 126 messages in total (mentioned by SELECT)
+Host2: folder [Sent] has 126 messages in total (mentioned by SELECT)
+Host2: folder [Sent] permanentflags: 
+Host1: folder [Sent] considering 126 messages
+Host2: folder [Sent] considering 126 messages
+Host1: folder [Sent] selected 126 messages, duplicates 0
+Host2: folder [Sent] selected 126 messages, duplicates 0
+ETA: Tuesday 06 October 2026-10-06 17:15:43 +0200 CEST  1242 s  642/13207 msgs left
+Folder   19/23 [Spam]                              -> [Spam]                             
+Host1: folder [Spam] has 330 messages in total (mentioned by SELECT)
+Host2: folder [Spam] has 331 messages in total (mentioned by SELECT)
+Host2: folder [Spam] permanentflags: 
+Host1: folder [Spam] considering 330 messages
+Host2: folder [Spam] considering 331 messages
+Host1: folder [Spam] selected 330 messages, duplicates 0
+Host2: folder [Spam] selected 331 messages, duplicates 0
+ETA: Tuesday 06 October 2026-10-06 17:05:30 +0200 CEST  629 s  312/13207 msgs left
+Folder   20/23 [Trash]                             -> [Trash]                            
+Host1: folder [Trash] has 274 messages in total (mentioned by SELECT)
+Host2: folder [Trash] has 274 messages in total (mentioned by SELECT)
+Host2: folder [Trash] permanentflags: 
+Host1: folder [Trash] considering 274 messages
+Host2: folder [Trash] considering 274 messages
+Host1: folder [Trash] selected 274 messages, duplicates 0
+Host2: folder [Trash] selected 274 messages, duplicates 0
+ETA: Tuesday 06 October 2026-10-06 16:56:22 +0200 CEST  79 s  38/13207 msgs left
+Folder   21/23 [Vanad]                             -> [Vanad]                            
+Host1: folder [Vanad] has 20 messages in total (mentioned by SELECT)
+Host2: folder [Vanad] has 20 messages in total (mentioned by SELECT)
+Host2: folder [Vanad] permanentflags: 
+Host1: folder [Vanad] considering 20 messages
+Host2: folder [Vanad] considering 20 messages
+Host1: folder [Vanad] selected 20 messages, duplicates 0
+Host2: folder [Vanad] selected 20 messages, duplicates 0
+ETA: Tuesday 06 October 2026-10-06 16:55:41 +0200 CEST  38 s  18/13207 msgs left
+Folder   22/23 [Verzonden]                         -> [Verzonden]                        
+Host1: folder [Verzonden] has 9 messages in total (mentioned by SELECT)
+Host2: folder [Verzonden] has 9 messages in total (mentioned by SELECT)
+Host2: folder [Verzonden] permanentflags: 
+Host1: folder [Verzonden] considering 9 messages
+Host2: folder [Verzonden] considering 9 messages
+Host1: folder [Verzonden] selected 9 messages, duplicates 0
+Host2: folder [Verzonden] selected 9 messages, duplicates 0
+ETA: Tuesday 06 October 2026-10-06 16:55:22 +0200 CEST  19 s  9/13207 msgs left
+Folder   23/23 [sollicitaties]                     -> [sollicitaties]                    
+Host1: folder [sollicitaties] has 9 messages in total (mentioned by SELECT)
+Host2: folder [sollicitaties] has 9 messages in total (mentioned by SELECT)
+Host2: folder [sollicitaties] permanentflags: 
+Host1: folder [sollicitaties] considering 9 messages
+Host2: folder [sollicitaties] considering 9 messages
+Host1: folder [sollicitaties] selected 9 messages, duplicates 0
+Host2: folder [sollicitaties] selected 9 messages, duplicates 0
+ETA: Tuesday 06 October 2026-10-06 16:55:03 +0200 CEST  0 s  0/13207 msgs left
+++++ End looping on each folder
+
+Folders sizes after the synchronization.
+You can remove this foldersizes listing by using  "--nofoldersizesatend"
+Host1 folder    1/23 [Archive]                           Size:   8278214 Messages:    59 Biggest:   3025923
+Host2 folder    1/23 [Archive]                           Size:   8278214 Messages:    59 Biggest:   3025923
+Host2-Host1                                                            0               0                  0
+
+Host1 folder    2/23 [Archives]                          Size:         0 Messages:     0 Biggest:         0
+Host2 folder    2/23 [Archives]                          Size:         0 Messages:     0 Biggest:         0
+Host2-Host1                                                            0               0                  0
+
+Host1 folder    3/23 [Archives.2020]                     Size:   1493309 Messages:     7 Biggest:   1245863
+Host2 folder    3/23 [Archives.2020]                     Size:   1493309 Messages:     7 Biggest:   1245863
+Host2-Host1                                                            0               0                  0
+
+Host1 folder    4/23 [Archives.2021]                     Size:   6800839 Messages:    53 Biggest:   1186774
+Host2 folder    4/23 [Archives.2021]                     Size:   6800839 Messages:    53 Biggest:   1186774
+Host2-Host1                                                            0               0                  0
+
+Host1 folder    5/23 [Archives.2022]                     Size:         0 Messages:     0 Biggest:         0
+Host2 folder    5/23 [Archives.2022]                     Size:         0 Messages:     0 Biggest:         0
+Host2-Host1                                                            0               0                  0
+
+Host1 folder    6/23 [Archives.2023]                     Size:     21940 Messages:     1 Biggest:     21940
+Host2 folder    6/23 [Archives.2023]                     Size:     21940 Messages:     1 Biggest:     21940
+Host2-Host1                                                            0               0                  0
+
+Host1 folder    7/23 [CBR]                               Size:    448933 Messages:     7 Biggest:    182129
+Host2 folder    7/23 [CBR]                               Size:    448933 Messages:     7 Biggest:    182129
+Host2-Host1                                                            0               0                  0
+
+Host1 folder    8/23 [Call log]                          Size:    642615 Messages:   947 Biggest:       697
+Host2 folder    8/23 [Call log]                          Size:    641942 Messages:   946 Biggest:       697
+Host2-Host1                                                         -673              -1                  0
+
+Host1 folder    9/23 [Concepten]                         Size:     35835 Messages:     3 Biggest:     18264
+Host2 folder    9/23 [Concepten]                         Size:     35835 Messages:     3 Biggest:     18264
+Host2-Host1                                                            0               0                  0
+
+Host1 folder   10/23 [Conduent]                          Size:   2886079 Messages:    18 Biggest:    569215
+Host2 folder   10/23 [Conduent]                          Size:   2886079 Messages:    18 Biggest:    569215
+Host2-Host1                                                            0               0                  0
+
+Host1 folder   11/23 [Deurwaarders Ma]                   Size:   7221174 Messages:     9 Biggest:   7097867
+Host2 folder   11/23 [Deurwaarders Ma]                   Size:   7221174 Messages:     9 Biggest:   7097867
+Host2-Host1                                                            0               0                  0
+
+Host1 folder   12/23 [Drafts]                            Size:   7254797 Messages:    17 Biggest:   4578864
+Host2 folder   12/23 [Drafts]                            Size:   7254797 Messages:    17 Biggest:   4578864
+Host2-Host1                                                            0               0                  0
+
+Host1 folder   13/23 [Flanders gravel]                   Size:    560467 Messages:    23 Biggest:     54496
+Host2 folder   13/23 [Flanders gravel]                   Size:    560467 Messages:    23 Biggest:     54496
+Host2-Host1                                                            0               0                  0
+
+Host1 folder   14/23 [INBOX]                             Size: 838457679 Messages: 11049 Biggest:  10140919
+Host2 folder   14/23 [INBOX]                             Size: 838912673 Messages: 11059 Biggest:  10140919
+Host2-Host1                                                       454994              10                  0
+
+Host1 folder   15/23 [Iwell]                             Size:   1480444 Messages:    14 Biggest:    914985
+Host2 folder   15/23 [Iwell]                             Size:   1480444 Messages:    14 Biggest:    914985
+Host2-Host1                                                            0               0                  0
+
+Host1 folder   16/23 [Prullenbak]                        Size:  73961167 Messages:   212 Biggest:  29206315
+Host2 folder   16/23 [Prullenbak]                        Size:  73961167 Messages:   212 Biggest:  29206315
+Host2-Host1                                                            0               0                  0
+
+Host1 folder   17/23 [SMS]                               Size:     16625 Messages:    20 Biggest:      2496
+Host2 folder   17/23 [SMS]                               Size:     16625 Messages:    20 Biggest:      2496
+Host2-Host1                                                            0               0                  0
+
+Host1 folder   18/23 [Sent]                              Size: 395062318 Messages:   126 Biggest: 100611574
+Host2 folder   18/23 [Sent]                              Size: 395062318 Messages:   126 Biggest: 100611574
+Host2-Host1                                                            0               0                  0
+
+Host1 folder   19/23 [Spam]                              Size:  20726356 Messages:   330 Biggest:   2831403
+Host2 folder   19/23 [Spam]                              Size:  20763382 Messages:   331 Biggest:   2831403
+Host2-Host1                                                        37026               1                  0
+
+Host1 folder   20/23 [Trash]                             Size:  22621431 Messages:   274 Biggest:   2227829
+Host2 folder   20/23 [Trash]                             Size:  22621431 Messages:   274 Biggest:   2227829
+Host2-Host1                                                            0               0                  0
+
+Host1 folder   21/23 [Vanad]                             Size:   4731813 Messages:    20 Biggest:   3056528
+Host2 folder   21/23 [Vanad]                             Size:   4731813 Messages:    20 Biggest:   3056528
+Host2-Host1                                                            0               0                  0
+
+Host1 folder   22/23 [Verzonden]                         Size:  51961653 Messages:     9 Biggest:  29206476
+Host2 folder   22/23 [Verzonden]                         Size:  51961653 Messages:     9 Biggest:  29206476
+Host2-Host1                                                            0               0                  0
+
+Host1 folder   23/23 [sollicitaties]                     Size:    152817 Messages:     9 Biggest:     38883
+Host2 folder   23/23 [sollicitaties]                     Size:    152817 Messages:     9 Biggest:     38883
+Host2-Host1                                                            0               0                  0
+
+Host1 Nb folders:                    23 folders
+Host2 Nb folders:                    23 folders
+
+Host1 Nb messages:                13207 messages
+Host2 Nb messages:                13217 messages
+
+Host1 Total size:            1444816505 bytes (1.346 GiB)
+Host2 Total size:            1445307852 bytes (1.346 GiB)
+
+Host1 Biggest message:        100611574 bytes (95.951 MiB)
+Host2 Biggest message:        100611574 bytes (95.951 MiB)
+
+Time spent on sizing:         5.2 seconds
+++++ Statistics
+Transfer started on                     : Tuesday 06 October 2026-10-06 16:51:33 +0200 CEST
+Transfer ended on                       : Tuesday 06 October 2026-10-06 16:55:08 +0200 CEST
+Transfer time                           : 215.4 sec
+Folders synced                          : 23/23 synced
+Folders deleted on host2                : 0 
+Messages transferred                    : 8 
+Messages skipped                        : 13199
+Messages found duplicate on host1       : 1
+Messages found duplicate on host2       : 0
+Messages found crossduplicate on host2  : 0
+Messages void (noheader) on host1       : 0  
+Messages void (noheader) on host2       : 0
+Messages found in host1 not in host2    : 0 messages
+Messages found in host2 not in host1    : 10 messages
+Messages deleted on host1               : 0
+Messages deleted on host2               : 0
+Total bytes transferred                 : 492029 (480.497 KiB)
+Total bytes skipped                     : 1444323803 (1.345 GiB)
+Message rate                            : 0.0 messages/s
+Average bandwidth rate                  : 2.2 KiB/s
+Reconnections to host1                  : 0
+Reconnections to host2                  : 0
+Memory consumption at the end           : 286.9 MiB (*time 17.2 MiB*h) (started with 166.7 MiB)
+Load end is                             : 0.75 0.94 1.20 3/1592 on 16 cores
+CPU time and %cpu                       : 10.66 sec 4.9 %cpu 0.3 %allcpus
+Biggest message transferred             : 153832 bytes (150.227 KiB)
+Memory/biggest message ratio            : 1955.6
+Start difference host2 - host1          : 2 messages, -682 bytes (-0.666 KiB)
+Final difference host2 - host1          : 10 messages, 491347 bytes (479.831 KiB)
+The sync looks good, all 13206 identified messages in host1 are on host2.
+There is no unidentified message on host1.
+The sync is not strict, there are 10 among 13216 identified messages in host2 that are not on host1. Use --delete2 and sync again to delete them and have a strict sync.
+Detected 0 errors
+This imapsync is up to date. ( local 2.314 >= official 2.314 )( Use --noreleasecheck to avoid this release check. )
+Homepage: https://imapsync.lamiral.info/
+Exiting with return value 0 (EX_OK: successful termination) 0/50 nb_errors/max_errors PID 486364
+Removing pidfile /home/zanbee/tmp/imapsync.pid
+Log file is LOG_imapsync/2026_10_06_16_51_33_277_m_vrauwdeunt_openmailbox_nl_m_vrauwdeunt_openmailbox_nl.txt ( to change it, use --logfile filepath ; or use --nolog to turn off logging )

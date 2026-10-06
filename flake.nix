@@ -85,7 +85,7 @@
         {
           name = "ratatosk";
           platform = "hetzner";
-          firmware = "uefi";
+          firmware = "bios";
           disk = "/dev/sda";
           useDisko = true;
         }

@@ -21,7 +21,7 @@
       };
     };
     ratatosk = {
-      hostname = "78.46.246.115";
+      hostname = "168.119.229.56";
       sshUser = "zanbee";
       profiles.system = {
         user = "root";

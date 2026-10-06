@@ -6,7 +6,7 @@
   # Hetzner Rescue gebruikt eth0, maar NixOS hernoemt
   # de virtio interface tijdens boot naar enp1s0.
   systemd.network.networks."10-wan".matchConfig.Name =
-    lib.mkForce "enp1s0";
+    lib.mkForce "enp0s3";
 
   networking.firewall.allowedTCPPorts = [
     22

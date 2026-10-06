@@ -4,7 +4,7 @@
 
 let
   mailDomain = "openmailbox.nl";
-  mailHost = "ratatosk-test.openmailbox.nl";
+  mailHost = "ratatosk.openmailbox.nl";
 in
 {
   mailserver = {

@@ -9,6 +9,6 @@
   sops.secrets."ratatosk/mail/authelia-password" = { };
   sops.secrets."ratatosk/mail/zanbee-password" = { };
   sops.secrets."ratatosk/nextcloud/admin-password" = {
-    owner = "nextcloud";
+   # owner = "nextcloud";
   };
 }

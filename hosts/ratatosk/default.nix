@@ -12,7 +12,7 @@
     ./nginx.nix
     ./sops.nix
     ./services.nix
-    ./nextcloud.nix
+    # ./nextcloud.nix
   ];
 
   nix.settings.trusted-users = [
