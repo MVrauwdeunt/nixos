@@ -1,4 +1,4 @@
-{ config, lib, ... }:
+\{ config, lib, ... }:
 
 let
   cfg = config.apps.wallos;
@@ -25,6 +25,12 @@ in
       description = "Local HTTP port for Wallos.";
     };
 
+    openFirewall = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = "Open the Wallos port in the host firewall.";
+    };
+
     tailscale.enable = lib.mkOption {
       type = lib.types.bool;
       default = true;
@@ -41,7 +47,6 @@ in
 
     virtualisation.oci-containers.containers.wallos = {
       image = cfg.image;
-
       autoStart = true;
 
       ports = [
@@ -56,10 +61,9 @@ in
       environment = {
         TZ = "Europe/Amsterdam";
       };
-
-      extraOptions = [
-        "--network=bridge"
-      ];
     };
+
+    networking.firewall.allowedTCPPorts =
+      lib.mkIf cfg.openFirewall [ cfg.port ];
   };
 }
