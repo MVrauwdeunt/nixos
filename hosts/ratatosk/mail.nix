@@ -29,6 +29,10 @@ in
         passwordFile =
           config.sops.secrets."ratatosk/mail/m-vrauwdeunt-password".path;
 
+        catchAll = [
+          "openmailbox.nl"
+        ];
+
         aliases = [
           "postmaster@openmailbox.nl"
           "abuse@openmailbox.nl"
