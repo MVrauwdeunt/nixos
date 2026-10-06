@@ -16,6 +16,7 @@ let
     "immich"
     "manyfold"
     "lubelogger"
+    "wallos"
   ];
 
   appModules =
