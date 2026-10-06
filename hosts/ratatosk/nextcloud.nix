@@ -1,4 +1,4 @@
-{ config, ... }:
+{ config, pkgs, ... }:
 
 let
   hostName = "cloud.openmailbox.nl";
@@ -8,6 +8,10 @@ in
     enable = true;
     inherit hostName;
 
+    # Expliciet pinnen is aanbevolen door NixOS.
+    # Voor een nieuwe installatie kunnen we direct op de actuele major starten.
+    package = pkgs.nextcloud34;
+
     https = true;
 
     database.createLocally = true;
@@ -15,7 +19,9 @@ in
 
     config = {
       dbtype = "pgsql";
+
       adminuser = "zanbee";
+
       adminpassFile =
         config.sops.secrets."ratatosk/nextcloud/admin-password".path;
     };
