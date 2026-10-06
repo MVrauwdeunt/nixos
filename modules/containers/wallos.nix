@@ -10,26 +10,25 @@ in
     image = lib.mkOption {
       type = lib.types.str;
       default = "docker.io/bellamy/wallos:latest";
+      description = "Wallos container image.";
     };
 
     dataDir = lib.mkOption {
       type = lib.types.str;
       default = "/var/lib/wallos";
+      description = "Persistent Wallos data directory.";
     };
 
     port = lib.mkOption {
       type = lib.types.port;
       default = 8282;
-    };
-
-    openFirewall = lib.mkOption {
-      type = lib.types.bool;
-      default = false;
+      description = "Local HTTP port for Wallos.";
     };
 
     tailscale.enable = lib.mkOption {
       type = lib.types.bool;
-      default = false;
+      default = true;
+      description = "Expose Wallos through Tailscale Services.";
     };
   };
 
@@ -42,6 +41,7 @@ in
 
     virtualisation.oci-containers.containers.wallos = {
       image = cfg.image;
+
       autoStart = true;
 
       ports = [
@@ -56,6 +56,10 @@ in
       environment = {
         TZ = "Europe/Amsterdam";
       };
+
+      extraOptions = [
+        "--network=bridge"
+      ];
     };
   };
 }
