@@ -1,3 +1,4 @@
+
 { lib, ... }:
 
 let
@@ -8,6 +9,7 @@ let
 
   enabledApps = [
     "open-webui"
+    "litellm"
   ];
 
   modules =
@@ -24,8 +26,14 @@ in
     httpPort = 8080;
   };
 
-  apps = lib.genAttrs enabledApps (_: {
+  apps = (lib.genAttrs enabledApps (_: {
     enable = true;
     openFirewall = false;
-  });
+  })) // {
+    open-webui = {
+      enable = true;
+      openFirewall = false;
+      oidc.enable = true;
+    };
+  };
 }

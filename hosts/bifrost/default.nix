@@ -44,7 +44,7 @@ in
   # Authelia with field-level secrets via sops
   apps.authelia = {
     enable = true;
-
+    oidc.enable = true;
     # Point to your sops file; only short secrets are needed:
     #   authelia/jwt_secret
     #   authelia/session_secret

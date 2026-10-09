@@ -1,3 +1,4 @@
+
 { config, lib, pkgs, ... }:
 
 let
@@ -13,7 +14,9 @@ let
 
   vhostToBlock = name: v: ''
     ${name} {
-      reverse_proxy ${v.upstream}
+      reverse_proxy ${v.upstream} {
+        ${v.proxyExtraConfig}
+      }
       ${optionalString (v.extraConfig or "" != "") v.extraConfig}
     }
   '';
@@ -72,6 +75,11 @@ in
           };
 
           extraConfig = mkOption {
+            type = types.lines;
+            default = "";
+          };
+
+          proxyExtraConfig = mkOption {
             type = types.lines;
             default = "";
           };
