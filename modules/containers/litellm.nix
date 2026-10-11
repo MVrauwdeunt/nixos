@@ -6,20 +6,11 @@ let
 
   litellmConfig = pkgs.writeText "litellm-config.yaml" ''
     model_list:
-      - model_name: fast
+      - model_name: hermes-agent
         litellm_params:
-          model: openai/gpt-5.4-mini
-          api_key: os.environ/OPENAI_API_KEY
-
-      - model_name: smart
-        litellm_params:
-          model: openai/gpt-5.5
-          api_key: os.environ/OPENAI_API_KEY
-
-      - model_name: automation
-        litellm_params:
-          model: openai/gpt-4.1-nano
-          api_key: os.environ/OPENAI_API_KEY
+          model: openai/hermes-agent
+          api_base: http://10.89.0.1:8642/v1
+          api_key: os.environ/HERMES_API_KEY
 
     general_settings:
       master_key: os.environ/LITELLM_MASTER_KEY

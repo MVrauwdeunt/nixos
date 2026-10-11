@@ -10,6 +10,7 @@ let
     "n8n"
     "garmin-bridge"
     "homelable"
+    "allos"
   ];
 
   appModules =

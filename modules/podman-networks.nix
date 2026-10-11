@@ -32,7 +32,8 @@ in
         fi
       '';
     };
-
+    networking.firewall.interfaces."podman1".allowedTCPPorts = [ 8642 ];
+    
     systemd.services.podman-litellm = {
       requires = [ "${unitName}.service" ];
       after = [ "${unitName}.service" ];

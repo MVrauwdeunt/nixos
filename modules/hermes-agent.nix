@@ -34,9 +34,8 @@
     settings = {
       model = {
         provider = "openai-api";
-        default = "fast";
-        base_url = "http://127.0.0.1:4000/v1";
-        key_env = "LITELLM_API_KEY";        
+        default = "gpt-5.4-mini";
+        key_env = "OPENAI_API_KEY";        
       };
     };
   };
