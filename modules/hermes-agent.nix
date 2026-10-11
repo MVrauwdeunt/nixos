@@ -37,6 +37,10 @@
         default = "gpt-5.4-mini";
         key_env = "OPENAI_API_KEY";        
       };
+
+      memory = {
+        provider = "honcho";
+      };
     };
   };
 }
