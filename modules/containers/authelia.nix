@@ -6,6 +6,28 @@ let
 
   secret = name: config.sops.placeholder.${name};
 
+  # Load only explicitly enabled OIDC clients
+  clientFiles =
+    lib.optionals cfg.oidc.openWebui.enable [
+      ./authelia-clients/open-webui.nix
+    ]
+    ++ lib.optionals cfg.oidc.actualBudget.enable [
+      ./authelia-clients/actual-budget.nix
+    ];
+
+  oidcClients =
+    map (file: import file { inherit secret; }) clientFiles;
+
+  # Correct YAML indentation:
+  # clients: is at 4 spaces, list items at 6 spaces
+  clientYaml = lib.concatMapStringsSep "\n"
+    (client:
+      lib.concatMapStringsSep "\n"
+        (line: "      ${line}")
+        (lib.splitString "\n"
+          (lib.removeSuffix "\n" client.yaml)))
+    oidcClients;
+
   userPasswordKey = name: user:
     if user.passwordKey != null
     then user.passwordKey
@@ -63,8 +85,17 @@ in
       description = "SOPS secrets file";
     };
 
-    oidc.enable =
-      lib.mkEnableOption "Authelia OIDC provider for Open WebUI";
+    # OIDC provider and individual clients
+    oidc = {
+      enable =
+        lib.mkEnableOption "Authelia OIDC provider";
+
+      openWebui.enable =
+        lib.mkEnableOption "Open WebUI OIDC client";
+
+      actualBudget.enable =
+        lib.mkEnableOption "Actual Budget OIDC client";
+    };
 
     users = lib.mkOption {
       type = lib.types.attrsOf (lib.types.submodule {
@@ -133,19 +164,20 @@ in
   config = lib.mkIf cfg.enable {
 
     # SOPS secrets
-
     sops.secrets = lib.mkMerge [
       {
-        "authelia/jwt_secret".sopsFile = cfg.sops.file;
-        "authelia/session_secret".sopsFile = cfg.sops.file;
-        "authelia/storage_encryption_key".sopsFile = cfg.sops.file;
+        "authelia/jwt_secret".sopsFile =
+          cfg.sops.file;
+
+        "authelia/session_secret".sopsFile =
+          cfg.sops.file;
+
+        "authelia/storage_encryption_key".sopsFile =
+          cfg.sops.file;
       }
 
       (lib.mkIf cfg.oidc.enable {
         "authelia/oidc/hmac_secret".sopsFile =
-          cfg.sops.file;
-
-        "authelia/oidc/open_webui_client_secret_hash".sopsFile =
           cfg.sops.file;
 
         "authelia/oidc/jwks_private_key" = {
@@ -155,6 +187,17 @@ in
         };
       })
 
+      # Secrets for enabled OIDC clients
+      (lib.mkIf cfg.oidc.enable (
+        lib.listToAttrs (map (client: {
+          name = client.secretKey;
+          value = {
+            sopsFile = cfg.sops.file;
+          };
+        }) oidcClients)
+      ))
+
+      # User password secrets
       (lib.mapAttrs'
         (name: user: {
           name = userPasswordKey name user;
@@ -164,7 +207,6 @@ in
     ];
 
     # Users database
-
     sops.templates.authelia-users = {
       mode = "0400";
 
@@ -176,11 +218,12 @@ in
       '';
     };
 
-    # Authelia configuration
-
+    # Main Authelia configuration
     sops.templates.authelia-config = {
       mode = "0400";
 
+      # Keep the optional OIDC block separate so Nix
+      # normalizes indentation independently.
       content = ''
         server:
           address: tcp://0.0.0.0:${toString cfg.hostPort}
@@ -217,8 +260,7 @@ in
 
         access_control:
           default_policy: one_factor
-
-        ${lib.optionalString cfg.oidc.enable ''
+      '' + lib.optionalString cfg.oidc.enable (''
         identity_providers:
           oidc:
             hmac_secret: "${secret "authelia/oidc/hmac_secret"}"
@@ -228,33 +270,10 @@ in
                 use: sig
                 key: {{ secret "/config/oidc-private-key.pem" | mindent 10 "|" | msquote }}
             clients:
-              - client_id: open-webui
-                client_name: Open WebUI
-                client_secret: "${secret "authelia/oidc/open_webui_client_secret_hash"}"
-                public: false
-                authorization_policy: one_factor
-                require_pkce: true
-                pkce_challenge_method: S256
-                redirect_uris:
-                  - https://ai.gladsheimr.nl/oauth/oidc/callback
-                  - https://openwebui.fiordland-gar.ts.net/oauth/oidc/callback
-                  - https://openwebui.fiordland-gar.ts.net:443/oauth/oidc/callback
-                scopes:
-                  - openid
-                  - profile
-                  - email
-                  - groups
-                response_types:
-                  - code
-                grant_types:
-                  - authorization_code
-                token_endpoint_auth_method: client_secret_basic
-        ''}
-      '';
+      '' + clientYaml + "\n");
     };
 
     # Host configuration paths
-
     environment.etc."authelia/config.yml".source =
       config.sops.templates.authelia-config.path;
 
@@ -262,13 +281,11 @@ in
       config.sops.templates.authelia-users.path;
 
     # Persistent storage
-
     systemd.tmpfiles.rules = [
       "d ${cfg.dataDir} 0755 root root - -"
     ];
 
     # Podman service
-
     systemd.services.podman-authelia = {
       description = "Authelia (Podman)";
 
@@ -298,7 +315,7 @@ in
             "--pull=always"
             "--network host"
 
-            # Directe SOPS-mounts
+            # SOPS configuration mounts
             "-v ${config.sops.templates.authelia-config.path}:/config/config.yml:ro"
             "-v ${config.sops.templates.authelia-users.path}:/config/users_database.yml:ro"
 

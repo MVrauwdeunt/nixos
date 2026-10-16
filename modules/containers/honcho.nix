@@ -1,4 +1,5 @@
 
+# modules/containers/honcho.nix
 { config, lib, pkgs, ... }:
 
 let
@@ -15,10 +16,13 @@ let
   appEnvironment = {
     CACHE_URL = "redis://honcho-redis:6379/0?suppress=true";
     CACHE_ENABLED = "true";
+
     VECTOR_STORE_TYPE = "pgvector";
+
     AUTH_USE_AUTH = "false";
     SENTRY_ENABLED = "false";
     TELEMETRY_ENABLED = "false";
+
     TZ = "Etc/UTC";
   };
 
@@ -30,35 +34,46 @@ in
     image = lib.mkOption {
       type = lib.types.str;
       default = "ghcr.io/plastic-labs/honcho:latest";
-      description = "Honcho container image";
+      description = "Official Honcho container image";
     };
 
-    dataDir = lib.mkOption {
+    postgresImage = lib.mkOption {
       type = lib.types.str;
-      default = "/var/lib/honcho";
-      description = "Honcho persistent storage";
+      default = "docker.io/pgvector/pgvector:pg15";
+      description = "PostgreSQL with pgvector";
+    };
+
+    redisImage = lib.mkOption {
+      type = lib.types.str;
+      default = "docker.io/library/redis:8";
+      description = "Redis container image";
     };
 
     port = lib.mkOption {
       type = lib.types.port;
       default = 8000;
-      description = "Honcho API host port";
+      description = "Honcho API localhost port";
     };
 
     openFirewall = lib.mkOption {
       type = lib.types.bool;
       default = false;
-      description = "Allow external access to Honcho";
+      description = "Open Honcho API port in firewall";
     };
   };
 
   config = lib.mkIf cfg.enable {
 
+    # --------------------------------------------------
+    # Podman
+    # --------------------------------------------------
+
+    virtualisation.podman.enable = true;
     virtualisation.oci-containers.backend = "podman";
 
-    # ------------------------------------------------------------
+    # --------------------------------------------------
     # SOPS
-    # ------------------------------------------------------------
+    # --------------------------------------------------
 
     sops.secrets."vili/honcho/db-password" = {
       sopsFile = ../../secrets.yaml;
@@ -77,25 +92,21 @@ in
       LLM_OPENAI_API_KEY=${config.sops.placeholder."vili/honcho/openai-key"}
     '';
 
-    # ------------------------------------------------------------
-    # Persistent storage
-    # ------------------------------------------------------------
+    # --------------------------------------------------
+    # Internal Podman network
+    # --------------------------------------------------
 
-    systemd.tmpfiles.rules = [
-      "d ${cfg.dataDir} 0750 root root -"
-      "d ${cfg.dataDir}/postgres 0700 root root -"
-      "d ${cfg.dataDir}/redis 0700 root root -"
-    ];
-
-    # ------------------------------------------------------------
-    # Private network
-    # ------------------------------------------------------------
-
-    systemd.services.${"podman-network-" + network} = {
+    systemd.services."podman-network-${network}" = {
       description = "Create Honcho internal Podman network";
+
       wantedBy = [ "multi-user.target" ];
 
-      path = [ pkgs.podman ];
+      before = [
+        "podman-honcho-db.service"
+        "podman-honcho-redis.service"
+        "podman-honcho.service"
+        "podman-honcho-deriver.service"
+      ];
 
       serviceConfig = {
         Type = "oneshot";
@@ -103,14 +114,14 @@ in
       };
 
       script = ''
-        podman network exists ${network} ||
-          podman network create ${network}
+        ${pkgs.podman}/bin/podman network exists ${network} \
+          || ${pkgs.podman}/bin/podman network create ${network}
       '';
     };
 
-    # ------------------------------------------------------------
-    # Service dependencies
-    # ------------------------------------------------------------
+    # --------------------------------------------------
+    # Systemd dependencies
+    # --------------------------------------------------
 
     systemd.services.podman-honcho-db = {
       requires = [ networkUnit ];
@@ -148,14 +159,15 @@ in
       ];
     };
 
-    # ------------------------------------------------------------
+    # --------------------------------------------------
     # Containers
-    # ------------------------------------------------------------
+    # --------------------------------------------------
 
     virtualisation.oci-containers.containers = {
 
+      # PostgreSQL + pgvector
       honcho-db = {
-        image = "docker.io/pgvector/pgvector:pg15";
+        image = cfg.postgresImage;
 
         environment = {
           POSTGRES_USER = "honcho";
@@ -169,17 +181,19 @@ in
         ];
 
         volumes = [
-          "${cfg.dataDir}/postgres:/var/lib/postgresql/data"
+          "honcho-postgres:/var/lib/postgresql/data"
           "${initSql}:/docker-entrypoint-initdb.d/init.sql:ro"
         ];
 
         extraOptions = [
           "--network=${network}"
+          "--pull=always"
         ];
       };
 
+      # Redis
       honcho-redis = {
-        image = "docker.io/library/redis:8";
+        image = cfg.redisImage;
 
         cmd = [
           "redis-server"
@@ -188,14 +202,16 @@ in
         ];
 
         volumes = [
-          "${cfg.dataDir}/redis:/data"
+          "honcho-redis:/data"
         ];
 
         extraOptions = [
           "--network=${network}"
+          "--pull=always"
         ];
       };
 
+      # Honcho API
       honcho = {
         image = cfg.image;
 
@@ -226,6 +242,7 @@ in
         ];
       };
 
+      # Honcho background memory processor
       honcho-deriver = {
         image = cfg.image;
 
@@ -242,7 +259,10 @@ in
           "src.deriver"
         ];
 
-        environment = appEnvironment;
+        # Process small conversation batches immediately.
+        environment = appEnvironment // {
+          DERIVER_FLUSH_ENABLED = "true";
+        };
 
         environmentFiles = [
           config.sops.templates."honcho.env".path
@@ -255,9 +275,9 @@ in
       };
     };
 
-    # ------------------------------------------------------------
+    # --------------------------------------------------
     # Firewall
-    # ------------------------------------------------------------
+    # --------------------------------------------------
 
     networking.firewall = lib.mkIf cfg.openFirewall {
       allowedTCPPorts = [ cfg.port ];

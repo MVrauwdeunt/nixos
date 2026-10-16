@@ -223,6 +223,22 @@
         "type": "github"
       }
     },
+    "honcho": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1791568926,
+        "narHash": "sha256-d2Z9JriTLYTMeueRY/mI+bY1VQ/pftELZoM09eTCYH4=",
+        "owner": "plastic-labs",
+        "repo": "honcho",
+        "rev": "3922af856d78ec41133916deec4d821fa9c5a92e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "plastic-labs",
+        "repo": "honcho",
+        "type": "github"
+      }
+    },
     "nixos-mailserver": {
       "inputs": {
         "blobs": "blobs",
@@ -404,6 +420,7 @@
         "disko": "disko",
         "hermes-agent": "hermes-agent",
         "home-manager": "home-manager_2",
+        "honcho": "honcho",
         "nixos-mailserver": "nixos-mailserver",
         "nixpkgs": "nixpkgs_3",
         "nixpkgs-unstable": "nixpkgs-unstable",

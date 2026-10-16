@@ -13,6 +13,10 @@
     };
 
     hermes-agent.url = "github:NousResearch/hermes-agent";
+    honcho = {
+      url = "github:plastic-labs/honcho";
+      flake = false;
+    };
 
     # Mailserver
     nixos-mailserver = {
