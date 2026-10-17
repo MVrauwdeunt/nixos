@@ -90,11 +90,11 @@ in
     # SOPS - administrator credentials
     #
 
-    sops.secrets."sif/allos_admin_password" = {};
+    sops.secrets."saga/allos_admin_password" = {};
 
     sops.templates."allos-bootstrap.env".content = ''
       ADMIN_USERNAME=${cfg.adminUsername}
-      ADMIN_PASSWORD=${config.sops.placeholder."sif/allos_admin_password"}
+      ADMIN_PASSWORD=${config.sops.placeholder."saga/allos_admin_password"}
     '';
 
     #

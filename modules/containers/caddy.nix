@@ -17,7 +17,7 @@ let
       reverse_proxy ${v.upstream} {
         ${v.proxyExtraConfig}
       }
-      ${optionalString (v.extraConfig or "" != "") v.extraConfig}
+      ${optionalString (v.extraConfig != "") v.extraConfig}
     }
   '';
 
@@ -36,7 +36,10 @@ let
     ${concatStringsSep "\n\n" (mapAttrsToList vhostToBlock cfg.virtualHosts)}
   '';
 
-  caddyfilePath = "/etc/caddy/Caddyfile";
+  # Immutable Caddyfile in the Nix store.
+  # Its store path changes whenever its contents change.
+  caddyfileStorePath = pkgs.writeText "Caddyfile" caddyfileText;
+
   dataDir = cfg.dataDir;
 
 in
@@ -104,8 +107,15 @@ in
     virtualisation.podman.enable = true;
     virtualisation.oci-containers.backend = "podman";
 
-    # Render the Caddyfile.
-    environment.etc."caddy/Caddyfile".text = caddyfileText;
+    # Keep a host-side reference for inspection.
+    environment.etc."caddy/Caddyfile".source =
+      caddyfileStorePath;
+
+    # Restart the container when the generated
+    # Caddyfile changes between NixOS generations.
+    systemd.services.podman-caddy.restartTriggers = [
+      caddyfileStorePath
+    ];
 
     # Ensure the Caddy data directory exists.
     systemd.tmpfiles.rules = [
@@ -134,7 +144,7 @@ in
         };
 
       volumes = [
-        "${caddyfilePath}:/etc/caddy/Caddyfile:ro"
+        "${caddyfileStorePath}:/etc/caddy/Caddyfile:ro"
         "${dataDir}:/data"
         "${dataDir}:/config"
       ] ++ cfg.extraVolumes;

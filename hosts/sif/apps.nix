@@ -1,3 +1,4 @@
+
 { lib, ... }:
 
 let
@@ -10,7 +11,6 @@ let
     "n8n"
     "garmin-bridge"
     "homelable"
-    "allos"
   ];
 
   appModules =
@@ -20,8 +20,21 @@ in
   imports = appModules;
 
   apps =
-    lib.genAttrs enabledApps (_: {
+    (lib.genAttrs enabledApps (_: {
       enable = true;
       openFirewall = false;
-    });
+    }))
+    // {
+      homelable = {
+        enable = true;
+        openFirewall = false;
+
+        mcp = {
+          enable = true;
+          port = 8001;
+          listenAddress = "0.0.0.0";
+          openFirewall = true;
+        };
+      };
+    };
 }

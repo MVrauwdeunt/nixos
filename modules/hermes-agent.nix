@@ -47,6 +47,7 @@ in
 {
   imports = [
     inputs.hermes-agent.nixosModules.default
+    ./mcp
   ];
 
   # --------------------------------------------------
