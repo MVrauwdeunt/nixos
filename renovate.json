@@ -1,18 +1,30 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"],
-  "enabledManagers": ["nix"],
+  "extends": [
+    "config:recommended"
+  ],
+  "enabledManagers": [
+    "nix"
+  ],
   "nix": {
-  "enabled": true
+    "enabled": true
   },
-  "labels": ["dependencies"],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["* * * * 0"],
+    "commitMessageAction": "Update",
+    "commitMessageTopic": "flake.lock"
+  },
+  "labels": [
+    "dependencies"
+  ],
   "prHourlyLimit": 2,
   "prConcurrentLimit": 5,
+  "automerge": false,
   "packageRules": [
-  {
-  "matchManagers": ["nix"],
-  "groupName": "flake inputs"
-  }
+    {
+      "matchManagers": ["nix"],
+      "groupName": "flake inputs"
+    }
   ]
-  }
-  
+}
