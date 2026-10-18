@@ -1,9 +1,10 @@
+
 {
   description = "Declarative NixOS configuration managed via flakes";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
-    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+
     disko.url = "github:nix-community/disko";
     sops-nix.url = "github:Mic92/sops-nix";
 
@@ -13,27 +14,29 @@
     };
 
     hermes-agent.url = "github:NousResearch/hermes-agent";
+
     honcho = {
       url = "github:plastic-labs/honcho";
       flake = false;
     };
 
-    # Mailserver
+    # Mailserver - unstable / 26.11 development
     nixos-mailserver = {
-      url = "gitlab:simple-nixos-mailserver/nixos-mailserver/nixos-26.05";
+      url = "gitlab:simple-nixos-mailserver/nixos-mailserver/main";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Home Manager
-    home-manager.url = "github:nix-community/home-manager/release-26.05";
-    home-manager.inputs.nixpkgs.follows = "nixpkgs";
+    # Home Manager - unstable / 26.11 development
+    home-manager = {
+      url = "github:nix-community/home-manager/master";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
     inputs@{
       self,
       nixpkgs,
-      nixpkgs-unstable,
       disko,
       sops-nix,
       home-manager,
