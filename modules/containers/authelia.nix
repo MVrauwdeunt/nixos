@@ -13,6 +13,9 @@ let
     ]
     ++ lib.optionals cfg.oidc.actualBudget.enable [
       ./authelia-clients/actual-budget.nix
+    ]
+    ++ lib.optionals cfg.oidc.wallos.enable [
+      ./authelia-clients/wallos.nix
     ];
 
   oidcClients =
@@ -95,6 +98,8 @@ in
 
       actualBudget.enable =
         lib.mkEnableOption "Actual Budget OIDC client";
+      wallos.enable =
+        lib.mkEnableOption "Wallos OIDC client";  
     };
 
     users = lib.mkOption {

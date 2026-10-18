@@ -55,6 +55,7 @@ in
 
       openWebui.enable = true;
       actualBudget.enable = true;
+      wallos.enable = true;
     };
 
     # SOPS secrets

@@ -1,3 +1,4 @@
+
 { lib, ... }:
 {
   nix.settings.sandbox = false;
@@ -13,10 +14,13 @@
   services.qemuGuest.enable = lib.mkForce false;
   systemd.oomd.enable = false;
 
+  # DNS resolver with split DNS for Tailscale.
+  # Also listen on the Podman gateway for Wallos.
   services.resolved.settings = {
     Resolve = {
       Cache = true;
       CacheFromLocalhost = true;
+      DNSStubListenerExtra = "10.88.0.1";
     };
   };
 

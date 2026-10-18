@@ -57,5 +57,16 @@ in
         wallosPort = 8282;
         autoSync = true;
       };
+
+      wallos = {
+        enable = true;
+        openFirewall = false;
+
+        oidc = {
+          enable = true;
+          autoCreateUser = false;
+          disablePasswordLogin = false;
+        };
+      };
     };
 }
