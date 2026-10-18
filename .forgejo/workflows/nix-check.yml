@@ -2,6 +2,9 @@
 name: NixOS configuration validation
 
 on:
+  push:
+    branches:
+      - upgrade/nixos-26.11
   workflow_dispatch:
 
 jobs:
