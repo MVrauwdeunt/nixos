@@ -1,0 +1,36 @@
+
+name: NixOS configuration validation
+
+on:
+  workflow_dispatch:
+
+jobs:
+  evaluate:
+    runs-on: nixos
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Add Nix to PATH
+        shell: bash
+        run: |
+          echo "/run/current-system/sw/bin" >> "$GITHUB_PATH"
+
+      - name: Validate flake and deploy definitions
+        shell: bash
+        run: |
+          nix --version
+          nix flake check --no-build --show-trace
+
+      - name: Evaluate system configurations
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          for host in bifrost sif mimir vili saga ratatosk vm proxmox-vm; do
+            echo "Checking $host"
+            nix eval --raw ".#nixosConfigurations.${host}.config.networking.hostName"
+            echo
+          done
