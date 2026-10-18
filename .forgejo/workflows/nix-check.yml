@@ -12,15 +12,20 @@ jobs:
     runs-on: nixos
     timeout-minutes: 30
 
-    env:
-      PATH: /run/current-system/sw/bin:/usr/bin:/bin
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Add Nix to PATH
+        shell: bash
+        run: |
+          echo "/run/current-system/sw/bin" >> "$GITHUB_PATH"
+
       - name: Validate flake and deploy definitions
-        run: nix flake check --no-build --show-trace
+        shell: bash
+        run: |
+          nix --version
+          nix flake check --no-build --show-trace
 
       - name: Evaluate system configurations
         shell: bash
