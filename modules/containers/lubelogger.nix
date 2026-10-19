@@ -9,7 +9,7 @@ in
 
     image = lib.mkOption {
       type = lib.types.str;
-      default = "ghcr.io/hargata/lubelogger:v1.7.3";
+      default = "ghcr.io/hargata/lubelogger:v1.7.4";
       description = "LubeLogger container image";
     };
 
