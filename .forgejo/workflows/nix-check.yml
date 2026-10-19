@@ -24,7 +24,7 @@ jobs:
         shell: bash
         run: |
           nix --version
-          nix flake check --no-build --show-trace
+          nix flake check --show-trace
 
       - name: Evaluate system configurations
         shell: bash
