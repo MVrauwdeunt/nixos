@@ -1,4 +1,3 @@
-
 name: NixOS configuration validation
 
 on:
@@ -20,12 +19,6 @@ jobs:
         run: |
           echo "/run/current-system/sw/bin" >> "$GITHUB_PATH"
 
-      - name: Validate flake and deploy definitions
-        shell: bash
-        run: |
-          nix --version
-          nix flake check --no-build --show-trace
-
       - name: Evaluate system configurations
         shell: bash
         run: |
@@ -33,6 +26,12 @@ jobs:
 
           for host in bifrost sif mimir vili saga ratatosk vm proxmox-vm; do
             echo "Checking $host"
-            nix eval --raw ".#nixosConfigurations.${host}.config.networking.hostName"
+            nix eval --raw ".#nixosConfigurations.${host}.config.system.build.toplevel.drvPath"
             echo
           done
+
+      - name: Validate flake and deploy definitions
+        shell: bash
+        run: |
+          nix --version
+          nix flake check --no-build --show-trace
