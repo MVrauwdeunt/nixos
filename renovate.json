@@ -16,10 +16,10 @@
       "customType": "regex",
       "description": "Podman images in NixOS modules",
       "managerFilePatterns": [
-        "/^modules\\/containers\\/wanderer\\.nix$/"
+        "/^modules\\/containers\\/.*\\.nix$/"
       ],
       "matchStrings": [
-        "image\\s*=\\s*\"(?<depName>[^\"\\s]+):(?<currentValue>v?\\d+\\.\\d+\\.\\d+)\";"
+        "(?:image|default)\\s*=\\s*\"(?<depName>(?:docker\\.io|ghcr\\.io|lscr\\.io|codeberg\\.org)/[^\"\\s:]+):(?<currentValue>v?\\d+(?:\\.\\d+)*(?:[-.][A-Za-z0-9.]+)?)\";"
       ],
       "datasourceTemplate": "docker"
     }
