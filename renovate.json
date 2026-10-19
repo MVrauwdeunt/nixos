@@ -1,17 +1,34 @@
+
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended"
   ],
   "enabledManagers": [
-    "nix"
+    "nix",
+    "custom.regex"
   ],
   "nix": {
     "enabled": true
   },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Podman images in NixOS modules",
+      "managerFilePatterns": [
+        "/^modules\\/containers\\/wanderer\\.nix$/"
+      ],
+      "matchStrings": [
+        "image\\s*=\\s*\"(?<depName>[^\"\\s]+):(?<currentValue>v?\\d+\\.\\d+\\.\\d+)\";"
+      ],
+      "datasourceTemplate": "docker"
+    }
+  ],
   "lockFileMaintenance": {
     "enabled": true,
-    "schedule": ["* * * * 0"],
+    "schedule": [
+      "* * * * 0"
+    ],
     "commitMessageAction": "Update",
     "commitMessageTopic": "flake.lock"
   },
@@ -23,7 +40,9 @@
   "automerge": false,
   "packageRules": [
     {
-      "matchManagers": ["nix"],
+      "matchManagers": [
+        "nix"
+      ],
       "groupName": "flake inputs"
     }
   ]
