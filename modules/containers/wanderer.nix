@@ -83,7 +83,7 @@ in
 
     virtualisation.oci-containers.containers = {
       wanderer-search = {
-        image = "docker.io/getmeili/meilisearch:v1.11.3";
+        image = "docker.io/getmeili/meilisearch:v1.55.0";
         pull = "always";
 
         volumes = [
