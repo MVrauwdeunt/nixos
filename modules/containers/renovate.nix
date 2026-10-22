@@ -17,7 +17,7 @@ in
 
     image = mkOption {
       type = types.str;
-      default = "docker.io/renovate/renovate:43.139-full";
+      default = "docker.io/renovate/renovate:43.288-full";
     };
 
     dataDir = mkOption {
