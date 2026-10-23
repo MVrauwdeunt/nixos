@@ -187,7 +187,7 @@ in
 
         extraOptions = [
           "--network=${network}"
-          "--pull=always"
+          "--pull=missing"
         ];
       };
 
@@ -207,7 +207,7 @@ in
 
         extraOptions = [
           "--network=${network}"
-          "--pull=always"
+          "--pull=missing"
         ];
       };
 
@@ -238,7 +238,7 @@ in
 
         extraOptions = [
           "--network=${network}"
-          "--pull=always"
+          "--pull=missing"
         ];
       };
 
@@ -270,7 +270,7 @@ in
 
         extraOptions = [
           "--network=${network}"
-          "--pull=always"
+          "--pull=missing"
         ];
       };
     };

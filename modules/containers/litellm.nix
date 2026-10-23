@@ -1,3 +1,4 @@
+
 # modules/containers/litellm.nix
 { config, lib, pkgs, ... }:
 
@@ -20,6 +21,12 @@ in
 {
   options.apps.litellm = {
     enable = lib.mkEnableOption "LiteLLM AI Gateway";
+
+    image = lib.mkOption {
+      type = lib.types.str;
+      default = "ghcr.io/berriai/litellm:main-stable";
+      description = "LiteLLM container image reference.";
+    };
 
     port = lib.mkOption {
       type = lib.types.port;
@@ -173,7 +180,8 @@ in
     # ------------------------------------------------------------
 
     virtualisation.oci-containers.containers.litellm = {
-      image = "ghcr.io/berriai/litellm:main-stable";
+      image = cfg.image;
+      pull = "missing";
 
       ports = [
         "127.0.0.1:${toString cfg.port}:4000"
