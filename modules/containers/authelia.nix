@@ -317,7 +317,7 @@ in
         ExecStart = lib.concatStringsSep " " (
           [
             "${pkgs.podman}/bin/podman run --rm --name authelia"
-            "--pull=always"
+            "--pull=missing"
             "--network host"
 
             # SOPS configuration mounts

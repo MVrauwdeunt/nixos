@@ -11,6 +11,7 @@ let
     "n8n"
     "garmin-bridge"
     "homelable"
+    "dependency-track"
   ];
 
   appModules =
