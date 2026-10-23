@@ -1,3 +1,4 @@
+
 { config, lib, pkgs, ... }:
 
 let
@@ -40,20 +41,37 @@ in
     ];
 
     systemd.services.podman-gluetun.postStart = lib.mkAfter ''
-      sleep 8
+      SLSKD_IP=""
+      for attempt in $(seq 1 45); do
+        SLSKD_IP=$(
+          ${pkgs.podman}/bin/podman container inspect slskd 2>/dev/null \
+            | ${pkgs.jq}/bin/jq -r '[.[0].NetworkSettings.Networks // {} | to_entries[] | .value.IPAddress // empty] | first // empty' \
+            2>/dev/null || true
+        )
+        if [[ "$SLSKD_IP" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          break
+        fi
+        sleep 2
+      done
 
-      SLSKD_IP=$(${pkgs.podman}/bin/podman inspect slskd --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
+      if [[ ! "$SLSKD_IP" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        echo "ERROR: slskd has no Podman IPv4 after 90 seconds; refusing to start Soulseek forwarding" >&2
+        exit 1
+      fi
 
+      echo "Forwarding Soulseek port ${soulseekPort} to slskd at $SLSKD_IP"
+      ${pkgs.podman}/bin/podman exec gluetun sh -c \
+        'apk add --no-cache socat >/dev/null 2>&1 || command -v socat >/dev/null'
       ${pkgs.podman}/bin/podman exec -d gluetun sh -c "
-        apk add --no-cache socat >/dev/null 2>&1 || true
         pkill socat || true
-        socat TCP-LISTEN:${soulseekPort},bind=${wireguardAddress},fork,reuseaddr TCP:$SLSKD_IP:${soulseekPort}
+        exec socat TCP-LISTEN:${soulseekPort},bind=${wireguardAddress},fork,reuseaddr TCP:$SLSKD_IP:${soulseekPort}
       "
     '';
 
     virtualisation.oci-containers.containers.gluetun = {
-      image = "docker.io/qmcgaw/gluetun:latest";
-      pull = "always";
+      image = "docker.io/qmcgaw/gluetun:latest@sha256:c2ee4191762fca6b6a3c3359a731198a95d9c9af4db32d466e223bf3a84e779b";
+      pull = "missing";
+
       ports = [
         "8000:8000"
       ];
@@ -70,16 +88,11 @@ in
 
       environment = {
         TZ = "Europe/Amsterdam";
-
         VPN_SERVICE_PROVIDER = "airvpn";
         VPN_TYPE = "wireguard";
-
         WIREGUARD_ADDRESSES = "${wireguardAddress}/32";
-
         SERVER_COUNTRIES = "Switzerland,Romania";
-
         FIREWALL_VPN_INPUT_PORTS = soulseekPort;
-
         GLUETUN_HTTP_CONTROL_SERVER_ENABLE = "on";
       };
 

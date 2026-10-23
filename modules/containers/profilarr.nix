@@ -1,3 +1,4 @@
+
 { config, lib, ... }:
 
 let
@@ -31,8 +32,9 @@ in
 
   config = lib.mkIf cfg.enable {
     virtualisation.oci-containers.containers.profilarr = {
-      image = "docker.io/santiagosayshey/profilarr:latest";
-      pull = "always";      
+      image = "docker.io/santiagosayshey/profilarr:latest@sha256:8033e9c6d6995f37625afeb93d7020e99566f549ae83b65f1db7e11048952d0f";
+      pull = "missing";
+
       ports = [
         "127.0.0.1:${toString cfg.port}:6868"
       ];

@@ -1,3 +1,4 @@
+
 { config, lib, ... }:
 
 let
@@ -42,8 +43,8 @@ in
 
   config = lib.mkIf cfg.enable {
     virtualisation.oci-containers.containers.arr-dashboard = {
-      image = "docker.io/khak1s/arr-dashboard:latest";
-      pull = "always";
+      image = "docker.io/khak1s/arr-dashboard:latest@sha256:bd24ff75a61708de22c31947ea8f7efbe1c44ea870c3af9eb0f021968c5d4bab";
+      pull = "missing";
 
       ports = [
         "${toString cfg.port}:3000"
@@ -55,17 +56,12 @@ in
 
       environment = {
         TZ = "Europe/Amsterdam";
-
         PUID = "1000";
         PGID = "1000";
 
-        # Public URL behind Tailscale Serve
         APP_URL = publicUrl;
-
-        # Browser/API origin
         API_CORS_ORIGIN = publicUrl;
 
-        # Passkeys / WebAuthn
         WEBAUTHN_RP_NAME = "Arr Dashboard";
         WEBAUTHN_RP_ID = publicHost;
         WEBAUTHN_ORIGIN = publicUrl;

@@ -1,3 +1,4 @@
+
 { config, lib, ... }:
 
 with lib;
@@ -17,7 +18,7 @@ in
 
     image = mkOption {
       type = types.str;
-      default = "docker.io/mrusse08/soularr:latest";
+      default = "docker.io/mrusse08/soularr:latest@sha256:61ee506de5fb1447f3abd4a5a47e2537fad152ddf8c7e0392a36ef00b4f1c3d9";
       description = "Soularr container image.";
     };
 
@@ -55,7 +56,8 @@ in
   config = mkIf cfg.enable {
     virtualisation.oci-containers.containers.soularr = {
       image = cfg.image;
-      pull = "always";
+      pull = "missing";
+
       ports = [
         "${toString cfg.port}:8265"
       ];

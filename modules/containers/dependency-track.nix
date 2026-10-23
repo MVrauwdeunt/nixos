@@ -99,7 +99,7 @@ in
     # Persistent directories
     systemd.tmpfiles.rules = [
       "d ${cfg.dataDir} 0755 root root - -"
-      "d ${cfg.dataDir}/postgres 0700 root root - -"
+      "d ${cfg.dataDir}/postgres 0700 70 70 - -"
       "d ${cfg.dataDir}/api 0770 1000 1000 - -"
     ];
 
@@ -166,6 +166,7 @@ in
 
         extraOptions = [
           "--network=dependency-track"
+          "--user=70:70"
         ];
       };
 
@@ -223,7 +224,6 @@ in
     };
 
     # Nginx reverse proxy
-    # Both frontend and API use the same Tailscale hostname.
     services.nginx.enable = true;
 
     services.nginx.virtualHosts."dependency-track-local" = {

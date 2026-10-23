@@ -1,3 +1,4 @@
+
 { config, lib, ... }:
 
 with lib;
@@ -17,7 +18,7 @@ in
 
     image = mkOption {
       type = types.str;
-      default = "docker.io/thewicklowwolf/lidify:latest";
+      default = "docker.io/thewicklowwolf/lidify:latest@sha256:3e99fa32bd5f4462e61d07ac949ca3443931f4a62a3cfcf443ec804814a2cd76";
       description = "Lidify container image.";
     };
 
@@ -49,7 +50,8 @@ in
   config = mkIf cfg.enable {
     virtualisation.oci-containers.containers.lidify = {
       image = cfg.image;
-      pull = "always";
+      pull = "missing";
+
       ports = [
         "${toString cfg.port}:5000"
       ];

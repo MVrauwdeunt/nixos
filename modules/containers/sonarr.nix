@@ -1,3 +1,4 @@
+
 { config, lib, ... }:
 
 let
@@ -31,9 +32,12 @@ in
 
   config = lib.mkIf cfg.enable {
     virtualisation.oci-containers.containers.sonarr = {
-      image = "lscr.io/linuxserver/sonarr:latest";
-      pull = "always";
-      ports = [ "${toString cfg.port}:8989" ];
+      image = "lscr.io/linuxserver/sonarr:latest@sha256:889dcc58c6aea859033985894b519b2e6b1e55d92527ed123f9f52e42ae7c97b";
+      pull = "missing";
+
+      ports = [
+        "${toString cfg.port}:8989"
+      ];
 
       volumes = [
         "${cfg.dataDir}:/config"

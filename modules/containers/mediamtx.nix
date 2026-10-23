@@ -1,3 +1,4 @@
+
 # modules/containers/mediamtx.nix
 { config, lib, pkgs, ... }:
 
@@ -52,8 +53,9 @@ in
 
   config = lib.mkIf cfg.enable {
     virtualisation.oci-containers.containers.mediamtx = {
-      image = "docker.io/bluenviron/mediamtx:latest";
-      pull = "always";
+      image = "docker.io/bluenviron/mediamtx:latest@sha256:c7540465f868a02652118bea5a0daab12a29ac0f6cb8485abd535939ecddf886";
+      pull = "missing";
+
       ports = [
         "1935:1935/tcp"
         "8888:8888/tcp"

@@ -1,3 +1,4 @@
+
 { config, lib, ... }:
 
 let
@@ -31,9 +32,12 @@ in
 
   config = lib.mkIf cfg.enable {
     virtualisation.oci-containers.containers.bazarr = {
-      image = "lscr.io/linuxserver/bazarr:latest";
-      pull = "always";
-      ports = [ "${toString cfg.port}:6767" ];
+      image = "lscr.io/linuxserver/bazarr:latest@sha256:946dc8c5bb5331418eac60050cf40a63cb8f66ac039841dda493870e3559799c";
+      pull = "missing";
+
+      ports = [
+        "${toString cfg.port}:6767"
+      ];
 
       volumes = [
         "${cfg.dataDir}:/config"
