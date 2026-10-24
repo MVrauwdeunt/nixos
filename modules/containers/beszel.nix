@@ -18,8 +18,8 @@ in
 
     image = mkOption {
       type = types.str;
-      default = "docker.io/henrygd/beszel:latest@sha256:8514a69d9bbbcb74f371a3205561ee231fc0289739cea64e8131f341d695b770";
-      description = "Container image for the Beszel hub";
+      default = "docker.io/henrygd/beszel:0.21.1@sha256:dd149010e30f4ba5876b6a65eb7ba3026f8c10d14dc07808d6324b02d477d93d";
+      description = "Container image for the Beszel hub.";
     };
 
     dataDir = mkOption {
@@ -82,7 +82,12 @@ in
       allowedTCPPorts = [ cfg.port ];
     };
 
-    systemd.services.podman-beszel.after = [ "network-online.target" ];
-    systemd.services.podman-beszel.wants = [ "network-online.target" ];
+    systemd.services.podman-beszel.after = [
+      "network-online.target"
+    ];
+
+    systemd.services.podman-beszel.wants = [
+      "network-online.target"
+    ];
   };
 }

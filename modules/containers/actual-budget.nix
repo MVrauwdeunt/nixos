@@ -13,7 +13,7 @@ in
 
     image = lib.mkOption {
       type = lib.types.str;
-      default = "docker.io/actualbudget/actual-server@sha256:24645e971da6bb1a1f953d6859e307a0b29be1e8b4130a35b3220c209b5b860c";
+      default = "ghcr.io/actualbudget/actual-server:26.10.0@sha256:24645e971da6bb1a1f953d6859e307a0b29be1e8b4130a35b3220c209b5b860c";
       description = "Actual Budget container image.";
     };
 
@@ -80,8 +80,6 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-
-    # Original (unhashed) OIDC client secret from SOPS
     sops.secrets = lib.mkIf cfg.oidc.enable {
       ${oidcSecret} = {
         owner = "root";
@@ -90,12 +88,10 @@ in
       };
     };
 
-    # Persistent data storage
     systemd.tmpfiles.rules = [
       "d ${cfg.dataDir} 0750 1000 1000 -"
     ];
 
-    # Actual Budget Podman container
     virtualisation.oci-containers.containers.actual-budget = {
       image = cfg.image;
       autoStart = true;
@@ -121,14 +117,12 @@ in
         ACTUAL_OPENID_SERVER_HOSTNAME = cfg.oidc.serverURL;
         ACTUAL_OPENID_AUTH_METHOD = "oauth2";
 
-        # Client secret is read from file, not environment
         ACTUAL_OPENID_CLIENT_SECRET_FILE =
           "/run/secrets/actual-oidc-client-secret";
 
         ACTUAL_TOKEN_EXPIRATION = "openid-provider";
         ACTUAL_USER_CREATION_MODE = "manual";
 
-        # Keep password login until OIDC is verified
         ACTUAL_OPENID_ENFORCE =
           if cfg.oidc.enforce then "true" else "false";
       };
