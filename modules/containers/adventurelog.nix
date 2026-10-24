@@ -1,6 +1,4 @@
-
 { config, lib, pkgs, ... }:
-
 let
   cfg = config.apps.adventurelog;
   apiCfg = config.apps.adventureapi;
@@ -8,18 +6,15 @@ in
 {
   options.apps.adventurelog = {
     enable = lib.mkEnableOption "AdventureLog";
-
     port = lib.mkOption {
       type = lib.types.port;
       default = 8015;
       description = "Local AdventureLog frontend port.";
     };
-
     openFirewall = lib.mkOption {
       type = lib.types.bool;
       default = false;
     };
-
     tailscale.enable = lib.mkOption {
       type = lib.types.bool;
       default = true;
@@ -29,18 +24,15 @@ in
 
   options.apps.adventureapi = {
     enable = lib.mkEnableOption "AdventureLog API";
-
     port = lib.mkOption {
       type = lib.types.port;
       default = 8016;
       description = "Local AdventureLog API port.";
     };
-
     openFirewall = lib.mkOption {
       type = lib.types.bool;
       default = false;
     };
-
     tailscale.enable = lib.mkOption {
       type = lib.types.bool;
       default = true;
@@ -61,7 +53,6 @@ in
     sops.templates."adventurelog-db.env".content = ''
       POSTGRES_PASSWORD=${config.sops.placeholder."saga/adventurelog_db_password"}
     '';
-
     sops.templates."adventurelog-api.env".content = ''
       POSTGRES_PASSWORD=${config.sops.placeholder."saga/adventurelog_db_password"}
       PGPASSWORD=${config.sops.placeholder."saga/adventurelog_db_password"}
@@ -78,15 +69,12 @@ in
     systemd.services.podman-network-adventurelog = {
       description = "Create AdventureLog Podman network";
       wantedBy = [ "multi-user.target" ];
-
       before = [
         "podman-adventurelog.service"
         "podman-adventureapi.service"
         "podman-adventurelog-db.service"
       ];
-
       serviceConfig.Type = "oneshot";
-
       script = ''
         ${pkgs.podman}/bin/podman network exists adventurelog \
           || ${pkgs.podman}/bin/podman network create adventurelog
@@ -97,12 +85,10 @@ in
       requires = [ "podman-network-adventurelog.service" ];
       after = [ "podman-network-adventurelog.service" ];
     };
-
     systemd.services.podman-adventureapi = {
       requires = [ "podman-network-adventurelog.service" ];
       after = [ "podman-network-adventurelog.service" ];
     };
-
     systemd.services.podman-adventurelog-db = {
       requires = [ "podman-network-adventurelog.service" ];
       after = [ "podman-network-adventurelog.service" ];
@@ -112,111 +98,66 @@ in
       adventurelog-db = {
         image = "docker.io/postgis/postgis@sha256:94146ac37bc61e2322f88016056c5920729cb8c64c8542ed590af8fc2abdac07";
         pull = "missing";
-
         environment = {
           POSTGRES_DB = "database";
           POSTGRES_USER = "adventure";
         };
-
         environmentFiles = [
           config.sops.templates."adventurelog-db.env".path
         ];
-
         volumes = [
           "/var/lib/adventurelog/postgres:/var/lib/postgresql/data"
         ];
-
-        extraOptions = [
-          "--network=adventurelog"
-        ];
+        extraOptions = [ "--network=adventurelog" ];
       };
 
       adventureapi = {
-        image = "ghcr.io/seanmorley15/adventurelog-backend@sha256:418e82260939d70783f76dc0a10b7a1c32362dad5663b561dbad6a27dd4a6a7d";
+        image = "ghcr.io/seanmorley15/adventurelog-backend:v0.13.0@sha256:0250d9cb0d745a8d768f31d3cdc68ac14bfa8b43dedfe0f550158e3861c12db7";
         pull = "missing";
-
         dependsOn = [ "adventurelog-db" ];
-
-        # IMPORTANT:
-        # Expose the backend container's nginx on port 80.
-        # nginx handles protected media and proxies API traffic
-        # internally to Gunicorn on port 8000.
         ports = [
           "127.0.0.1:${toString apiCfg.port}:80"
         ];
-
         environment = {
           PUID = "1000";
           PGID = "1000";
-
           DJANGO_ADMIN_USERNAME = "zanbee";
           DJANGO_ADMIN_EMAIL = "adventurelog@openmailbox.nl";
-
           PGHOST = "adventurelog-db";
-
-          # Legacy/split deployment variable names.
           PGDATABASE = "database";
           PGUSER = "adventure";
-
-          # Current AdventureLog variable names.
           POSTGRES_DB = "database";
           POSTGRES_USER = "adventure";
-
           PUBLIC_URL = "https://adventureapi.fiordland-gar.ts.net";
-
           CSRF_TRUSTED_ORIGINS =
             "https://adventurelog.fiordland-gar.ts.net,https://adventureapi.fiordland-gar.ts.net";
-
           DEBUG = "False";
-
-          FRONTEND_URL =
-            "https://adventurelog.fiordland-gar.ts.net";
-
-          # This is the externally exposed backend port.
+          FRONTEND_URL = "https://adventurelog.fiordland-gar.ts.net";
           BACKEND_PORT = toString apiCfg.port;
         };
-
         environmentFiles = [
           config.sops.templates."adventurelog-api.env".path
         ];
-
-        volumes = [
-          "/var/lib/adventurelog/media:/code/media"
-        ];
-
-        extraOptions = [
-          "--network=adventurelog"
-        ];
+        volumes = [ "/var/lib/adventurelog/media:/code/media" ];
+        extraOptions = [ "--network=adventurelog" ];
       };
 
       adventurelog = {
-        image = "ghcr.io/seanmorley15/adventurelog-frontend@sha256:51ee22428b4192f4372b54f84c8b90cd710311ad99993c5045f53b51717dd3f7";
+        image = "ghcr.io/seanmorley15/adventurelog-frontend:v0.13.0@sha256:51ee22428b4192f4372b54f84c8b90cd710311ad99993c5045f53b51717dd3f7";
         pull = "missing";
-
         dependsOn = [ "adventureapi" ];
-
         ports = [
           "127.0.0.1:${toString cfg.port}:3000"
         ];
-
         environment = {
-          # Keep this on :8000.
-          # The frontend talks directly to Gunicorn over the internal
-          # Podman network.
           PUBLIC_SERVER_URL = "http://adventureapi:8000";
-
           ORIGIN = "https://adventurelog.fiordland-gar.ts.net";
           BODY_SIZE_LIMIT = "Infinity";
-
           FRONTEND_PORT = toString cfg.port;
-
           PUID = "1000";
           PGID = "1000";
         };
-
-        extraOptions = [
-          "--network=adventurelog"
-        ];
+        extraOptions = [ "--network=adventurelog" ];
       };
     };
 

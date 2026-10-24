@@ -1,70 +1,55 @@
-
 { config, lib, pkgs, ... }:
-
-let
-  cfg = config.apps.wanderer;
+let cfg = config.apps.wanderer;
 in
 {
   options.apps.wanderer = {
     enable = lib.mkEnableOption "Wanderer";
-
     port = lib.mkOption {
       type = lib.types.port;
       default = 3001;
     };
-
     openFirewall = lib.mkOption {
       type = lib.types.bool;
       default = false;
     };
-
     tailscale.enable = lib.mkOption {
       type = lib.types.bool;
       default = true;
     };
   };
-
   config = lib.mkIf cfg.enable {
     sops.secrets."saga/wanderer_meili_master_key" = {};
     sops.secrets."saga/wanderer_pocketbase_encryption_key" = {};
-
     sops.templates."wanderer.env".content = ''
       MEILI_MASTER_KEY=${config.sops.placeholder."saga/wanderer_meili_master_key"}
       POCKETBASE_ENCRYPTION_KEY=${config.sops.placeholder."saga/wanderer_pocketbase_encryption_key"}
     '';
-
     systemd.tmpfiles.rules = [
       "d /var/lib/wanderer 0755 root root -"
       "d /var/lib/wanderer/pb_data 0755 root root -"
       "d /var/lib/wanderer/uploads 0755 root root -"
     ];
-
     systemd.services.wanderer-network = {
       description = "Create Wanderer Podman network";
       wantedBy = [ "multi-user.target" ];
-
       before = [
         "podman-wanderer-search.service"
         "podman-wanderer-db.service"
         "podman-wanderer.service"
       ];
-
       serviceConfig = {
         Type = "oneshot";
         RemainAfterExit = true;
       };
-
       script = ''
         ${pkgs.podman}/bin/podman network exists wanderer \
           || ${pkgs.podman}/bin/podman network create wanderer
       '';
     };
-
     systemd.services.podman-wanderer-search = {
       requires = [ "wanderer-network.service" ];
       after = [ "wanderer-network.service" ];
     };
-
     systemd.services.podman-wanderer-db = {
       requires = [ "wanderer-network.service" ];
       after = [
@@ -72,7 +57,6 @@ in
         "podman-wanderer-search.service"
       ];
     };
-
     systemd.services.podman-wanderer = {
       requires = [ "wanderer-network.service" ];
       after = [
@@ -86,20 +70,16 @@ in
       wanderer-search = {
         image = "docker.io/getmeili/meilisearch@sha256:6f8f1fc29d1ff67b4d8d503bb4e0a69b55c8d42600decafde951344218193a27";
         pull = "missing";
-
         volumes = [
           "/var/lib/wanderer/data.ms:/meili_data/data.ms"
         ];
-
         environment = {
           MEILI_URL = "http://127.0.0.1:7700";
           MEILI_NO_ANALYTICS = "true";
         };
-
         environmentFiles = [
           config.sops.templates."wanderer.env".path
         ];
-
         extraOptions = [
           "--network=wanderer"
           "--network-alias=search"
@@ -107,31 +87,21 @@ in
       };
 
       wanderer-db = {
-        image = "docker.io/flomp/wanderer-db@sha256:ba7bd45b8177fec7a31d297ecaf3c98e94aabb4fc043f167df35aeba8b93468c";
+        image = "docker.io/flomp/wanderer-db:v0.21.1@sha256:1575a18a025af284185612d165ec80bb4a6e0c7727c157c6a6edbe917853d10e";
         pull = "missing";
-
-        dependsOn = [
-          "wanderer-search"
-        ];
-
-        ports = [
-          "127.0.0.1:8090:8090"
-        ];
-
+        dependsOn = [ "wanderer-search" ];
+        ports = [ "127.0.0.1:8090:8090" ];
         volumes = [
           "/var/lib/wanderer/pb_data:/pb_data"
           "/var/lib/wanderer/plugins:/data/plugins"
         ];
-
         environment = {
           MEILI_URL = "http://search:7700";
           ORIGIN = "https://wanderer.fiordland-gar.ts.net";
         };
-
         environmentFiles = [
           config.sops.templates."wanderer.env".path
         ];
-
         extraOptions = [
           "--network=wanderer"
           "--network-alias=db"
@@ -139,22 +109,13 @@ in
       };
 
       wanderer = {
-        image = "docker.io/flomp/wanderer-web@sha256:af721ffac56fd33243043211fc49e4d5c5651f784551ae7b5b05d845c7c41147";
+        image = "docker.io/flomp/wanderer-web:v0.21.1@sha256:e57900a59a746d6f1cab3f191a54a5760922ecccad93f13d61d0fb3188335da4";
         pull = "missing";
-
-        dependsOn = [
-          "wanderer-search"
-          "wanderer-db"
-        ];
-
+        dependsOn = [ "wanderer-search" "wanderer-db" ];
         ports = [
           "127.0.0.1:${toString cfg.port}:3000"
         ];
-
-        volumes = [
-          "/var/lib/wanderer/uploads:/app/uploads"
-        ];
-
+        volumes = [ "/var/lib/wanderer/uploads:/app/uploads" ];
         environment = {
           MEILI_URL = "http://search:7700";
           ORIGIN = "https://wanderer.fiordland-gar.ts.net";
@@ -165,17 +126,12 @@ in
           PUBLIC_VALHALLA_URL = "https://valhalla1.openstreetmap.de";
           PUBLIC_NOMINATIM_URL = "https://nominatim.openstreetmap.org";
         };
-
         environmentFiles = [
           config.sops.templates."wanderer.env".path
         ];
-
-        extraOptions = [
-          "--network=wanderer"
-        ];
+        extraOptions = [ "--network=wanderer" ];
       };
     };
-
     networking.firewall = lib.mkIf cfg.openFirewall {
       allowedTCPPorts = [ cfg.port ];
     };

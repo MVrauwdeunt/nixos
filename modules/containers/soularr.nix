@@ -1,84 +1,63 @@
-
 { config, lib, ... }:
-
 with lib;
-
-let
-  cfg = config.apps.soularr;
+let cfg = config.apps.soularr;
 in
 {
   options.apps.soularr = {
     enable = mkEnableOption "Soularr container";
-
     tailscale.enable = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = "Expose Sonarr through Tailscale Serve.";
     };
-
     image = mkOption {
       type = types.str;
-      default = "docker.io/mrusse08/soularr:latest@sha256:61ee506de5fb1447f3abd4a5a47e2537fad152ddf8c7e0392a36ef00b4f1c3d9";
+      default = "docker.io/mrusse08/soularr:v1.2.3@sha256:e448d49d0ca6091a35653ff9198ebb4a3acf42abfc2f2056490a9a0f0cffd210";
       description = "Soularr container image.";
     };
-
     dataDir = mkOption {
       type = types.str;
       default = "/var/lib/soularr";
       description = "Soularr application data directory.";
     };
-
     downloadsDir = mkOption {
       type = types.str;
       default = "/mnt/shares/Downloads/Muziek/soularr";
       description = "Host directory used by Soularr for downloads.";
     };
-
     configSecretName = mkOption {
       type = types.str;
       default = "mimir/soularr/config_ini";
       description = "SOPS secret name for the Soularr config.ini.";
     };
-
     port = mkOption {
       type = types.port;
       default = 8265;
       description = "Soularr web UI port.";
     };
-
     openFirewall = mkOption {
       type = types.bool;
       default = false;
       description = "Open the Soularr web UI port in the firewall.";
     };
   };
-
   config = mkIf cfg.enable {
     virtualisation.oci-containers.containers.soularr = {
       image = cfg.image;
       pull = "missing";
-
-      ports = [
-        "${toString cfg.port}:8265"
-      ];
-
+      ports = [ "${toString cfg.port}:8265" ];
       volumes = [
         "${cfg.dataDir}:/data"
         "${config.sops.secrets.${cfg.configSecretName}.path}:/data/config.ini:ro"
         "${cfg.downloadsDir}:/downloads"
       ];
-
-      environment = {
-        TZ = "Europe/Amsterdam";
-      };
-
+      environment = { TZ = "Europe/Amsterdam"; };
       extraOptions = [
         "--user=1000:1000"
         "--network=bridge"
         "--health-cmd=none"
       ];
     };
-
     systemd.tmpfiles.rules = [
       "d ${cfg.dataDir} 0755 1000 1000 -"
       "d ${cfg.downloadsDir} 0755 1000 1000 -"
@@ -86,7 +65,6 @@ in
       "d ${cfg.downloadsDir}/incomplete 0755 1000 1000 -"
       "d ${cfg.downloadsDir}/failed_imports 0755 1000 1000 -"
     ];
-
     networking.firewall = mkIf cfg.openFirewall {
       allowedTCPPorts = [ cfg.port ];
     };

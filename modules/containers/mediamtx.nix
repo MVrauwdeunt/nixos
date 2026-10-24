@@ -53,7 +53,7 @@ in
 
   config = lib.mkIf cfg.enable {
     virtualisation.oci-containers.containers.mediamtx = {
-      image = "docker.io/bluenviron/mediamtx:latest@sha256:c7540465f868a02652118bea5a0daab12a29ac0f6cb8485abd535939ecddf886";
+      image = "docker.io/bluenviron/mediamtx:1.21.2@sha256:c7540465f868a02652118bea5a0daab12a29ac0f6cb8485abd535939ecddf886";
       pull = "missing";
 
       ports = [
