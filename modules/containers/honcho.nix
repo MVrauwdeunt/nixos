@@ -1,7 +1,9 @@
+
 { config, lib, pkgs, ... }:
 
 let
   cfg = config.apps.honcho;
+
   network = "honcho-internal";
   networkUnit = "podman-network-${network}.service";
 
@@ -32,14 +34,14 @@ in
 
     postgresImage = lib.mkOption {
       type = lib.types.str;
-      default = "docker.io/pgvector/pgvector:pg15";
-      description = "PostgreSQL with pgvector";
+      default = "docker.io/pgvector/pgvector:pg15@sha256:47af0b65960b14f1c6945aa4ccae37836c632e9a6fe0eea9160936e616e5b2e9";
+      description = "PostgreSQL 15 with pgvector";
     };
 
     redisImage = lib.mkOption {
       type = lib.types.str;
-      default = "docker.io/library/redis:8";
-      description = "Redis container image";
+      default = "docker.io/library/redis:8@sha256:2c2dff791878316e3b083188be0d578423b24813cdda5de0e80ea4f7b3e6bfd6";
+      description = "Redis 8 container image";
     };
 
     port = lib.mkOption {
@@ -62,6 +64,7 @@ in
     sops.secrets."vili/honcho/db-password" = {
       sopsFile = ../../secrets.yaml;
     };
+
     sops.secrets."vili/honcho/openai-key" = {
       sopsFile = ../../secrets.yaml;
     };
@@ -78,16 +81,19 @@ in
     systemd.services."podman-network-${network}" = {
       description = "Create Honcho internal Podman network";
       wantedBy = [ "multi-user.target" ];
+
       before = [
         "podman-honcho-db.service"
         "podman-honcho-redis.service"
         "podman-honcho.service"
         "podman-honcho-deriver.service"
       ];
+
       serviceConfig = {
         Type = "oneshot";
         RemainAfterExit = true;
       };
+
       script = ''
         ${pkgs.podman}/bin/podman network exists ${network} \
           || ${pkgs.podman}/bin/podman network create ${network}
@@ -98,27 +104,32 @@ in
       requires = [ networkUnit ];
       after = [ networkUnit ];
     };
+
     systemd.services.podman-honcho-redis = {
       requires = [ networkUnit ];
       after = [ networkUnit ];
     };
+
     systemd.services.podman-honcho = {
       requires = [
         networkUnit
         "podman-honcho-db.service"
         "podman-honcho-redis.service"
       ];
+
       after = [
         networkUnit
         "podman-honcho-db.service"
         "podman-honcho-redis.service"
       ];
     };
+
     systemd.services.podman-honcho-deriver = {
       requires = [
         networkUnit
         "podman-honcho.service"
       ];
+
       after = [
         networkUnit
         "podman-honcho.service"
@@ -128,19 +139,23 @@ in
     virtualisation.oci-containers.containers = {
       honcho-db = {
         image = cfg.postgresImage;
+
         environment = {
           POSTGRES_USER = "honcho";
           POSTGRES_DB = "honcho";
           PGDATA = "/var/lib/postgresql/data/pgdata";
           TZ = "Etc/UTC";
         };
+
         environmentFiles = [
           config.sops.templates."honcho-db.env".path
         ];
+
         volumes = [
           "honcho-postgres:/var/lib/postgresql/data"
           "${initSql}:/docker-entrypoint-initdb.d/init.sql:ro"
         ];
+
         extraOptions = [
           "--network=${network}"
           "--pull=missing"
@@ -149,8 +164,17 @@ in
 
       honcho-redis = {
         image = cfg.redisImage;
-        cmd = [ "redis-server" "--appendonly" "yes" ];
-        volumes = [ "honcho-redis:/data" ];
+
+        cmd = [
+          "redis-server"
+          "--appendonly"
+          "yes"
+        ];
+
+        volumes = [
+          "honcho-redis:/data"
+        ];
+
         extraOptions = [
           "--network=${network}"
           "--pull=missing"
@@ -159,16 +183,25 @@ in
 
       honcho = {
         image = cfg.image;
-        dependsOn = [ "honcho-db" "honcho-redis" ];
+
+        dependsOn = [
+          "honcho-db"
+          "honcho-redis"
+        ];
+
         entrypoint = "sh";
         cmd = [ "docker/entrypoint.sh" ];
+
         environment = appEnvironment;
+
         environmentFiles = [
           config.sops.templates."honcho.env".path
         ];
+
         ports = [
           "127.0.0.1:${toString cfg.port}:8000"
         ];
+
         extraOptions = [
           "--network=${network}"
           "--pull=missing"
@@ -177,19 +210,27 @@ in
 
       honcho-deriver = {
         image = cfg.image;
+
         dependsOn = [
           "honcho"
           "honcho-db"
           "honcho-redis"
         ];
+
         entrypoint = "/app/.venv/bin/python";
-        cmd = [ "-m" "src.deriver" ];
+        cmd = [
+          "-m"
+          "src.deriver"
+        ];
+
         environment = appEnvironment // {
           DERIVER_FLUSH_ENABLED = "true";
         };
+
         environmentFiles = [
           config.sops.templates."honcho.env".path
         ];
+
         extraOptions = [
           "--network=${network}"
           "--pull=missing"

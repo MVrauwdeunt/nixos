@@ -1,104 +1,143 @@
+
 { config, lib, pkgs, ... }:
-let cfg = config.apps.n8n;
+
+let
+  cfg = config.apps.n8n;
 in
 {
   options.apps.n8n = {
     enable = lib.mkEnableOption "n8n";
+
     image = lib.mkOption {
       type = lib.types.str;
       default = "docker.io/n8nio/n8n:2.44.6@sha256:d02752c6ab446ae9db8deec2f9cc887c378f77cdcad31650814df936b7386dfb";
       description = "n8n container image.";
     };
+
     postgresImage = lib.mkOption {
       type = lib.types.str;
-      default = "docker.io/library/postgres@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685";
-      description = "PostgreSQL container image.";
+      default = "docker.io/library/postgres:16.15@sha256:9e2cf6287f25c3151f4c9421ccce2b17f3e60061c111a29165e0d2cdd9ff0a97";
+      description = "PostgreSQL 16.15 container image for n8n.";
     };
+
     dataDir = lib.mkOption {
       type = lib.types.path;
       default = "/var/lib/n8n";
       description = "Base data directory for n8n.";
     };
+
     port = lib.mkOption {
       type = lib.types.port;
       default = 5678;
       description = "Local n8n web port.";
     };
+
     openFirewall = lib.mkOption {
       type = lib.types.bool;
       default = false;
       description = "Open the n8n port in the firewall.";
     };
+
     tailscale.enable = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = "Expose n8n through Tailscale Services.";
     };
   };
+
   config = lib.mkIf cfg.enable {
     virtualisation.oci-containers.backend = "podman";
+
     sops.secrets."sif/n8n_db_password" = {};
+
     sops.templates."n8n-db.env".content = ''
       POSTGRES_PASSWORD=${config.sops.placeholder."sif/n8n_db_password"}
     '';
+
     sops.templates."n8n.env".content = ''
       DB_POSTGRESDB_PASSWORD=${config.sops.placeholder."sif/n8n_db_password"}
     '';
+
     systemd.tmpfiles.rules = [
       "d ${cfg.dataDir} 0755 root root -"
       "d ${cfg.dataDir}/postgres 0755 root root -"
       "d ${cfg.dataDir}/storage 0755 1000 1000 -"
       "d ${cfg.dataDir}/files 0755 1000 1000 -"
     ];
+
     systemd.services.podman-network-n8n = {
       description = "Create n8n Podman network";
       wantedBy = [ "multi-user.target" ];
+
       before = [
         "podman-n8n.service"
         "podman-n8n-db.service"
       ];
+
       serviceConfig.Type = "oneshot";
+
       script = ''
         ${pkgs.podman}/bin/podman network exists n8n \
           || ${pkgs.podman}/bin/podman network create n8n
       '';
     };
+
     systemd.services.podman-n8n-db = {
-      requires = [ "podman-network-n8n.service" ];
-      after = [ "podman-network-n8n.service" ];
+      requires = [
+        "podman-network-n8n.service"
+      ];
+
+      after = [
+        "podman-network-n8n.service"
+      ];
     };
+
     systemd.services.podman-n8n = {
       requires = [
         "podman-network-n8n.service"
         "podman-n8n-db.service"
       ];
+
       after = [
         "podman-network-n8n.service"
         "podman-n8n-db.service"
       ];
     };
+
     virtualisation.oci-containers.containers = {
       n8n-db = {
         image = cfg.postgresImage;
+
         environment = {
           POSTGRES_USER = "n8n";
           POSTGRES_DB = "n8n";
           TZ = "Etc/UTC";
         };
+
         environmentFiles = [
           config.sops.templates."n8n-db.env".path
         ];
+
         volumes = [
           "${cfg.dataDir}/postgres:/var/lib/postgresql/data"
         ];
-        extraOptions = [ "--network=n8n" ];
+
+        extraOptions = [
+          "--network=n8n"
+        ];
       };
+
       n8n = {
         image = cfg.image;
-        dependsOn = [ "n8n-db" ];
+
+        dependsOn = [
+          "n8n-db"
+        ];
+
         ports = [
           "127.0.0.1:${toString cfg.port}:5678"
         ];
+
         environment = {
           DB_TYPE = "postgresdb";
           DB_POSTGRESDB_HOST = "n8n-db";
@@ -110,16 +149,22 @@ in
           TZ = "Etc/UTC";
           WEBHOOK_URL = "https://n8n.fiordland-gar.ts.net/";
         };
+
         environmentFiles = [
           config.sops.templates."n8n.env".path
         ];
+
         volumes = [
           "${cfg.dataDir}/storage:/home/node/.n8n"
           "${cfg.dataDir}/files:/files"
         ];
-        extraOptions = [ "--network=n8n" ];
+
+        extraOptions = [
+          "--network=n8n"
+        ];
       };
     };
+
     networking.firewall = lib.mkIf cfg.openFirewall {
       allowedTCPPorts = [ cfg.port ];
     };
