@@ -1,3 +1,4 @@
+
 { config, lib, ... }:
 
 let
@@ -27,9 +28,9 @@ in
 
   config = lib.mkIf cfg.enable {
     virtualisation.oci-containers.containers.mazanoke = {
-      image = "ghcr.io/civilblur/mazanoke:latest";
-      pull = "always";
-      
+      image = "ghcr.io/civilblur/mazanoke@sha256:ca83cddd90cd1e4b43102884bf39025731a1c7569f3bbda9d6530de72528cbab";
+      pull = "missing";
+
       ports = [
         "${toString cfg.port}:80"
       ];

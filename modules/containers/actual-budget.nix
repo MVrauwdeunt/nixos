@@ -13,7 +13,7 @@ in
 
     image = lib.mkOption {
       type = lib.types.str;
-      default = "docker.io/actualbudget/actual-server:latest";
+      default = "docker.io/actualbudget/actual-server@sha256:24645e971da6bb1a1f953d6859e307a0b29be1e8b4130a35b3220c209b5b860c";
       description = "Actual Budget container image.";
     };
 
@@ -99,7 +99,7 @@ in
     virtualisation.oci-containers.containers.actual-budget = {
       image = cfg.image;
       autoStart = true;
-      pull = "always";
+      pull = "missing";
 
       ports = [
         "127.0.0.1:${toString cfg.port}:5006"

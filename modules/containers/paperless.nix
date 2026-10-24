@@ -1,3 +1,4 @@
+
 { config, lib, pkgs, ... }:
 
 let
@@ -105,9 +106,9 @@ in
       # MariaDB
       #
       paperless-db = {
-        image = "docker.io/library/mariadb:11";
-        pull = "always";
-        
+        image = "docker.io/library/mariadb@sha256:f16d7a344413e519dff518f27bdb221388f84b0d274c97c4fb5f2cb0dc1b34fa";
+        pull = "missing";
+
         volumes = [
           "/var/lib/paperless/database:/var/lib/mysql"
         ];
@@ -131,9 +132,9 @@ in
       # Redis
       #
       paperless-redis = {
-        image = "docker.io/library/redis:8";
-        pull = "always";
-        
+        image = "docker.io/library/redis@sha256:2c2dff791878316e3b083188be0d578423b24813cdda5de0e80ea4f7b3e6bfd6";
+        pull = "missing";
+
         extraOptions = [
           "--network=paperless"
           "--network-alias=broker"
@@ -144,9 +145,9 @@ in
       # Paperless-ngx
       #
       paperless = {
-        image = "ghcr.io/paperless-ngx/paperless-ngx:latest";
-        pull = "always";
-        
+        image = "ghcr.io/paperless-ngx/paperless-ngx@sha256:d232cba37cc0bab0d6c6581ecd320383b7a6f49f33e0fd16adda4d009eb600dd";
+        pull = "missing";
+
         dependsOn = [
           "paperless-db"
           "paperless-redis"

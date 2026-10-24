@@ -23,7 +23,7 @@ in
 
     image = lib.mkOption {
       type = lib.types.str;
-      default = "ghcr.io/floorlamp/allos:latest";
+      default = "ghcr.io/floorlamp/allos@sha256:4562e9ec3be77538e7759b3f59fdd48fa1b564407ecdc6c3e86f151c5c1766db";
       description = "Allos container image.";
     };
 
@@ -115,7 +115,7 @@ in
 
       allos = {
         image = cfg.image;
-        pull = "always";
+        pull = "missing";
         autoStart = true;
 
         ports = [
@@ -139,7 +139,7 @@ in
 
       allos-notify = {
         image = cfg.image;
-        pull = "always";
+        pull = "missing";
         autoStart = true;
 
         cmd = [

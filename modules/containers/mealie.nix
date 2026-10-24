@@ -1,3 +1,4 @@
+
 { config, lib, ... }:
 
 let
@@ -37,9 +38,9 @@ in
     ];
 
     virtualisation.oci-containers.containers.mealie = {
-      image = "ghcr.io/mealie-recipes/mealie:latest";
-      pull = "always";
-      
+      image = "ghcr.io/mealie-recipes/mealie@sha256:8b02290f4d1806f02acac6f25f6d48a3c965612fda1f8e914d5af533276f8688";
+      pull = "missing";
+
       ports = [
         "127.0.0.1:${toString cfg.port}:9000"
       ];

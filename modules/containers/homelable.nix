@@ -58,13 +58,13 @@ in
 
     backendImage = lib.mkOption {
       type = lib.types.str;
-      default = "ghcr.io/pouzor/homelable-backend:latest";
+      default = "ghcr.io/pouzor/homelable-backend:latest@sha256:0c682daec42f57e8a2f74671901373d7e8513b85a434235b524a36772da2e93c";
       description = "Container image for the Homelable backend.";
     };
 
     frontendImage = lib.mkOption {
       type = lib.types.str;
-      default = "ghcr.io/pouzor/homelable-frontend:latest";
+      default = "ghcr.io/pouzor/homelable-frontend:latest@sha256:21456d46ce88fd443140ebe15cd83bfb57a0fd8d449d622ac3ad16a9663cbf7c";
       description = "Container image for the Homelable frontend.";
     };
 
@@ -77,7 +77,7 @@ in
 
       image = lib.mkOption {
         type = lib.types.str;
-        default = "ghcr.io/pouzor/homelable-mcp:latest";
+        default = "ghcr.io/pouzor/homelable-mcp:latest@sha256:39668f7c0ed6d7e09f0d9134e92517a79e99e93a6005ce981dc74e459896056d";
         description = "Homelable MCP container image.";
       };
 
@@ -330,7 +330,7 @@ in
     virtualisation.oci-containers.containers = {
       homelable-backend = {
         image = cfg.backendImage;
-        pull = "always";
+        pull = "missing";
 
         environment = {
           SQLITE_PATH = "/app/data/homelab.db";
@@ -368,7 +368,7 @@ in
       # Existing Tailscale Services depend on this unit.
       homelable = {
         image = cfg.frontendImage;
-        pull = "always";
+        pull = "missing";
 
         dependsOn = [
           "homelable-backend"
@@ -386,7 +386,7 @@ in
     // lib.optionalAttrs cfg.mcp.enable {
       homelable-mcp = {
         image = cfg.mcp.image;
-        pull = "always";
+        pull = "missing";
 
         dependsOn = [
           "homelable-backend"

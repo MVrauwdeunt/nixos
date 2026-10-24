@@ -1,3 +1,4 @@
+
 { config, lib, ... }:
 
 let
@@ -25,9 +26,9 @@ in
 
   config = lib.mkIf cfg.enable {
     virtualisation.oci-containers.containers.pdf = {
-      image = "docker.stirlingpdf.com/stirlingtools/stirling-pdf:latest";
-      pull = "always";
-      
+      image = "docker.stirlingpdf.com/stirlingtools/stirling-pdf@sha256:10164ffe04961b02ebc9fa4da12064eeacb8d3bc3e09ceb059f78ce7aaa83207";
+      pull = "missing";
+
       ports = [
         "${toString cfg.port}:8080"
       ];

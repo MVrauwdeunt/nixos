@@ -1,3 +1,4 @@
+
 { config, lib, pkgs, ... }:
 
 let
@@ -89,8 +90,8 @@ in
     virtualisation.oci-containers.containers = {
 
       dawarich-db = {
-        image = "docker.io/postgis/postgis:17-3.5-alpine";
-        pull = "always";
+        image = "docker.io/postgis/postgis@sha256:894f570c0cf0664ed5576a8fd5d5bfb8fb1b19d592885b686c3a88c8bd90c41f";
+        pull = "missing";
 
         volumes = [
           "/var/lib/dawarich/db:/var/lib/postgresql/data"
@@ -113,8 +114,8 @@ in
       };
 
       dawarich-redis = {
-        image = "docker.io/library/redis:7.4-alpine";
-        pull = "always";
+        image = "docker.io/library/redis@sha256:520775a41a63e77e06c73e35d2fd9cc15921a609516818796b4ecbb813078bc7";
+        pull = "missing";
 
         extraOptions = [
           "--network=dawarich"
@@ -123,9 +124,9 @@ in
       };
 
       dawarich = {
-        image = "docker.io/freikin/dawarich:latest";
-        pull = "always";
-        
+        image = "docker.io/freikin/dawarich@sha256:589e3606b11b61c3fa2d9661832cb73645a9b93a9cc7d807a071e2bc6c584498";
+        pull = "missing";
+
         dependsOn = [
           "dawarich-db"
           "dawarich-redis"
@@ -188,9 +189,9 @@ in
       };
 
       dawarich-sidekiq = {
-        image = "docker.io/freikin/dawarich:latest";
-        pull = "always";
-        
+        image = "docker.io/freikin/dawarich@sha256:589e3606b11b61c3fa2d9661832cb73645a9b93a9cc7d807a071e2bc6c584498";
+        pull = "missing";
+
         dependsOn = [
           "dawarich-db"
           "dawarich-redis"

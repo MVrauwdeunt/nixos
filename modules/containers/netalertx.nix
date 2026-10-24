@@ -1,3 +1,4 @@
+
 { config, lib, pkgs, ... }:
 
 with lib;
@@ -17,7 +18,7 @@ in
 
     image = mkOption {
       type = types.str;
-      default = "ghcr.io/jokob-sk/netalertx:25.11";
+      default = "ghcr.io/jokob-sk/netalertx:25.11@sha256:fd1a4ca4bd4c0f38797b36b4ec5b0928d7add7b9add788d9cedb11fd25a42a65";
       description = "Container image for NetAlertX";
     };
 
@@ -88,6 +89,7 @@ in
 
     virtualisation.oci-containers.containers.netalertx = {
       image = cfg.image;
+      pull = "missing";
       autoStart = true;
 
       environment = {

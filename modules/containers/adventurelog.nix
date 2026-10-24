@@ -1,3 +1,4 @@
+
 { config, lib, pkgs, ... }:
 
 let
@@ -109,8 +110,8 @@ in
 
     virtualisation.oci-containers.containers = {
       adventurelog-db = {
-        image = "docker.io/postgis/postgis:16-3.5";
-        pull = "always";
+        image = "docker.io/postgis/postgis@sha256:94146ac37bc61e2322f88016056c5920729cb8c64c8542ed590af8fc2abdac07";
+        pull = "missing";
 
         environment = {
           POSTGRES_DB = "database";
@@ -131,8 +132,8 @@ in
       };
 
       adventureapi = {
-        image = "ghcr.io/seanmorley15/adventurelog-backend:latest";
-        pull = "always";
+        image = "ghcr.io/seanmorley15/adventurelog-backend@sha256:418e82260939d70783f76dc0a10b7a1c32362dad5663b561dbad6a27dd4a6a7d";
+        pull = "missing";
 
         dependsOn = [ "adventurelog-db" ];
 
@@ -189,8 +190,8 @@ in
       };
 
       adventurelog = {
-        image = "ghcr.io/seanmorley15/adventurelog-frontend:latest";
-        pull = "always";
+        image = "ghcr.io/seanmorley15/adventurelog-frontend@sha256:51ee22428b4192f4372b54f84c8b90cd710311ad99993c5045f53b51717dd3f7";
+        pull = "missing";
 
         dependsOn = [ "adventureapi" ];
 

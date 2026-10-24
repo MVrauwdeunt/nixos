@@ -14,7 +14,7 @@ in
 
     image = lib.mkOption {
       type = lib.types.str;
-      default = "docker.io/bellamy/wallos:latest";
+      default = "docker.io/bellamy/wallos@sha256:b12fc3f6456fa4879346d27f13c96011a1dce8d5285ef31fcec9323f2bac9854";
       description = "Wallos container image.";
     };
 
@@ -103,6 +103,7 @@ in
     # Podman-container.
     virtualisation.oci-containers.containers.wallos = {
       image = cfg.image;
+      pull = "missing";
       autoStart = true;
 
       ports = [

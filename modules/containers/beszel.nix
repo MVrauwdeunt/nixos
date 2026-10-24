@@ -1,3 +1,4 @@
+
 { config, lib, pkgs, ... }:
 
 with lib;
@@ -17,7 +18,7 @@ in
 
     image = mkOption {
       type = types.str;
-      default = "docker.io/henrygd/beszel:latest";
+      default = "docker.io/henrygd/beszel:latest@sha256:8514a69d9bbbcb74f371a3205561ee231fc0289739cea64e8131f341d695b770";
       description = "Container image for the Beszel hub";
     };
 
@@ -57,7 +58,8 @@ in
     virtualisation.oci-containers.containers.beszel = {
       image = cfg.image;
       autoStart = true;
-      pull = "always";
+      pull = "missing";
+
       environment = {
         APP_URL = cfg.appUrl;
       };

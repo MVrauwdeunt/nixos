@@ -1,3 +1,4 @@
+
 { config, lib, ... }:
 
 let
@@ -9,7 +10,7 @@ in
 
     image = lib.mkOption {
       type = lib.types.str;
-      default = "ghcr.io/hargata/lubelogger:v1.7.3";
+      default = "ghcr.io/hargata/lubelogger@sha256:c9d2bbb48c7f84d90e54496e2cd60422e56a5f2345c8a539ebe09f77e629d321";
       description = "LubeLogger container image";
     };
 
@@ -42,6 +43,7 @@ in
 
     virtualisation.oci-containers.containers.lubelogger = {
       image = cfg.image;
+      pull = "missing";
       autoStart = true;
 
       ports = [

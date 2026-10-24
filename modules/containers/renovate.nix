@@ -1,3 +1,4 @@
+
 { config, lib, ... }:
 
 with lib;
@@ -17,7 +18,7 @@ in
 
     image = mkOption {
       type = types.str;
-      default = "docker.io/renovate/renovate:43.139-full";
+      default = "docker.io/renovate/renovate:43.139-full@sha256:c1c399fa676f11258937cb708f6e40fb6659de7e62600b21e7fc2796eb450754";
     };
 
     dataDir = mkOption {
@@ -62,6 +63,7 @@ in
 
     virtualisation.oci-containers.containers.renovate = {
       image = cfg.image;
+      pull = "missing";
       autoStart = true;
 
       environment = {

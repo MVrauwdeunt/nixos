@@ -1,3 +1,4 @@
+
 { config, lib, pkgs, ... }:
 
 with lib;
@@ -48,13 +49,13 @@ in
 
     image = mkOption {
       type = types.str;
-      default = "lscr.io/linuxserver/unifi-network-application:10.6.106";
+      default = "lscr.io/linuxserver/unifi-network-application:10.6.106@sha256:392031f6300b5b98631c2ee6871e0dae67aca31e9debb298c8efca0d92eb9fa7";
       description = "Container image for UniFi Network Application.";
     };
 
     mongoImage = mkOption {
       type = types.str;
-      default = "docker.io/mongo:8.0";
+      default = "docker.io/library/mongo:8.0@sha256:4a4ab5d4834207389e0d7270fac988e21ffedccecba77991a552f755df229907";
       description = "MongoDB container image.";
     };
 
@@ -155,7 +156,7 @@ in
     virtualisation.oci-containers.containers = {
       unifi-db = {
         image = cfg.mongoImage;
-        pull = "always";
+        pull = "missing";
         autoStart = true;
 
         environment = {

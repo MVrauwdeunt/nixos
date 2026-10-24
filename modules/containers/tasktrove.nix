@@ -1,3 +1,4 @@
+
 { config, lib, ... }:
 
 let
@@ -32,9 +33,9 @@ in
     ];
 
     virtualisation.oci-containers.containers.tasktrove = {
-      image = "ghcr.io/dohsimpson/tasktrove:latest";
-      pull = "always";
-      
+      image = "ghcr.io/dohsimpson/tasktrove@sha256:ecfda986ed36909cde78cbdec8b3b39eb60e39be41df3e42afdb102baba9850b";
+      pull = "missing";
+
       ports = [
         "127.0.0.1:${toString cfg.port}:3000"
       ];

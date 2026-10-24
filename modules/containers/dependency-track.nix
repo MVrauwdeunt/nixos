@@ -54,17 +54,17 @@ in
     # Container images
     apiImage = lib.mkOption {
       type = lib.types.str;
-      default = "ghcr.io/dependencytrack/apiserver:5.2.0";
+      default = "ghcr.io/dependencytrack/apiserver:5.2.0@sha256:7411c390182e6e42156ccf2ab033aa9120a1f37b7ce59e8c2da0d77ec23c0a5f";
     };
 
     frontendImage = lib.mkOption {
       type = lib.types.str;
-      default = "ghcr.io/dependencytrack/frontend:5.2.0";
+      default = "ghcr.io/dependencytrack/frontend:5.2.0@sha256:7e68cc134284d6206e813212cf2a20c72f438d76f2094c0f05fd5d5e14602dda";
     };
 
     postgresImage = lib.mkOption {
       type = lib.types.str;
-      default = "docker.io/library/postgres:18-alpine";
+      default = "docker.io/library/postgres:18-alpine@sha256:898c60cb390d1085bc97bdd6a1ae968757421df394b071848b52b1c09c89d6a5";
     };
 
     # Persistent storage
@@ -149,6 +149,7 @@ in
       # PostgreSQL
       dependency-track-db = {
         image = cfg.postgresImage;
+        pull = "missing";
         autoStart = true;
 
         environment = {
@@ -173,6 +174,7 @@ in
       # Dependency-Track API
       dependency-track-api = {
         image = cfg.apiImage;
+        pull = "missing";
         autoStart = true;
 
         dependsOn = [
@@ -207,6 +209,7 @@ in
       # Dependency-Track frontend
       dependency-track-frontend = {
         image = cfg.frontendImage;
+        pull = "missing";
         autoStart = true;
 
         environment = {
