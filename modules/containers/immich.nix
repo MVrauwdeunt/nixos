@@ -90,7 +90,7 @@ in
 
     virtualisation.oci-containers.containers = {
       immich-database = {
-        image = "ghcr.io/immich-app/postgres@sha256:bcf63357191b76a916ae5eb93464d65c07511da41e3bf7a8416db519b40b1c23";
+        image = "ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0@sha256:bcf63357191b76a916ae5eb93464d65c07511da41e3bf7a8416db519b40b1c23";
         pull = "missing";
 
         environment = {
@@ -109,11 +109,12 @@ in
 
         extraOptions = [
           "--network=immich"
+          "--shm-size=128m"
         ];
       };
 
       immich-redis = {
-        image = "docker.io/valkey/valkey@sha256:418652cfb58ef879d4978c33553735d7147016032d5aefaa14c828e611eb9dfd";
+        image = "docker.io/valkey/valkey:9@sha256:418652cfb58ef879d4978c33553735d7147016032d5aefaa14c828e611eb9dfd";
         pull = "missing";
 
         extraOptions = [
@@ -122,7 +123,7 @@ in
       };
 
       immich-machine-learning = {
-        image = "ghcr.io/immich-app/immich-machine-learning@sha256:73915f07e1f4289ba45b174c58443db74cef47ddf502613f475fc5e52458ea42";
+        image = "ghcr.io/immich-app/immich-machine-learning:v3.3.5@sha256:5b28c9352c8374b8a1ed96fbdd8d6755fea6e43510ec43fdf6538aa02ea40f56";
         pull = "missing";
 
         volumes = [
@@ -135,7 +136,7 @@ in
       };
 
       immich = {
-        image = "ghcr.io/immich-app/immich-server@sha256:bae7664ff3aa4c2c1fcbdcdd86b40b105643c5f861f3e6a770fc760089f25862";
+        image = "ghcr.io/immich-app/immich-server:v3.3.5@sha256:485d546a2e31d6a8b4db8423fcba5c109de8c218d93410af115fd1ccfc4352a6";
         pull = "missing";
 
         dependsOn = [
@@ -152,7 +153,11 @@ in
           DB_HOSTNAME = "immich-database";
           DB_USERNAME = "immich";
           DB_DATABASE_NAME = "immich";
+
           REDIS_HOSTNAME = "immich-redis";
+
+          IMMICH_MEDIA_LOCATION = "/usr/src/app/upload";
+
           TZ = "Europe/Amsterdam";
         };
 

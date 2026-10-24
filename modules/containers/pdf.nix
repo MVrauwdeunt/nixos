@@ -26,7 +26,7 @@ in
 
   config = lib.mkIf cfg.enable {
     virtualisation.oci-containers.containers.pdf = {
-      image = "docker.stirlingpdf.com/stirlingtools/stirling-pdf@sha256:10164ffe04961b02ebc9fa4da12064eeacb8d3bc3e09ceb059f78ce7aaa83207";
+      image = "docker.stirlingpdf.com/stirlingtools/stirling-pdf:3.2.1@sha256:f95b691c3df463373258e21a578b404f1eb4c7660e8170a40e3e03c9c8f208a4";
       pull = "missing";
 
       ports = [

@@ -10,7 +10,7 @@ in
 
     image = lib.mkOption {
       type = lib.types.str;
-      default = "ghcr.io/manyfold3d/manyfold-solo@sha256:f171f544b81ab92d373906a22114f65851b5b4f30861883baed754ca94651a7d";
+      default = "ghcr.io/manyfold3d/manyfold-solo:0.153.0@sha256:161109b917a158b5efd8478a437e9900db7bdc57235c167aa70d5ad69425fc31";
     };
 
     dataDir = lib.mkOption {

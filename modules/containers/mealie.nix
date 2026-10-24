@@ -38,7 +38,7 @@ in
     ];
 
     virtualisation.oci-containers.containers.mealie = {
-      image = "ghcr.io/mealie-recipes/mealie@sha256:8b02290f4d1806f02acac6f25f6d48a3c965612fda1f8e914d5af533276f8688";
+      image = "ghcr.io/mealie-recipes/mealie:v3.29.0@sha256:78eb28b8776d0bad40c5e605c72b3f4f5976793e491558c7dcbdfc04c835d4bc";
       pull = "missing";
 
       ports = [
@@ -49,10 +49,7 @@ in
         ALLOW_SIGNUP = "false";
         PUID = "1000";
         PGID = "1000";
-
-        # Keep the existing timezone during migration.
         TZ = "Europe/Amsterdam";
-
         BASE_URL = "https://mealie.gladsheimr.nl";
       };
 

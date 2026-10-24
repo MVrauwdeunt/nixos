@@ -5,7 +5,6 @@ let
   cfg = config.apps.wallos;
 
   oidcSecretName = "saga/wallos_oidc_client_secret";
-
 in
 {
   options.apps.wallos = {
@@ -14,7 +13,7 @@ in
 
     image = lib.mkOption {
       type = lib.types.str;
-      default = "docker.io/bellamy/wallos@sha256:b12fc3f6456fa4879346d27f13c96011a1dce8d5285ef31fcec9323f2bac9854";
+      default = "docker.io/bellamy/wallos:5.10.2@sha256:8873c2328e745c7ca8ff0e0f5508215219ec5c02a3469c0d8049602be2a2bca3";
       description = "Wallos container image.";
     };
 
@@ -75,15 +74,12 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-
-    # PHP-FPM draait in Wallos als www-data (GID 82).
     users.groups = lib.mkIf cfg.oidc.enable {
       wallos-oidc = {
         gid = 82;
       };
     };
 
-    # OIDC-secret via SOPS.
     sops.secrets = lib.mkIf cfg.oidc.enable {
       "${oidcSecretName}" = {
         sopsFile = ../../secrets.yaml;
@@ -93,14 +89,12 @@ in
       };
     };
 
-    # Persistente directories.
     systemd.tmpfiles.rules = [
       "d ${cfg.dataDir} 0755 root root -"
       "d ${cfg.dataDir}/db 0755 root root -"
       "d ${cfg.dataDir}/logos 0755 82 82 -"
     ];
 
-    # Podman-container.
     virtualisation.oci-containers.containers.wallos = {
       image = cfg.image;
       pull = "missing";
@@ -146,14 +140,11 @@ in
             lib.boolToString cfg.oidc.disablePasswordLogin;
         };
 
-      # DNS via Saga's systemd-resolved.
-      # Publieke DNS en Tailscale MagicDNS.
       extraOptions = [
         "--dns=10.88.0.1"
       ];
     };
 
-    # Firewall.
     networking.firewall.allowedTCPPorts =
       lib.mkIf cfg.openFirewall [ cfg.port ];
   };

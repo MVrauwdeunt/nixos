@@ -25,7 +25,6 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-
     sops.secrets."saga/dawarich_db_password" = {};
 
     sops.templates."dawarich-db.env".content = ''
@@ -53,7 +52,6 @@ in
         "podman-dawarich-db.service"
         "podman-dawarich-redis.service"
         "podman-dawarich.service"
-        "podman-dawarich-sidekiq.service"
       ];
 
       serviceConfig = {
@@ -82,15 +80,9 @@ in
       after = [ "dawarich-network.service" ];
     };
 
-    systemd.services.podman-dawarich-sidekiq = {
-      requires = [ "dawarich-network.service" ];
-      after = [ "dawarich-network.service" ];
-    };
-
     virtualisation.oci-containers.containers = {
-
       dawarich-db = {
-        image = "docker.io/postgis/postgis@sha256:894f570c0cf0664ed5576a8fd5d5bfb8fb1b19d592885b686c3a88c8bd90c41f";
+        image = "docker.io/postgis/postgis:17-3.5-alpine@sha256:894f570c0cf0664ed5576a8fd5d5bfb8fb1b19d592885b686c3a88c8bd90c41f";
         pull = "missing";
 
         volumes = [
@@ -114,7 +106,7 @@ in
       };
 
       dawarich-redis = {
-        image = "docker.io/library/redis@sha256:520775a41a63e77e06c73e35d2fd9cc15921a609516818796b4ecbb813078bc7";
+        image = "docker.io/library/redis:7.4-alpine@sha256:520775a41a63e77e06c73e35d2fd9cc15921a609516818796b4ecbb813078bc7";
         pull = "missing";
 
         extraOptions = [
@@ -124,7 +116,7 @@ in
       };
 
       dawarich = {
-        image = "docker.io/freikin/dawarich@sha256:589e3606b11b61c3fa2d9661832cb73645a9b93a9cc7d807a071e2bc6c584498";
+        image = "docker.io/freikin/dawarich:1.17.0@sha256:207dc86f8baa8fcf5b585f31186bf81b55added9c102a96f308d640e964ea60f";
         pull = "missing";
 
         dependsOn = [
@@ -163,6 +155,10 @@ in
           DATABASE_USERNAME = "dawarich";
           DATABASE_NAME = "dawarich_development";
 
+          SIDEKIQ_EMBEDDED = "true";
+          WEB_CONCURRENCY = "0";
+          BACKGROUND_PROCESSING_CONCURRENCY = "2";
+
           MIN_MINUTES_SPENT_IN_CITY = "60";
 
           APPLICATION_HOSTS =
@@ -185,60 +181,7 @@ in
 
         extraOptions = [
           "--network=dawarich"
-        ];
-      };
-
-      dawarich-sidekiq = {
-        image = "docker.io/freikin/dawarich@sha256:589e3606b11b61c3fa2d9661832cb73645a9b93a9cc7d807a071e2bc6c584498";
-        pull = "missing";
-
-        dependsOn = [
-          "dawarich-db"
-          "dawarich-redis"
-          "dawarich"
-        ];
-
-        entrypoint = "sidekiq-entrypoint.sh";
-
-        cmd = [
-          "sidekiq"
-        ];
-
-        volumes = [
-          "/var/lib/dawarich/public:/var/app/public"
-          "/var/lib/dawarich/watched:/var/app/tmp/imports/watched"
-          "/var/lib/dawarich/storage:/var/app/storage"
-        ];
-
-        environment = {
-          RAILS_ENV = "development";
-
-          REDIS_URL = "redis://dawarich_redis:6379";
-
-          DATABASE_HOST = "dawarich_db";
-          DATABASE_USERNAME = "dawarich";
-          DATABASE_NAME = "dawarich_development";
-
-          APPLICATION_HOSTS = "localhost";
-
-          BACKGROUND_PROCESSING_CONCURRENCY = "10";
-
-          APPLICATION_PROTOCOL = "http";
-
-          PROMETHEUS_EXPORTER_ENABLED = "false";
-          PROMETHEUS_EXPORTER_HOST = "dawarich";
-          PROMETHEUS_EXPORTER_PORT = "9394";
-
-          SELF_HOSTED = "true";
-          STORE_GEODATA = "true";
-        };
-
-        environmentFiles = [
-          config.sops.templates."dawarich-app.env".path
-        ];
-
-        extraOptions = [
-          "--network=dawarich"
+          "--stop-timeout=60"
         ];
       };
     };
