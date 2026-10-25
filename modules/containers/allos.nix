@@ -23,8 +23,8 @@ in
 
     image = lib.mkOption {
       type = lib.types.str;
-      default = "ghcr.io/floorlamp/allos@sha256:4562e9ec3be77538e7759b3f59fdd48fa1b564407ecdc6c3e86f151c5c1766db";
-      description = "Allos container image.";
+      default = "ghcr.io/floorlamp/allos:9cc16e0c1cae35406ba29ffc754f8f921d64d90c@sha256:4562e9ec3be77538e7759b3f59fdd48fa1b564407ecdc6c3e86f151c5c1766db";
+      description = "Allos container image pinned to Git revision and SHA256 digest.";
     };
 
     port = lib.mkOption {
@@ -132,6 +132,13 @@ in
 
         extraOptions = [
           "--security-opt=no-new-privileges"
+
+          # Official Allos HTTP healthcheck
+          "--health-cmd=node -e \"fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""
+          "--health-interval=30s"
+          "--health-timeout=5s"
+          "--health-retries=3"
+          "--health-start-period=30s"
         ];
       };
 
