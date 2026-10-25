@@ -1,3 +1,4 @@
+
 { config, lib, pkgs, ... }:
 let cfg = config.apps.karakeep;
 in
@@ -30,6 +31,7 @@ in
       MEILI_MASTER_KEY=${config.sops.placeholder."saga/karakeep_meili_master_key"}
       OPENAI_API_KEY=${config.sops.placeholder."saga/karakeep_openai_api_key"}
     '';
+
     sops.templates."karakeep-meilisearch.env".content = ''
       MEILI_MASTER_KEY=${config.sops.placeholder."saga/karakeep_meili_master_key"}
     '';
@@ -38,6 +40,7 @@ in
       "d /var/lib/karakeep 0755 root root -"
       "d /var/lib/karakeep/data 0755 root root -"
       "d /var/lib/karakeep/meilisearch 0755 root root -"
+      "d /var/lib/karakeep/meili-v1.41 0755 root root -"
     ];
 
     systemd.services.podman-network-karakeep = {
@@ -54,14 +57,17 @@ in
           || ${pkgs.podman}/bin/podman network create karakeep
       '';
     };
+
     systemd.services.podman-karakeep-app = {
       requires = [ "podman-network-karakeep.service" ];
       after = [ "podman-network-karakeep.service" ];
     };
+
     systemd.services.podman-karakeep-chrome = {
       requires = [ "podman-network-karakeep.service" ];
       after = [ "podman-network-karakeep.service" ];
     };
+
     systemd.services.podman-karakeep-meilisearch = {
       requires = [ "podman-network-karakeep.service" ];
       after = [ "podman-network-karakeep.service" ];
@@ -75,7 +81,9 @@ in
           "karakeep-chrome"
           "karakeep-meilisearch"
         ];
-        ports = [ "127.0.0.1:${toString cfg.port}:3000" ];
+        ports = [
+          "127.0.0.1:${toString cfg.port}:3000"
+        ];
         environment = {
           MEILI_ADDR = "http://karakeep-meilisearch:7700";
           BROWSER_WEB_URL = "http://karakeep-chrome:9222";
@@ -88,8 +96,12 @@ in
         environmentFiles = [
           config.sops.templates."karakeep-app.env".path
         ];
-        volumes = [ "/var/lib/karakeep/data:/data" ];
-        extraOptions = [ "--network=karakeep" ];
+        volumes = [
+          "/var/lib/karakeep/data:/data"
+        ];
+        extraOptions = [
+          "--network=karakeep"
+        ];
       };
 
       karakeep-chrome = {
@@ -109,7 +121,7 @@ in
       };
 
       karakeep-meilisearch = {
-        image = "docker.io/getmeili/meilisearch@sha256:bed3fb650e62da53145777204891159242f6ea4ce69e215b36223af4aa64a0ae";
+        image = "docker.io/getmeili/meilisearch:v1.41.0@sha256:860fa4baed04ae1c235de870edab0c8006227546dea1bbb6411fbfc5e27cf1db";
         pull = "missing";
         environment = {
           MEILI_NO_ANALYTICS = "true";
@@ -118,11 +130,14 @@ in
           config.sops.templates."karakeep-meilisearch.env".path
         ];
         volumes = [
-          "/var/lib/karakeep/meilisearch:/meili_data"
+          "/var/lib/karakeep/meili-v1.41:/meili_data"
         ];
-        extraOptions = [ "--network=karakeep" ];
+        extraOptions = [
+          "--network=karakeep"
+        ];
       };
     };
+
     networking.firewall = lib.mkIf cfg.openFirewall {
       allowedTCPPorts = [ cfg.port ];
     };
