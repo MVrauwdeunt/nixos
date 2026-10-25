@@ -6,7 +6,7 @@
   services.hermes-agent.mcpServers.actual-budget = {
     enabled = true;
 
-    url = "http://saga.fiordland-gar.ts.net:3001/mcp";
+    url = "http://saga.fiordland-gar.ts.net:3101/mcp";
 
     headers.Authorization =
       "Bearer \${ACTUAL_MCP_TOKEN}";
