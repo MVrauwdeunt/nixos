@@ -1,3 +1,4 @@
+
 { config, lib, pkgs, ... }:
 let cfg = config.apps.wanderer;
 in
@@ -17,18 +18,24 @@ in
       default = true;
     };
   };
+
   config = lib.mkIf cfg.enable {
     sops.secrets."saga/wanderer_meili_master_key" = {};
     sops.secrets."saga/wanderer_pocketbase_encryption_key" = {};
+    sops.secrets."saga/wanderer_pocketbase_proxy_secret" = {};
+
     sops.templates."wanderer.env".content = ''
       MEILI_MASTER_KEY=${config.sops.placeholder."saga/wanderer_meili_master_key"}
       POCKETBASE_ENCRYPTION_KEY=${config.sops.placeholder."saga/wanderer_pocketbase_encryption_key"}
+      POCKETBASE_PROXY_SECRET=${config.sops.placeholder."saga/wanderer_pocketbase_proxy_secret"}
     '';
+
     systemd.tmpfiles.rules = [
       "d /var/lib/wanderer 0755 root root -"
       "d /var/lib/wanderer/pb_data 0755 root root -"
       "d /var/lib/wanderer/uploads 0755 root root -"
     ];
+
     systemd.services.wanderer-network = {
       description = "Create Wanderer Podman network";
       wantedBy = [ "multi-user.target" ];
@@ -46,10 +53,12 @@ in
           || ${pkgs.podman}/bin/podman network create wanderer
       '';
     };
+
     systemd.services.podman-wanderer-search = {
       requires = [ "wanderer-network.service" ];
       after = [ "wanderer-network.service" ];
     };
+
     systemd.services.podman-wanderer-db = {
       requires = [ "wanderer-network.service" ];
       after = [
@@ -57,6 +66,7 @@ in
         "podman-wanderer-search.service"
       ];
     };
+
     systemd.services.podman-wanderer = {
       requires = [ "wanderer-network.service" ];
       after = [
@@ -68,10 +78,10 @@ in
 
     virtualisation.oci-containers.containers = {
       wanderer-search = {
-        image = "docker.io/getmeili/meilisearch@sha256:6f8f1fc29d1ff67b4d8d503bb4e0a69b55c8d42600decafde951344218193a27";
+        image = "docker.io/getmeili/meilisearch:v1.36.0@sha256:203a0854738be101bfdada825ac3cbf95e5681bc849757b6bc199e4cfae98faa";
         pull = "missing";
         volumes = [
-          "/var/lib/wanderer/data.ms:/meili_data/data.ms"
+          "/var/lib/wanderer/meili-v1.36:/meili_data"
         ];
         environment = {
           MEILI_URL = "http://127.0.0.1:7700";
@@ -123,8 +133,9 @@ in
           PUBLIC_POCKETBASE_URL = "http://db:8090";
           PUBLIC_DISABLE_SIGNUP = "false";
           UPLOAD_FOLDER = "/app/uploads";
-          PUBLIC_VALHALLA_URL = "https://valhalla1.openstreetmap.de";
-          PUBLIC_NOMINATIM_URL = "https://nominatim.openstreetmap.org";
+          VALHALLA_URL = "https://valhalla1.openstreetmap.de";
+          NOMINATIM_URL = "https://nominatim.openstreetmap.org";
+          OVERPASS_API_URL = "https://overpass-api.de";
         };
         environmentFiles = [
           config.sops.templates."wanderer.env".path
@@ -132,6 +143,7 @@ in
         extraOptions = [ "--network=wanderer" ];
       };
     };
+
     networking.firewall = lib.mkIf cfg.openFirewall {
       allowedTCPPorts = [ cfg.port ];
     };
