@@ -86,7 +86,7 @@ in
 
     virtualisation.oci-containers.containers = {
       paperless-db = {
-        image = "docker.io/library/mariadb:11@sha256:f16d7a344413e519dff518f27bdb221388f84b0d274c97c4fb5f2cb0dc1b34fa";
+        image = "docker.io/library/mariadb:11.8.9@sha256:f16d7a344413e519dff518f27bdb221388f84b0d274c97c4fb5f2cb0dc1b34fa";
         pull = "missing";
 
         volumes = [
@@ -109,7 +109,7 @@ in
       };
 
       paperless-redis = {
-        image = "docker.io/library/redis:8@sha256:2c2dff791878316e3b083188be0d578423b24813cdda5de0e80ea4f7b3e6bfd6";
+        image = "docker.io/library/redis:8.10.2@sha256:97ec88159e6d7cfb5ddef9015386087d58a912de80112f06ebdfa78fa5989901";
         pull = "missing";
 
         extraOptions = [
