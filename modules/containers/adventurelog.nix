@@ -1,3 +1,4 @@
+
 { config, lib, pkgs, ... }:
 let
   cfg = config.apps.adventurelog;
@@ -6,15 +7,18 @@ in
 {
   options.apps.adventurelog = {
     enable = lib.mkEnableOption "AdventureLog";
+
     port = lib.mkOption {
       type = lib.types.port;
       default = 8015;
       description = "Local AdventureLog frontend port.";
     };
+
     openFirewall = lib.mkOption {
       type = lib.types.bool;
       default = false;
     };
+
     tailscale.enable = lib.mkOption {
       type = lib.types.bool;
       default = true;
@@ -24,15 +28,18 @@ in
 
   options.apps.adventureapi = {
     enable = lib.mkEnableOption "AdventureLog API";
+
     port = lib.mkOption {
       type = lib.types.port;
       default = 8016;
       description = "Local AdventureLog API port.";
     };
+
     openFirewall = lib.mkOption {
       type = lib.types.bool;
       default = false;
     };
+
     tailscale.enable = lib.mkOption {
       type = lib.types.bool;
       default = true;
@@ -53,6 +60,7 @@ in
     sops.templates."adventurelog-db.env".content = ''
       POSTGRES_PASSWORD=${config.sops.placeholder."saga/adventurelog_db_password"}
     '';
+
     sops.templates."adventurelog-api.env".content = ''
       POSTGRES_PASSWORD=${config.sops.placeholder."saga/adventurelog_db_password"}
       PGPASSWORD=${config.sops.placeholder."saga/adventurelog_db_password"}
@@ -74,7 +82,9 @@ in
         "podman-adventureapi.service"
         "podman-adventurelog-db.service"
       ];
+
       serviceConfig.Type = "oneshot";
+
       script = ''
         ${pkgs.podman}/bin/podman network exists adventurelog \
           || ${pkgs.podman}/bin/podman network create adventurelog
@@ -82,42 +92,135 @@ in
     };
 
     systemd.services.podman-adventurelog = {
-      requires = [ "podman-network-adventurelog.service" ];
-      after = [ "podman-network-adventurelog.service" ];
+      requires = [
+        "podman-network-adventurelog.service"
+        "adventurelog-api-ready.service"
+      ];
+      after = [
+        "podman-network-adventurelog.service"
+        "adventurelog-api-ready.service"
+      ];
     };
+
     systemd.services.podman-adventureapi = {
-      requires = [ "podman-network-adventurelog.service" ];
-      after = [ "podman-network-adventurelog.service" ];
+      requires = [
+        "podman-network-adventurelog.service"
+        "adventurelog-db-ready.service"
+      ];
+      after = [
+        "podman-network-adventurelog.service"
+        "adventurelog-db-ready.service"
+      ];
     };
+
     systemd.services.podman-adventurelog-db = {
       requires = [ "podman-network-adventurelog.service" ];
       after = [ "podman-network-adventurelog.service" ];
     };
 
+    # Compose equivalent:
+    # depends_on:
+    #   condition: service_healthy
+    #
+    # OCI dependsOn only controls start order.
+    # These systemd services explicitly wait for container health.
+
+    systemd.services.adventurelog-db-ready = {
+      description = "Wait for AdventureLog PostGIS health";
+
+      requires = [ "podman-adventurelog-db.service" ];
+      after = [ "podman-adventurelog-db.service" ];
+
+      serviceConfig = {
+        Type = "oneshot";
+        TimeoutStartSec = "150s";
+      };
+
+      script = ''
+        for i in $(${pkgs.coreutils}/bin/seq 1 120); do
+          status=$(${pkgs.podman}/bin/podman inspect adventurelog-db \
+            --format '{{if .State.Health}}{{.State.Health.Status}}{{end}}' 2>/dev/null || true)
+
+          if [ "$status" = healthy ]; then
+            exit 0
+          fi
+
+          ${pkgs.coreutils}/bin/sleep 1
+        done
+
+        echo "AdventureLog database did not become healthy" >&2
+        exit 1
+      '';
+    };
+
+    systemd.services.adventurelog-api-ready = {
+      description = "Wait for AdventureLog backend health";
+
+      requires = [ "podman-adventureapi.service" ];
+      after = [ "podman-adventureapi.service" ];
+
+      serviceConfig = {
+        Type = "oneshot";
+        TimeoutStartSec = "150s";
+      };
+
+      script = ''
+        for i in $(${pkgs.coreutils}/bin/seq 1 120); do
+          status=$(${pkgs.podman}/bin/podman inspect adventureapi \
+            --format '{{if .State.Health}}{{.State.Health.Status}}{{end}}' 2>/dev/null || true)
+
+          if [ "$status" = healthy ]; then
+            exit 0
+          fi
+
+          ${pkgs.coreutils}/bin/sleep 1
+        done
+
+        echo "AdventureLog backend did not become healthy" >&2
+        exit 1
+      '';
+    };
+
     virtualisation.oci-containers.containers = {
       adventurelog-db = {
-        image = "docker.io/postgis/postgis@sha256:94146ac37bc61e2322f88016056c5920729cb8c64c8542ed590af8fc2abdac07";
+        image = "docker.io/postgis/postgis:16-3.5@sha256:94146ac37bc61e2322f88016056c5920729cb8c64c8542ed590af8fc2abdac07";
         pull = "missing";
+
         environment = {
           POSTGRES_DB = "database";
           POSTGRES_USER = "adventure";
         };
+
         environmentFiles = [
           config.sops.templates."adventurelog-db.env".path
         ];
+
         volumes = [
           "/var/lib/adventurelog/postgres:/var/lib/postgresql/data"
         ];
-        extraOptions = [ "--network=adventurelog" ];
+
+        extraOptions = [
+          "--network=adventurelog"
+          "--health-cmd=pg_isready -U adventure -d database"
+          "--health-interval=5s"
+          "--health-timeout=5s"
+          "--health-retries=5"
+          "--health-start-period=10s"
+        ];
       };
 
       adventureapi = {
-        image = "ghcr.io/seanmorley15/adventurelog-backend:v0.13.0@sha256:0250d9cb0d745a8d768f31d3cdc68ac14bfa8b43dedfe0f550158e3861c12db7";
+        # Upstream main build: 2026-10-24
+        # Revision: 6b80516d5b9c5f675bbef56855bf4bdd711dbc45
+        image = "ghcr.io/seanmorley15/adventurelog-backend:latest@sha256:22447c533ed843287f1b578e7624d551b2770a75c4eefc4b69b7cfb91b6d5586";
         pull = "missing";
+
         dependsOn = [ "adventurelog-db" ];
+
         ports = [
           "127.0.0.1:${toString apiCfg.port}:80"
         ];
+
         environment = {
           PUID = "1000";
           PGID = "1000";
@@ -135,20 +238,37 @@ in
           FRONTEND_URL = "https://adventurelog.fiordland-gar.ts.net";
           BACKEND_PORT = toString apiCfg.port;
         };
+
         environmentFiles = [
           config.sops.templates."adventurelog-api.env".path
         ];
-        volumes = [ "/var/lib/adventurelog/media:/code/media" ];
-        extraOptions = [ "--network=adventurelog" ];
+
+        volumes = [
+          "/var/lib/adventurelog/media:/code/media"
+        ];
+
+        extraOptions = [
+          "--network=adventurelog"
+          "--health-cmd=python -c \"import urllib.request; urllib.request.urlopen('http://localhost:80/health/')\""
+          "--health-interval=15s"
+          "--health-timeout=5s"
+          "--health-retries=5"
+          "--health-start-period=60s"
+        ];
       };
 
       adventurelog = {
-        image = "ghcr.io/seanmorley15/adventurelog-frontend:v0.13.0@sha256:51ee22428b4192f4372b54f84c8b90cd710311ad99993c5045f53b51717dd3f7";
+        # Upstream main build: 2026-10-24
+        # Revision: 6b80516d5b9c5f675bbef56855bf4bdd711dbc45
+        image = "ghcr.io/seanmorley15/adventurelog-frontend:latest@sha256:74e3972ecbd2a9708af4996f22acb6cca8e2fabe1c91d5fe60f6510d2ca490ec";
         pull = "missing";
+
         dependsOn = [ "adventureapi" ];
+
         ports = [
           "127.0.0.1:${toString cfg.port}:3000"
         ];
+
         environment = {
           PUBLIC_SERVER_URL = "http://adventureapi:8000";
           ORIGIN = "https://adventurelog.fiordland-gar.ts.net";
@@ -157,7 +277,15 @@ in
           PUID = "1000";
           PGID = "1000";
         };
-        extraOptions = [ "--network=adventurelog" ];
+
+        extraOptions = [
+          "--network=adventurelog"
+          "--health-cmd=node -e \"fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""
+          "--health-interval=30s"
+          "--health-timeout=5s"
+          "--health-retries=5"
+          "--health-start-period=30s"
+        ];
       };
     };
 
