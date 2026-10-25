@@ -44,11 +44,18 @@ in
     openFirewall = mkOption {
       type = types.bool;
       default = false;
-      description = "Open firewall ports for Renovate. Renovate has no web UI, so this normally stays false.";
+      description = "Renovate has no web UI.";
     };
 
     logLevel = mkOption {
-      type = types.enum [ "trace" "debug" "info" "warn" "error" "fatal" ];
+      type = types.enum [
+        "trace"
+        "debug"
+        "info"
+        "warn"
+        "error"
+        "fatal"
+      ];
       default = "info";
     };
   };
@@ -64,7 +71,9 @@ in
     virtualisation.oci-containers.containers.renovate = {
       image = cfg.image;
       pull = "missing";
-      autoStart = true;
+
+      # Renovate is a batch job, not a daemon.
+      autoStart = false;
 
       environment = {
         LOG_LEVEL = cfg.logLevel;
@@ -72,7 +81,8 @@ in
 
         RENOVATE_PLATFORM = "forgejo";
         RENOVATE_ENDPOINT = "http://127.0.0.1:3000/api/v1/";
-        RENOVATE_REPOSITORIES = concatStringsSep "," cfg.repositories;
+        RENOVATE_REPOSITORIES =
+          concatStringsSep "," cfg.repositories;
         RENOVATE_BASE_DIR = "/tmp/renovate";
       };
 
@@ -84,20 +94,7 @@ in
         "${cfg.dataDir}:/tmp/renovate"
       ];
 
-      cmd = [
-        "/bin/sh"
-        "-lc"
-        ''
-          set -eu
-
-          TOKEN="$RENOVATE_TOKEN"
-
-          git config --global url."http://zanbee:$TOKEN@127.0.0.1:3000/".insteadOf "https://forgejo.fiordland-gar.ts.net/"
-          git config --global url."http://zanbee:$TOKEN@127.0.0.1:3000/".insteadOf "https://$TOKEN@forgejo.fiordland-gar.ts.net/"
-
-          exec renovate
-        ''
-      ];
+      # No custom shell wrapper or token-bearing Git URL rewrites.
 
       extraOptions = [
         "--hostname=renovate"
@@ -106,8 +103,23 @@ in
       ];
     };
 
-    systemd.services.podman-renovate.after = [ "network-online.target" ];
-    systemd.services.podman-renovate.wants = [ "network-online.target" ];
-    systemd.services.podman-renovate.serviceConfig.Restart = lib.mkForce "no";
+    systemd.services.podman-renovate = {
+      after = [ "network-online.target" ];
+      wants = [ "network-online.target" ];
+
+      serviceConfig.Restart = mkForce "no";
+    };
+
+    systemd.timers.podman-renovate = {
+      description = "Daily Renovate dependency scan";
+      wantedBy = [ "timers.target" ];
+
+      timerConfig = {
+        OnCalendar = "daily";
+        Persistent = true;
+        RandomizedDelaySec = "30m";
+        Unit = "podman-renovate.service";
+      };
+    };
   };
 }
