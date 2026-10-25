@@ -15,7 +15,4 @@
     path = "/run/secrets/renovate-config.js";
   };
 
-  sops.secrets."sif/forgejo-runner-token" = {
-    sopsFile = ../../secrets.yaml;
-  };
 }

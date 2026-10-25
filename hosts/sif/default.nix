@@ -8,7 +8,6 @@
     ./system.nix
     ./networking.nix
     ./sops.nix
-    #./forgejo-runner.nix
     ../../modules/tailscale-services.nix
     ./apps.nix
   ];
