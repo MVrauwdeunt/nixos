@@ -1,8 +1,21 @@
-
 { config, lib, pkgs, ... }:
 
 let
   cfg = config.apps.immich;
+
+  images = {
+    server =
+      "ghcr.io/immich-app/immich-server:v3.3.5@sha256:485d546a2e31d6a8b4db8423fcba5c109de8c218d93410af115fd1ccfc4352a6";
+
+    machineLearning =
+      "ghcr.io/immich-app/immich-machine-learning:v3.3.5@sha256:5b28c9352c8374b8a1ed96fbdd8d6755fea6e43510ec43fdf6538aa02ea40f56";
+
+    database =
+      "ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0@sha256:bcf63357191b76a916ae5eb93464d65c07511da41e3bf7a8416db519b40b1c23";
+
+    valkey =
+      "docker.io/valkey/valkey:9.1.2@sha256:c123e3715db63d06d4ad6964884037aa0d5d4d703939b9929954112889708e1d";
+  };
 in
 {
   options.apps.immich = {
@@ -90,7 +103,7 @@ in
 
     virtualisation.oci-containers.containers = {
       immich-database = {
-        image = "ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0@sha256:bcf63357191b76a916ae5eb93464d65c07511da41e3bf7a8416db519b40b1c23";
+        image = images.database;
         pull = "missing";
 
         environment = {
@@ -114,7 +127,7 @@ in
       };
 
       immich-redis = {
-        image = "docker.io/valkey/valkey:9@sha256:418652cfb58ef879d4978c33553735d7147016032d5aefaa14c828e611eb9dfd";
+        image = images.valkey;
         pull = "missing";
 
         extraOptions = [
@@ -123,7 +136,7 @@ in
       };
 
       immich-machine-learning = {
-        image = "ghcr.io/immich-app/immich-machine-learning:v3.3.5@sha256:5b28c9352c8374b8a1ed96fbdd8d6755fea6e43510ec43fdf6538aa02ea40f56";
+        image = images.machineLearning;
         pull = "missing";
 
         volumes = [
@@ -136,7 +149,7 @@ in
       };
 
       immich = {
-        image = "ghcr.io/immich-app/immich-server:v3.3.5@sha256:485d546a2e31d6a8b4db8423fcba5c109de8c218d93410af115fd1ccfc4352a6";
+        image = images.server;
         pull = "missing";
 
         dependsOn = [
