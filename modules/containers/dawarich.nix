@@ -106,7 +106,7 @@ in
       };
 
       dawarich-redis = {
-        image = "docker.io/library/redis:7.4-alpine@sha256:520775a41a63e77e06c73e35d2fd9cc15921a609516818796b4ecbb813078bc7";
+        image = "docker.io/library/redis:7.4.11-alpine@sha256:57e4255cc971b1c8d6f8a6ca283ac01bc3ecdd914273ef6bfaede87aaecd6541";
         pull = "missing";
 
         extraOptions = [
