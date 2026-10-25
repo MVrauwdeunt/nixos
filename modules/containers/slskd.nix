@@ -1,3 +1,4 @@
+
 { config, lib, ... }:
 
 with lib;
@@ -24,10 +25,12 @@ in
       type = types.str;
       default = "/mnt/shares/Downloads/Muziek/soularr";
     };
+
     mediaDir = mkOption {
       type = types.str;
       default = "/mnt/shares/Media/Muziek";
     };
+
     port = mkOption {
       type = types.port;
       default = 5030;
@@ -41,9 +44,12 @@ in
 
   config = mkIf cfg.enable {
     virtualisation.oci-containers.containers.slskd = {
-      image = "docker.io/slskd/slskd:latest";
-      pull = "always";
-      ports = [ "${toString cfg.port}:5030" ];
+      image = "docker.io/slskd/slskd:0.26.2.0@sha256:d0963a3e5b16facd295bf4f2156dad0182f246b1b21a032cae12f5494c694843";
+      pull = "missing";
+
+      ports = [
+        "${toString cfg.port}:5030"
+      ];
 
       volumes = [
         "${cfg.dataDir}:/app"

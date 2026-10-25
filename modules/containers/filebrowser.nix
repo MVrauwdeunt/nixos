@@ -1,3 +1,4 @@
+
 { config, lib, ... }:
 
 let
@@ -34,9 +35,9 @@ in
     ];
 
     virtualisation.oci-containers.containers.filebrowser = {
-      image = "docker.io/filebrowser/filebrowser:latest";
-      pull = "always";
-      
+      image = "docker.io/filebrowser/filebrowser:v2.63.23@sha256:a469ea076d4a1b4b1d86a41d130f2f536cd9da996a2b1fb39c0d7635f9d89b9a";
+      pull = "missing";
+
       ports = [
         "127.0.0.1:${toString cfg.port}:8080"
       ];
@@ -44,8 +45,6 @@ in
       environment = {
         PUID = "1000";
         PGID = "1000";
-
-        # Use an unprivileged port inside the container.
         FB_PORT = "8080";
       };
 

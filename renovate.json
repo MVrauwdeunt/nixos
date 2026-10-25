@@ -14,14 +14,15 @@
   "customManagers": [
     {
       "customType": "regex",
-      "description": "Podman images in NixOS modules",
+      "description": "NixOS Podman container images",
       "managerFilePatterns": [
         "/^modules\\/containers\\/.*\\.nix$/"
       ],
       "matchStrings": [
-        "(?:image|default)\\s*=\\s*\"(?<depName>(?:docker\\.io|ghcr\\.io|lscr\\.io|codeberg\\.org)/[^\"\\s:]+):(?<currentValue>v?\\d+(?:\\.\\d+)*(?:[-.][A-Za-z0-9.]+)?)\";"
+        "(?:image|default)\\s*=\\s*\"(?<depName>(?:docker\\.io|ghcr\\.io|lscr\\.io|codeberg\\.org|docker\\.stirlingpdf\\.com)/[^\"\\s@:]+(?:/[^\"\\s@:]+)*):(?<currentValue>[^\"@\\s]+)@(?<currentDigest>sha256:[a-f0-9]{64})\""
       ],
-      "datasourceTemplate": "docker"
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
     }
   ],
   "lockFileMaintenance": {
@@ -38,12 +39,19 @@
   "prHourlyLimit": 2,
   "prConcurrentLimit": 5,
   "automerge": false,
+  "dependencyDashboard": true,
   "packageRules": [
     {
       "matchManagers": [
         "nix"
       ],
       "groupName": "flake inputs"
+    },
+    {
+      "matchDatasources": [
+        "docker"
+      ],
+      "pinDigests": true
     }
   ]
 }

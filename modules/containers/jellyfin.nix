@@ -1,3 +1,4 @@
+
 { config, lib, ... }:
 
 let
@@ -49,9 +50,12 @@ in
     ];
 
     virtualisation.oci-containers.containers.jellyfin = {
-      image = "docker.io/jellyfin/jellyfin:latest";
-      pull = "always";
-      ports = [ "${toString cfg.port}:8096" ];
+      image = "docker.io/jellyfin/jellyfin:12.3@sha256:2038fe038ab3876a80f6e7b7e0aef6607b032c7dc0c9b3ad3296d0b2eba3bbb5";
+      pull = "missing";
+
+      ports = [
+        "${toString cfg.port}:8096"
+      ];
 
       volumes = [
         "${cfg.dataDir}:/config"

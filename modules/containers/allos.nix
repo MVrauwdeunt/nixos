@@ -1,4 +1,3 @@
-
 { config, lib, ... }:
 
 let
@@ -10,11 +9,11 @@ let
     BACKUP_DEST_DIR = "/backup";
   };
 
-  commonVolumes = [
-    "${cfg.dataDir}:/app/data"
-  ] ++ lib.optionals (cfg.backupDir != null) [
-    "${cfg.backupDir}:/backup"
-  ];
+  commonVolumes =
+    [ "${cfg.dataDir}:/app/data" ]
+    ++ lib.optionals (cfg.backupDir != null) [
+      "${cfg.backupDir}:/backup"
+    ];
 
 in
 {
@@ -23,14 +22,14 @@ in
 
     image = lib.mkOption {
       type = lib.types.str;
-      default = "ghcr.io/floorlamp/allos:latest";
-      description = "Allos container image.";
+      default = "ghcr.io/floorlamp/allos:9cc16e0c1cae35406ba29ffc754f8f921d64d90c@sha256:4562e9ec3be77538e7759b3f59fdd48fa1b564407ecdc6c3e86f151c5c1766db";
+      description = "Allos container image pinned to a commit and SHA256 digest.";
     };
 
     port = lib.mkOption {
       type = lib.types.port;
       default = 3006;
-      description = "Local Allos web UI port.";
+      description = "Local HTTP port for Allos.";
     };
 
     dataDir = lib.mkOption {
@@ -42,53 +41,44 @@ in
     backupDir = lib.mkOption {
       type = lib.types.nullOr lib.types.str;
       default = null;
-      description = "Optional external backup directory.";
+      description = "Optional Allos backup directory.";
     };
 
     adminUsername = lib.mkOption {
       type = lib.types.str;
       default = "admin";
-      description = "Initial administrator username.";
+      description = "Bootstrap admin username.";
     };
 
     notifications.enable = lib.mkOption {
       type = lib.types.bool;
       default = true;
-      description = "Enable notification and backup scheduler.";
+      description = "Enable Allos notification worker.";
     };
 
     openFirewall = lib.mkOption {
       type = lib.types.bool;
       default = false;
-      description = "Open Allos port in the firewall.";
+      description = "Open the Allos HTTP port in the firewall.";
     };
 
     tailscale = {
       enable = lib.mkOption {
         type = lib.types.bool;
         default = true;
-        description = "Expose Allos via Tailscale Serve.";
+        description = "Expose Allos through Tailscale Services.";
       };
 
       serviceName = lib.mkOption {
         type = lib.types.str;
         default = "health";
-        description = "Tailscale service name (svc:health).";
+        description = "Tailscale Service name.";
       };
     };
   };
 
   config = lib.mkIf cfg.enable {
-
-    #
-    # Podman
-    #
-
     virtualisation.oci-containers.backend = "podman";
-
-    #
-    # SOPS - administrator credentials
-    #
 
     sops.secrets."saga/allos_admin_password" = {};
 
@@ -97,25 +87,16 @@ in
       ADMIN_PASSWORD=${config.sops.placeholder."saga/allos_admin_password"}
     '';
 
-    #
-    # Persistent storage
-    #
-
-    systemd.tmpfiles.rules = [
-      "d ${cfg.dataDir} 0700 root root - -"
-    ] ++ lib.optionals (cfg.backupDir != null) [
-      "d ${cfg.backupDir} 0700 root root - -"
-    ];
-
-    #
-    # Containers
-    #
+    systemd.tmpfiles.rules =
+      [ "d ${cfg.dataDir} 0700 root root - -" ]
+      ++ lib.optionals (cfg.backupDir != null) [
+        "d ${cfg.backupDir} 0700 root root - -"
+      ];
 
     virtualisation.oci-containers.containers = {
-
       allos = {
         image = cfg.image;
-        pull = "always";
+        pull = "missing";
         autoStart = true;
 
         ports = [
@@ -132,14 +113,13 @@ in
 
         extraOptions = [
           "--security-opt=no-new-privileges"
+          "--stop-timeout=30"
         ];
       };
-
     } // lib.optionalAttrs cfg.notifications.enable {
-
       allos-notify = {
         image = cfg.image;
-        pull = "always";
+        pull = "missing";
         autoStart = true;
 
         cmd = [
@@ -156,27 +136,15 @@ in
 
         extraOptions = [
           "--security-opt=no-new-privileges"
+          "--stop-timeout=30"
         ];
       };
     };
 
-    #
-    # Systemd
-    #
-
     systemd.services.podman-allos = {
-      wants = [
-        "network-online.target"
-      ];
-
-      after = [
-        "network-online.target"
-      ];
+      wants = [ "network-online.target" ];
+      after = [ "network-online.target" ];
     };
-
-    #
-    # Firewall
-    #
 
     networking.firewall = lib.mkIf cfg.openFirewall {
       allowedTCPPorts = [ cfg.port ];

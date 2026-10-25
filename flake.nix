@@ -6,12 +6,11 @@
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
     disko.url = "github:nix-community/disko";
     sops-nix.url = "github:Mic92/sops-nix";
-
     deploy-rs = {
       url = "github:serokell/deploy-rs";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
+   
     hermes-agent.url = "github:NousResearch/hermes-agent";
     honcho = {
       url = "github:plastic-labs/honcho";
@@ -134,6 +133,7 @@
                 ./modules/base.nix
                 ./modules/packages.nix
                 ./modules/ssh-hardened.nix
+                #./modules/users/deploy
                 ./modules/just
                 sops-nix.nixosModules.sops
                 ./modules/sops.nix

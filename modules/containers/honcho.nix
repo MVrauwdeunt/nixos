@@ -1,5 +1,4 @@
 
-# modules/containers/honcho.nix
 { config, lib, pkgs, ... }:
 
 let
@@ -16,16 +15,12 @@ let
   appEnvironment = {
     CACHE_URL = "redis://honcho-redis:6379/0?suppress=true";
     CACHE_ENABLED = "true";
-
     VECTOR_STORE_TYPE = "pgvector";
-
     AUTH_USE_AUTH = "false";
     SENTRY_ENABLED = "false";
     TELEMETRY_ENABLED = "false";
-
     TZ = "Etc/UTC";
   };
-
 in
 {
   options.apps.honcho = {
@@ -33,20 +28,20 @@ in
 
     image = lib.mkOption {
       type = lib.types.str;
-      default = "ghcr.io/plastic-labs/honcho:latest";
+      default = "ghcr.io/plastic-labs/honcho:v3.4.1@sha256:dc55e09c1df00374fc887b39d123d60b7a3556c9bbfdaea4b1d3da7a6fd87c36";
       description = "Official Honcho container image";
     };
 
     postgresImage = lib.mkOption {
       type = lib.types.str;
-      default = "docker.io/pgvector/pgvector:pg15";
-      description = "PostgreSQL with pgvector";
+      default = "docker.io/pgvector/pgvector:pg15@sha256:47af0b65960b14f1c6945aa4ccae37836c632e9a6fe0eea9160936e616e5b2e9";
+      description = "PostgreSQL 15 with pgvector";
     };
 
     redisImage = lib.mkOption {
       type = lib.types.str;
-      default = "docker.io/library/redis:8";
-      description = "Redis container image";
+      default = "docker.io/library/redis:8@sha256:2c2dff791878316e3b083188be0d578423b24813cdda5de0e80ea4f7b3e6bfd6";
+      description = "Redis 8 container image";
     };
 
     port = lib.mkOption {
@@ -63,17 +58,8 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-
-    # --------------------------------------------------
-    # Podman
-    # --------------------------------------------------
-
     virtualisation.podman.enable = true;
     virtualisation.oci-containers.backend = "podman";
-
-    # --------------------------------------------------
-    # SOPS
-    # --------------------------------------------------
 
     sops.secrets."vili/honcho/db-password" = {
       sopsFile = ../../secrets.yaml;
@@ -92,13 +78,8 @@ in
       LLM_OPENAI_API_KEY=${config.sops.placeholder."vili/honcho/openai-key"}
     '';
 
-    # --------------------------------------------------
-    # Internal Podman network
-    # --------------------------------------------------
-
     systemd.services."podman-network-${network}" = {
       description = "Create Honcho internal Podman network";
-
       wantedBy = [ "multi-user.target" ];
 
       before = [
@@ -118,10 +99,6 @@ in
           || ${pkgs.podman}/bin/podman network create ${network}
       '';
     };
-
-    # --------------------------------------------------
-    # Systemd dependencies
-    # --------------------------------------------------
 
     systemd.services.podman-honcho-db = {
       requires = [ networkUnit ];
@@ -159,13 +136,7 @@ in
       ];
     };
 
-    # --------------------------------------------------
-    # Containers
-    # --------------------------------------------------
-
     virtualisation.oci-containers.containers = {
-
-      # PostgreSQL + pgvector
       honcho-db = {
         image = cfg.postgresImage;
 
@@ -187,11 +158,10 @@ in
 
         extraOptions = [
           "--network=${network}"
-          "--pull=always"
+          "--pull=missing"
         ];
       };
 
-      # Redis
       honcho-redis = {
         image = cfg.redisImage;
 
@@ -207,11 +177,10 @@ in
 
         extraOptions = [
           "--network=${network}"
-          "--pull=always"
+          "--pull=missing"
         ];
       };
 
-      # Honcho API
       honcho = {
         image = cfg.image;
 
@@ -221,10 +190,7 @@ in
         ];
 
         entrypoint = "sh";
-
-        cmd = [
-          "docker/entrypoint.sh"
-        ];
+        cmd = [ "docker/entrypoint.sh" ];
 
         environment = appEnvironment;
 
@@ -238,11 +204,10 @@ in
 
         extraOptions = [
           "--network=${network}"
-          "--pull=always"
+          "--pull=missing"
         ];
       };
 
-      # Honcho background memory processor
       honcho-deriver = {
         image = cfg.image;
 
@@ -253,13 +218,11 @@ in
         ];
 
         entrypoint = "/app/.venv/bin/python";
-
         cmd = [
           "-m"
           "src.deriver"
         ];
 
-        # Process small conversation batches immediately.
         environment = appEnvironment // {
           DERIVER_FLUSH_ENABLED = "true";
         };
@@ -270,14 +233,10 @@ in
 
         extraOptions = [
           "--network=${network}"
-          "--pull=always"
+          "--pull=missing"
         ];
       };
     };
-
-    # --------------------------------------------------
-    # Firewall
-    # --------------------------------------------------
 
     networking.firewall = lib.mkIf cfg.openFirewall {
       allowedTCPPorts = [ cfg.port ];

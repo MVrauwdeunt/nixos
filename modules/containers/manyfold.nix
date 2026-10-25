@@ -1,3 +1,4 @@
+
 { config, lib, ... }:
 
 let
@@ -9,7 +10,7 @@ in
 
     image = lib.mkOption {
       type = lib.types.str;
-      default = "ghcr.io/manyfold3d/manyfold-solo:latest";
+      default = "ghcr.io/manyfold3d/manyfold-solo:0.153.0@sha256:161109b917a158b5efd8478a437e9900db7bdc57235c167aa70d5ad69425fc31";
     };
 
     dataDir = lib.mkOption {
@@ -55,6 +56,7 @@ in
 
     virtualisation.oci-containers.containers.manyfold = {
       image = cfg.image;
+      pull = "missing";
       autoStart = true;
 
       ports = [

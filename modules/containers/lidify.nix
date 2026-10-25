@@ -1,44 +1,35 @@
 { config, lib, ... }:
-
 with lib;
-
-let
-  cfg = config.apps.lidify;
+let cfg = config.apps.lidify;
 in
 {
   options.apps.lidify = {
     enable = mkEnableOption "Lidify container";
-
     tailscale.enable = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = "Expose Sonarr through Tailscale Serve.";
     };
-
     image = mkOption {
       type = types.str;
-      default = "docker.io/thewicklowwolf/lidify:latest";
+      default = "docker.io/thewicklowwolf/lidify:0.2.11@sha256:3e99fa32bd5f4462e61d07ac949ca3443931f4a62a3cfcf443ec804814a2cd76";
       description = "Lidify container image.";
     };
-
     dataDir = mkOption {
       type = types.str;
       default = "/var/lib/lidify";
       description = "Lidify application data directory.";
     };
-
     secretName = mkOption {
       type = types.str;
       default = "mimir/lidify/env";
       description = "SOPS secret name for the Lidify environment file.";
     };
-
     port = mkOption {
       type = types.port;
       default = 5000;
       description = "Lidify web UI port.";
     };
-
     openFirewall = mkOption {
       type = types.bool;
       default = false;
@@ -49,20 +40,15 @@ in
   config = mkIf cfg.enable {
     virtualisation.oci-containers.containers.lidify = {
       image = cfg.image;
-      pull = "always";
-      ports = [
-        "${toString cfg.port}:5000"
-      ];
-
+      pull = "missing";
+      ports = [ "${toString cfg.port}:5000" ];
       volumes = [
         "${cfg.dataDir}:/lidify/config"
         "/etc/localtime:/etc/localtime:ro"
       ];
-
       environmentFiles = [
         config.sops.secrets.${cfg.secretName}.path
       ];
-
       environment = {
         TZ = "Europe/Amsterdam";
         PUID = "1000";
@@ -73,17 +59,14 @@ in
         search_for_missing_albums = "False";
         dry_run_adding_to_lidarr = "False";
       };
-
       extraOptions = [
         "--network=bridge"
         "--health-cmd=none"
       ];
     };
-
     systemd.tmpfiles.rules = [
       "d ${cfg.dataDir} 0755 1000 1000 -"
     ];
-
     networking.firewall = mkIf cfg.openFirewall {
       allowedTCPPorts = [ cfg.port ];
     };

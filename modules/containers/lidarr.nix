@@ -1,62 +1,50 @@
 { config, lib, ... }:
-
-let
-  cfg = config.apps.lidarr;
+let cfg = config.apps.lidarr;
 in
 {
   options.apps.lidarr = {
     enable = lib.mkEnableOption "Lidarr container";
-
     tailscale.enable = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = "Expose Sonarr through Tailscale Serve.";
     };
-
     dataDir = lib.mkOption {
       type = lib.types.str;
       default = "/var/lib/lidarr";
     };
-
     port = lib.mkOption {
       type = lib.types.port;
       default = 8686;
     };
-
     openFirewall = lib.mkOption {
       type = lib.types.bool;
       default = false;
     };
   };
-
   config = lib.mkIf cfg.enable {
     virtualisation.oci-containers.containers.lidarr = {
-      image = "lscr.io/linuxserver/lidarr:latest";
-      pull = "always";
+      image = "lscr.io/linuxserver/lidarr:3.1.0.4875-ls45@sha256:d8549ff9ea29b4015c32257360652c1000c31ea471a2b3f0835ae77292faf35b";
+      pull = "missing";
       ports = [ "${toString cfg.port}:8686" ];
-
       volumes = [
         "${cfg.dataDir}:/config"
         "/mnt/shares/Downloads/Muziek:/downloads"
         "/mnt/shares/Media/Muziek:/music"
       ];
-
       environment = {
         TZ = "Europe/Amsterdam";
         PUID = "1000";
         PGID = "1000";
       };
-
       extraOptions = [
         "--network=bridge"
         "--health-cmd=none"
       ];
     };
-
     systemd.tmpfiles.rules = [
       "d ${cfg.dataDir} 0755 1000 1000 -"
     ];
-
     networking.firewall = lib.mkIf cfg.openFirewall {
       allowedTCPPorts = [ cfg.port ];
     };

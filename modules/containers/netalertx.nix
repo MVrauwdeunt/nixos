@@ -1,23 +1,21 @@
+
 { config, lib, pkgs, ... }:
-
 with lib;
-
-let
-  cfg = config.apps.netalertx;
+let cfg = config.apps.netalertx;
 in
 {
   options.apps.netalertx = {
     enable = mkEnableOption "NetAlertX container stack";
 
-    tailscale.enable = lib.mkOption {
-      type = lib.types.bool;
+    tailscale.enable = mkOption {
+      type = types.bool;
       default = true;
       description = "Expose this app through Tailscale Serve.";
     };
 
     image = mkOption {
       type = types.str;
-      default = "ghcr.io/jokob-sk/netalertx:25.11";
+      default = "ghcr.io/jokob-sk/netalertx:26.10.24@sha256:df3fd09ac057c944d669b7fd819652ed87f0abae8e30e0cc24260ac34ebabb39";
       description = "Container image for NetAlertX";
     };
 
@@ -88,6 +86,7 @@ in
 
     virtualisation.oci-containers.containers.netalertx = {
       image = cfg.image;
+      pull = "missing";
       autoStart = true;
 
       environment = {
@@ -109,20 +108,22 @@ in
         "--network=host"
         "--hostname=netalertx"
         "--userns=host"
-
         "--cap-drop=ALL"
         "--cap-add=NET_ADMIN"
         "--cap-add=NET_RAW"
         "--cap-add=NET_BIND_SERVICE"
 
+        # Required for NetAlertX 26.x startup and privilege handling.
+        "--cap-add=CHOWN"
+        "--cap-add=SETUID"
+        "--cap-add=SETGID"
+
         "--tmpfs=/tmp:rw,noexec,nosuid,size=64m"
         "--tmpfs=/run:rw,noexec,nosuid,size=16m"
-
         "--memory=2048m"
         "--memory-reservation=1024m"
         "--cpus=0.5"
         "--pids-limit=512"
-
         "--security-opt=no-new-privileges"
       ];
     };
@@ -131,7 +132,12 @@ in
       allowedTCPPorts = [ cfg.port cfg.graphqlPort ];
     };
 
-    systemd.services.podman-netalertx.after = [ "network-online.target" ];
-    systemd.services.podman-netalertx.wants = [ "network-online.target" ];
+    systemd.services.podman-netalertx.after = [
+      "network-online.target"
+    ];
+
+    systemd.services.podman-netalertx.wants = [
+      "network-online.target"
+    ];
   };
 }

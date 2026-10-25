@@ -1,3 +1,4 @@
+
 { config, lib, pkgs, ... }:
 
 with lib;
@@ -17,8 +18,8 @@ in
 
     image = mkOption {
       type = types.str;
-      default = "docker.io/henrygd/beszel:latest";
-      description = "Container image for the Beszel hub";
+      default = "docker.io/henrygd/beszel:0.21.1@sha256:dd149010e30f4ba5876b6a65eb7ba3026f8c10d14dc07808d6324b02d477d93d";
+      description = "Container image for the Beszel hub.";
     };
 
     dataDir = mkOption {
@@ -57,7 +58,8 @@ in
     virtualisation.oci-containers.containers.beszel = {
       image = cfg.image;
       autoStart = true;
-      pull = "always";
+      pull = "missing";
+
       environment = {
         APP_URL = cfg.appUrl;
       };
@@ -80,7 +82,12 @@ in
       allowedTCPPorts = [ cfg.port ];
     };
 
-    systemd.services.podman-beszel.after = [ "network-online.target" ];
-    systemd.services.podman-beszel.wants = [ "network-online.target" ];
+    systemd.services.podman-beszel.after = [
+      "network-online.target"
+    ];
+
+    systemd.services.podman-beszel.wants = [
+      "network-online.target"
+    ];
   };
 }

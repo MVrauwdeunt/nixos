@@ -1,4 +1,3 @@
-# modules/containers/litellm.nix
 { config, lib, pkgs, ... }:
 
 let
@@ -15,11 +14,16 @@ let
     general_settings:
       master_key: os.environ/LITELLM_MASTER_KEY
   '';
-
 in
 {
   options.apps.litellm = {
     enable = lib.mkEnableOption "LiteLLM AI Gateway";
+
+    image = lib.mkOption {
+      type = lib.types.str;
+      default = "ghcr.io/berriai/litellm:v1.106.3@sha256:74d0696a9f0afcc993c7659d246f0c542f003368298633e852228250779f1032";
+      description = "LiteLLM container image reference.";
+    };
 
     port = lib.mkOption {
       type = lib.types.port;
@@ -47,39 +51,22 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-
-    # ------------------------------------------------------------
-    # PostgreSQL 17
-    # ------------------------------------------------------------
-
     services.postgresql = {
       enable = true;
       package = pkgs.postgresql_17;
-
-      # Alleen lokale Unix-sockets.
       enableTCPIP = false;
-
-      ensureDatabases = [
-        "litellm"
-      ];
-
+      ensureDatabases = [ "litellm" ];
       ensureUsers = [
         {
           name = "litellm";
           ensureDBOwnership = true;
         }
       ];
-
       authentication = lib.mkBefore ''
         local litellm litellm scram-sha-256
       '';
-
       settings.password_encryption = "scram-sha-256";
     };
-
-    # ------------------------------------------------------------
-    # PostgreSQL backups
-    # ------------------------------------------------------------
 
     services.postgresqlBackup = {
       enable = true;
@@ -87,14 +74,9 @@ in
       startAt = "*-*-* 03:00:00";
     };
 
-    # ------------------------------------------------------------
-    # SOPS secrets
-    # ------------------------------------------------------------
-
     sops.secrets."vili/litellm/env" = {
       sopsFile = ../../secrets.yaml;
     };
-
     sops.secrets."vili/litellm/db-password" = {
       sopsFile = ../../secrets.yaml;
       owner = "postgres";
@@ -102,55 +84,29 @@ in
       mode = "0400";
     };
 
-    # ------------------------------------------------------------
-    # PostgreSQL database password
-    # ------------------------------------------------------------
-
     systemd.services.litellm-db-password = {
       description = "Configure LiteLLM PostgreSQL credentials";
-
-      # Wacht totdat NixOS de database en rol heeft aangemaakt.
-      requires = [
-        "postgresql-setup.service"
-      ];
-
-      after = [
-        "postgresql-setup.service"
-      ];
-
-      before = [
-        "podman-litellm.service"
-      ];
-
-      path = [
-        pkgs.postgresql_17
-      ];
-
+      requires = [ "postgresql-setup.service" ];
+      after = [ "postgresql-setup.service" ];
+      before = [ "podman-litellm.service" ];
+      path = [ pkgs.postgresql_17 ];
       serviceConfig = {
         Type = "oneshot";
         User = "postgres";
         Group = "postgres";
         RemainAfterExit = true;
-
         LoadCredential = [
           "db-password:${config.sops.secrets."vili/litellm/db-password".path}"
         ];
       };
-
       script = ''
         set -euo pipefail
-
         password_file="$CREDENTIALS_DIRECTORY/db-password"
-
-        # Read the password from systemd credentials.
-        # It must be a 64-character hexadecimal value.
         ${pkgs.python3}/bin/python3 - "$password_file" <<'PY' \
           | psql -X -d postgres -v ON_ERROR_STOP=1
         import pathlib
         import sys
-
         password = pathlib.Path(sys.argv[1]).read_text().strip()
-
         if len(password) != 64 or any(
             c not in "0123456789abcdefABCDEF"
             for c in password
@@ -158,7 +114,6 @@ in
             raise SystemExit(
                 "Database password must be 64 hexadecimal characters"
             )
-
         print(
             "ALTER ROLE litellm WITH PASSWORD '" +
             password +
@@ -168,30 +123,20 @@ in
       '';
     };
 
-    # ------------------------------------------------------------
-    # LiteLLM container
-    # ------------------------------------------------------------
-
     virtualisation.oci-containers.containers.litellm = {
-      image = "ghcr.io/berriai/litellm:main-stable";
-
+      image = cfg.image;
+      pull = "missing";
       ports = [
         "127.0.0.1:${toString cfg.port}:4000"
       ];
-
-      extraOptions = [
-        "--network=ai-backend"
-      ];
-
+      extraOptions = [ "--network=ai-backend" ];
       volumes = [
         "${litellmConfig}:/app/config.yaml:ro"
         "/run/postgresql:/run/postgresql:ro"
       ];
-
       environmentFiles = [
         config.sops.secrets."vili/litellm/env".path
       ];
-
       cmd = [
         "--config"
         "/app/config.yaml"
@@ -200,23 +145,10 @@ in
       ];
     };
 
-    # ------------------------------------------------------------
-    # Service dependencies
-    # ------------------------------------------------------------
-
     systemd.services.podman-litellm = {
-      requires = [
-        "litellm-db-password.service"
-      ];
-
-      after = [
-        "litellm-db-password.service"
-      ];
+      requires = [ "litellm-db-password.service" ];
+      after = [ "litellm-db-password.service" ];
     };
-
-    # ------------------------------------------------------------
-    # Firewall
-    # ------------------------------------------------------------
 
     networking.firewall = lib.mkIf cfg.openFirewall {
       allowedTCPPorts = [ cfg.port ];

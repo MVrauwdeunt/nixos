@@ -1,3 +1,4 @@
+
 { config, lib, ... }:
 
 with lib;
@@ -17,7 +18,7 @@ in
 
     image = mkOption {
       type = types.str;
-      default = "codeberg.org/forgejo/forgejo:15";
+      default = "codeberg.org/forgejo/forgejo:17.0.0@sha256:06d38310de496a10186d952bdad5ca764c153c8023ede8dfa0944c79a1dc5412";
       description = "Container image for Forgejo.";
     };
 
@@ -73,7 +74,7 @@ in
 
     virtualisation.oci-containers.containers.forgejo = {
       image = cfg.image;
-      pull = "always";
+      pull = "missing";
       autoStart = true;
 
       environment = {

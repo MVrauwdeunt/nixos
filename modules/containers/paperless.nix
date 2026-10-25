@@ -1,3 +1,4 @@
+
 { config, lib, pkgs, ... }:
 
 let
@@ -26,10 +27,6 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-
-    #
-    # Secrets
-    #
     sops.secrets."saga/paperless_secret_key" = {};
     sops.secrets."saga/paperless_db_password" = {};
     sops.secrets."saga/paperless_db_root_password" = {};
@@ -44,18 +41,12 @@ in
       PAPERLESS_DBPASS=${config.sops.placeholder."saga/paperless_db_password"}
     '';
 
-    #
-    # Persistent directories
-    #
     systemd.tmpfiles.rules = [
       "d /var/lib/paperless 0755 root root -"
       "d /var/lib/paperless/database 0755 - - -"
       "d /var/lib/paperless/data 0755 - - -"
     ];
 
-    #
-    # Shared Podman network
-    #
     systemd.services.paperless-network = {
       description = "Create Paperless Podman network";
 
@@ -78,9 +69,6 @@ in
       '';
     };
 
-    #
-    # Ensure network exists before containers start
-    #
     systemd.services.podman-paperless-db = {
       requires = [ "paperless-network.service" ];
       after = [ "paperless-network.service" ];
@@ -96,18 +84,11 @@ in
       after = [ "paperless-network.service" ];
     };
 
-    #
-    # Containers
-    #
     virtualisation.oci-containers.containers = {
-
-      #
-      # MariaDB
-      #
       paperless-db = {
-        image = "docker.io/library/mariadb:11";
-        pull = "always";
-        
+        image = "docker.io/library/mariadb:11.8.9@sha256:f16d7a344413e519dff518f27bdb221388f84b0d274c97c4fb5f2cb0dc1b34fa";
+        pull = "missing";
+
         volumes = [
           "/var/lib/paperless/database:/var/lib/mysql"
         ];
@@ -127,26 +108,20 @@ in
         ];
       };
 
-      #
-      # Redis
-      #
       paperless-redis = {
-        image = "docker.io/library/redis:8";
-        pull = "always";
-        
+        image = "docker.io/library/redis:8.10.2@sha256:97ec88159e6d7cfb5ddef9015386087d58a912de80112f06ebdfa78fa5989901";
+        pull = "missing";
+
         extraOptions = [
           "--network=paperless"
           "--network-alias=broker"
         ];
       };
 
-      #
-      # Paperless-ngx
-      #
       paperless = {
-        image = "ghcr.io/paperless-ngx/paperless-ngx:latest";
-        pull = "always";
-        
+        image = "ghcr.io/paperless-ngx/paperless-ngx:3.3.4@sha256:9bc6e8248891bcfa6f52fffe8b81e4ea8cae75790c3ec1b9906961a7ba55c969";
+        pull = "missing";
+
         dependsOn = [
           "paperless-db"
           "paperless-redis"
@@ -158,7 +133,6 @@ in
 
         volumes = [
           "/var/lib/paperless/data:/usr/src/paperless/data"
-
           "/mnt/Volume2/Documenten/paperless/media:/usr/src/paperless/media"
           "/mnt/Volume2/Documenten/export:/usr/src/paperless/export"
           "/mnt/Volume2/Documenten/scanned:/usr/src/paperless/consume"
@@ -185,9 +159,6 @@ in
       };
     };
 
-    #
-    # Normally closed because access goes through Tailscale
-    #
     networking.firewall = lib.mkIf cfg.openFirewall {
       allowedTCPPorts = [ cfg.port ];
     };

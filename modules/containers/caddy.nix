@@ -130,7 +130,7 @@ in
     # Run Caddy as a Podman container.
     virtualisation.oci-containers.containers.caddy = {
       image = cfg.image;
-      pull = "always";
+      pull = "missing";
 
       extraOptions = [
         "--network=host"

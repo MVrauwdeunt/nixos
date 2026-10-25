@@ -43,7 +43,6 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-
     sops.secrets."vili/open-webui/env" = {
       sopsFile = ../../secrets.yaml;
     };
@@ -53,8 +52,8 @@ in
     ];
 
     virtualisation.oci-containers.containers.open-webui = {
-      image =
-        "ghcr.io/open-webui/open-webui@sha256:1a6399d237dc392a2313e0ca826020b3fd5d22536357840eb63393d18dc8b924";
+      image = "ghcr.io/open-webui/open-webui:v0.12.3@sha256:a537bbe1e6b428820f52ed4a029d7fff97062e24d5cf32c365fba36fd0542def";
+      pull = "missing";
 
       ports = [
         "127.0.0.1:${toString cfg.port}:8080"

@@ -1,62 +1,50 @@
 { config, lib, ... }:
-
-let
-  cfg = config.apps.radarr;
+let cfg = config.apps.radarr;
 in
 {
   options.apps.radarr = {
     enable = lib.mkEnableOption "Radarr container";
-
     tailscale.enable = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = "Expose Sonarr through Tailscale Serve.";
     };
-
     dataDir = lib.mkOption {
       type = lib.types.str;
       default = "/var/lib/radarr";
     };
-
     port = lib.mkOption {
       type = lib.types.port;
       default = 7878;
     };
-
     openFirewall = lib.mkOption {
       type = lib.types.bool;
       default = false;
     };
   };
-
   config = lib.mkIf cfg.enable {
     virtualisation.oci-containers.containers.radarr = {
-      image = "lscr.io/linuxserver/radarr:latest";
-      pull = "always";
+      image = "lscr.io/linuxserver/radarr:6.4.4.10685-ls323@sha256:fc0ae3c50f8128b97e84381903ec8d6845c3a569641cb7117c124376cccb57c1";
+      pull = "missing";
       ports = [ "${toString cfg.port}:7878" ];
-
       volumes = [
         "${cfg.dataDir}:/config"
         "/mnt/shares/Downloads/Films:/downloads"
         "/mnt/shares/Media/Films:/media"
       ];
-
       environment = {
         TZ = "Europe/Amsterdam";
         PUID = "1000";
         PGID = "1000";
       };
-
       extraOptions = [
         "--network=bridge"
         "--health-cmd=none"
       ];
     };
-
     systemd.tmpfiles.rules = [
       "d ${cfg.dataDir} 0755 1000 1000 -"
     ];
-
     networking.firewall = lib.mkIf cfg.openFirewall {
       allowedTCPPorts = [ cfg.port ];
     };

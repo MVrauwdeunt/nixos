@@ -1,9 +1,6 @@
-
 { config, lib, pkgs, ... }:
-
 let
   cfg = config.apps.homelable;
-
   proxmoxEnv = lib.optionalString cfg.proxmox.enable ''
     PROXMOX_TOKEN_ID=${config.sops.placeholder."sif/homelable_proxmox_token_id"}
     PROXMOX_TOKEN_SECRET=${config.sops.placeholder."sif/homelable_proxmox_token_secret"}
@@ -11,23 +8,14 @@ let
 
   generateScannerEnv = pkgs.writeShellScript "homelable-generate-scanner-env" ''
     set -euo pipefail
-
     ${pkgs.coreutils}/bin/mkdir -p /run/homelable
-
-    # Static networks defined in Nix.
     static_ranges='${builtins.toJSON cfg.scannerRanges}'
-
-    # Dynamic Tailscale peers.
     tailscale_ranges='[]'
-
     if status_json="$(${pkgs.tailscale}/bin/tailscale status --json 2>/dev/null)"; then
       tailscale_ranges="$(
         printf '%s' "$status_json" |
           ${pkgs.jq}/bin/jq -c '
-            [
-              .Self.TailscaleIPs[]?,
-              (.Peer[]?.TailscaleIPs[]?)
-            ]
+            [ .Self.TailscaleIPs[]?, (.Peer[]?.TailscaleIPs[]?) ]
             | map(select(startswith("100.")))
             | map(. + "/32")
             | unique
@@ -36,21 +24,16 @@ let
     else
       echo "Warning: unable to read Tailscale status; using static scanner ranges only."
     fi
-
     combined="$(
       ${pkgs.jq}/bin/jq -cn \
         --argjson static "$static_ranges" \
         --argjson tailscale "$tailscale_ranges" \
         '$static + $tailscale | unique'
     )"
-
-    printf 'SCANNER_RANGES=%s\n' "$combined" \
-      > /run/homelable/scanner.env
-
+    printf 'SCANNER_RANGES=%s\n' "$combined" > /run/homelable/scanner.env
     echo "Generated Homelable scanner ranges:"
     echo "$combined" | ${pkgs.jq}/bin/jq .
   '';
-
 in
 {
   options.apps.homelable = {
@@ -58,41 +41,33 @@ in
 
     backendImage = lib.mkOption {
       type = lib.types.str;
-      default = "ghcr.io/pouzor/homelable-backend:latest";
+      default = "ghcr.io/pouzor/homelable-backend:3.6.0@sha256:1e501424e8c53989fcea1dc9311d46614ae159b2bfee4608a5c0cd5baee3e9dc";
       description = "Container image for the Homelable backend.";
     };
 
     frontendImage = lib.mkOption {
       type = lib.types.str;
-      default = "ghcr.io/pouzor/homelable-frontend:latest";
+      default = "ghcr.io/pouzor/homelable-frontend:3.6.0@sha256:5950f4905da2ea92b2a3870066399e718987a4a23d16c368935b9ddb7901635a";
       description = "Container image for the Homelable frontend.";
     };
 
-    # --------------------------------------------------
-    # MCP server
-    # --------------------------------------------------
-
     mcp = {
       enable = lib.mkEnableOption "Homelable MCP server";
-
       image = lib.mkOption {
         type = lib.types.str;
-        default = "ghcr.io/pouzor/homelable-mcp:latest";
+        default = "ghcr.io/pouzor/homelable-mcp:3.6.0@sha256:42838c0733b6443bcb6aaa3310f39daa8e700817ddb1f4466ff58d5cc0013c85";
         description = "Homelable MCP container image.";
       };
-
       port = lib.mkOption {
         type = lib.types.port;
         default = 8001;
         description = "Host port for Homelable MCP.";
       };
-
       listenAddress = lib.mkOption {
         type = lib.types.str;
         default = "0.0.0.0";
         description = "Bind address for the Homelable MCP server.";
       };
-
       openFirewall = lib.mkOption {
         type = lib.types.bool;
         default = true;
@@ -126,13 +101,11 @@ in
 
     scannerRanges = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-
       default = [
         "192.168.30.0/24"
         "192.168.100.0/24"
         "192.168.178.0/24"
       ];
-
       description = ''
         Static CIDR ranges Homelable may scan.
         Current Tailscale IPv4 peers are automatically added as /32 ranges.
@@ -159,19 +132,16 @@ in
 
     proxmox = {
       enable = lib.mkEnableOption "Homelable Proxmox auto-sync";
-
       host = lib.mkOption {
         type = lib.types.str;
         default = "hvergelmir";
         description = "Proxmox host name or IP address.";
       };
-
       port = lib.mkOption {
         type = lib.types.port;
         default = 8006;
         description = "Proxmox API port.";
       };
-
       verifyTLS = lib.mkOption {
         type = lib.types.bool;
         default = true;
@@ -183,10 +153,6 @@ in
   config = lib.mkIf cfg.enable {
     virtualisation.oci-containers.backend = "podman";
     virtualisation.podman.enable = true;
-
-    # --------------------------------------------------
-    # SOPS secrets
-    # --------------------------------------------------
 
     sops.secrets = {
       "sif/homelable_secret_key" = {};
@@ -210,128 +176,77 @@ in
       MCP_SERVICE_KEY=${config.sops.placeholder."sif/homelable_mcp_service_key"}
     '';
 
-    sops.templates."homelable-mcp.env" =
-      lib.mkIf cfg.mcp.enable {
-        content = ''
-          MCP_API_KEY=${config.sops.placeholder."sif/homelable_mcp_api_key"}
-          MCP_SERVICE_KEY=${config.sops.placeholder."sif/homelable_mcp_service_key"}
-        '';
-      };
-
-    # --------------------------------------------------
-    # Persistent storage
-    # --------------------------------------------------
+    sops.templates."homelable-mcp.env" = lib.mkIf cfg.mcp.enable {
+      content = ''
+        MCP_API_KEY=${config.sops.placeholder."sif/homelable_mcp_api_key"}
+        MCP_SERVICE_KEY=${config.sops.placeholder."sif/homelable_mcp_service_key"}
+      '';
+    };
 
     systemd.tmpfiles.rules = [
       "d ${cfg.dataDir} 0755 root root - -"
     ];
 
-    # --------------------------------------------------
-    # Podman network
-    # --------------------------------------------------
-
     systemd.services.homelable-network = {
       description = "Create Homelable Podman network";
       wantedBy = [ "multi-user.target" ];
-
       before = [
         "podman-homelable-backend.service"
         "podman-homelable.service"
       ] ++ lib.optionals cfg.mcp.enable [
         "podman-homelable-mcp.service"
       ];
-
       serviceConfig = {
         Type = "oneshot";
         RemainAfterExit = true;
       };
-
       script = ''
         ${pkgs.podman}/bin/podman network exists homelable \
           || ${pkgs.podman}/bin/podman network create homelable
       '';
     };
 
-    # --------------------------------------------------
-    # Backend
-    # --------------------------------------------------
-
-    # Regenerate SCANNER_RANGES whenever the backend starts.
-    # Combine static LAN ranges with Tailscale IPv4 peers.
-
     systemd.services.podman-homelable-backend = {
-      requires = [
-        "homelable-network.service"
-      ];
-
+      requires = [ "homelable-network.service" ];
       after = [
         "network-online.target"
         "tailscaled.service"
         "homelable-network.service"
       ];
-
-      wants = [
-        "network-online.target"
-        "tailscaled.service"
-      ];
-
-      serviceConfig.ExecStartPre = [
-        "${generateScannerEnv}"
-      ];
+      wants = [ "network-online.target" "tailscaled.service" ];
+      serviceConfig.ExecStartPre = [ "${generateScannerEnv}" ];
     };
-
-    # --------------------------------------------------
-    # Frontend
-    # --------------------------------------------------
 
     systemd.services.podman-homelable = {
       requires = [
         "homelable-network.service"
         "podman-homelable-backend.service"
       ];
-
       after = [
         "network-online.target"
         "homelable-network.service"
         "podman-homelable-backend.service"
       ];
-
-      wants = [
-        "network-online.target"
-      ];
+      wants = [ "network-online.target" ];
     };
 
-    # --------------------------------------------------
-    # MCP service
-    # --------------------------------------------------
-
-    systemd.services.podman-homelable-mcp =
-      lib.mkIf cfg.mcp.enable {
-        requires = [
-          "homelable-network.service"
-          "podman-homelable-backend.service"
-        ];
-
-        after = [
-          "network-online.target"
-          "homelable-network.service"
-          "podman-homelable-backend.service"
-        ];
-
-        wants = [
-          "network-online.target"
-        ];
-      };
-
-    # --------------------------------------------------
-    # Podman containers
-    # --------------------------------------------------
+    systemd.services.podman-homelable-mcp = lib.mkIf cfg.mcp.enable {
+      requires = [
+        "homelable-network.service"
+        "podman-homelable-backend.service"
+      ];
+      after = [
+        "network-online.target"
+        "homelable-network.service"
+        "podman-homelable-backend.service"
+      ];
+      wants = [ "network-online.target" ];
+    };
 
     virtualisation.oci-containers.containers = {
       homelable-backend = {
         image = cfg.backendImage;
-        pull = "always";
-
+        pull = "missing";
         environment = {
           SQLITE_PATH = "/app/data/homelab.db";
           CORS_ORIGINS = builtins.toJSON [ cfg.url ];
@@ -342,20 +257,13 @@ in
           PROXMOX_HOST = cfg.proxmox.host;
           PROXMOX_PORT = toString cfg.proxmox.port;
           PROXMOX_VERIFY_TLS =
-            if cfg.proxmox.verifyTLS
-            then "true"
-            else "false";
+            if cfg.proxmox.verifyTLS then "true" else "false";
         };
-
         environmentFiles = [
           config.sops.templates."homelable.env".path
           "/run/homelable/scanner.env"
         ];
-
-        volumes = [
-          "${cfg.dataDir}:/app/data"
-        ];
-
+        volumes = [ "${cfg.dataDir}:/app/data" ];
         extraOptions = [
           "--network=homelable"
           "--network-alias=backend"
@@ -364,46 +272,25 @@ in
         ];
       };
 
-      # Keep the original frontend container name.
-      # Existing Tailscale Services depend on this unit.
       homelable = {
         image = cfg.frontendImage;
-        pull = "always";
-
-        dependsOn = [
-          "homelable-backend"
-        ];
-
-        ports = [
-          "127.0.0.1:${toString cfg.port}:80"
-        ];
-
-        extraOptions = [
-          "--network=homelable"
-        ];
+        pull = "missing";
+        dependsOn = [ "homelable-backend" ];
+        ports = [ "127.0.0.1:${toString cfg.port}:80" ];
+        extraOptions = [ "--network=homelable" ];
       };
-    }
-    // lib.optionalAttrs cfg.mcp.enable {
+    } // lib.optionalAttrs cfg.mcp.enable {
       homelable-mcp = {
         image = cfg.mcp.image;
-        pull = "always";
-
-        dependsOn = [
-          "homelable-backend"
-        ];
-
-        environment = {
-          BACKEND_URL = "http://backend:8000";
-        };
-
+        pull = "missing";
+        dependsOn = [ "homelable-backend" ];
+        environment = { BACKEND_URL = "http://backend:8000"; };
         environmentFiles = [
           config.sops.templates."homelable-mcp.env".path
         ];
-
         ports = [
           "${cfg.mcp.listenAddress}:${toString cfg.mcp.port}:8001"
         ];
-
         extraOptions = [
           "--network=homelable"
           "--security-opt=no-new-privileges"
@@ -411,14 +298,9 @@ in
       };
     };
 
-    # --------------------------------------------------
-    # Firewall
-    # --------------------------------------------------
-
     networking.firewall.allowedTCPPorts =
       lib.optionals cfg.openFirewall [ cfg.port ]
-      ++ lib.optionals
-        (cfg.mcp.enable && cfg.mcp.openFirewall)
+      ++ lib.optionals (cfg.mcp.enable && cfg.mcp.openFirewall)
         [ cfg.mcp.port ];
   };
 }

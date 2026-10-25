@@ -1,23 +1,19 @@
-{ config, lib, pkgs, ... }:
 
-let
-  cfg = config.apps.karakeep;
+{ config, lib, pkgs, ... }:
+let cfg = config.apps.karakeep;
 in
 {
   options.apps.karakeep = {
     enable = lib.mkEnableOption "Karakeep";
-
     port = lib.mkOption {
       type = lib.types.port;
       default = 3003;
       description = "Local Karakeep web port.";
     };
-
     openFirewall = lib.mkOption {
       type = lib.types.bool;
       default = false;
     };
-
     tailscale.enable = lib.mkOption {
       type = lib.types.bool;
       default = true;
@@ -44,20 +40,18 @@ in
       "d /var/lib/karakeep 0755 root root -"
       "d /var/lib/karakeep/data 0755 root root -"
       "d /var/lib/karakeep/meilisearch 0755 root root -"
+      "d /var/lib/karakeep/meili-v1.41 0755 root root -"
     ];
 
     systemd.services.podman-network-karakeep = {
       description = "Create Karakeep Podman network";
       wantedBy = [ "multi-user.target" ];
-
       before = [
         "podman-karakeep-app.service"
         "podman-karakeep-chrome.service"
         "podman-karakeep-meilisearch.service"
       ];
-
       serviceConfig.Type = "oneshot";
-
       script = ''
         ${pkgs.podman}/bin/podman network exists karakeep \
           || ${pkgs.podman}/bin/podman network create karakeep
@@ -81,48 +75,38 @@ in
 
     virtualisation.oci-containers.containers = {
       karakeep-app = {
-        image = "ghcr.io/karakeep-app/karakeep:release";
-        pull = "always";
-
+        image = "ghcr.io/karakeep-app/karakeep:0.34.1@sha256:69ae5315c618b7c14c1af3e34c6e211acdb231793af424ecd1cab0b70691d987";
+        pull = "missing";
         dependsOn = [
           "karakeep-chrome"
           "karakeep-meilisearch"
         ];
-
         ports = [
           "127.0.0.1:${toString cfg.port}:3000"
         ];
-
         environment = {
           MEILI_ADDR = "http://karakeep-meilisearch:7700";
           BROWSER_WEB_URL = "http://karakeep-chrome:9222";
-
           NEXTAUTH_URL = "https://karakeep.fiordland-gar.ts.net";
-
           DATA_DIR = "/data";
-
           CRAWLER_STORE_SCREENSHOT = "true";
           CRAWLER_FULL_PAGE_SCREENSHOT = "true";
           CRAWLER_ENABLE_ADBLOCKER = "true";
         };
-
         environmentFiles = [
           config.sops.templates."karakeep-app.env".path
         ];
-
         volumes = [
           "/var/lib/karakeep/data:/data"
         ];
-
         extraOptions = [
           "--network=karakeep"
         ];
       };
 
       karakeep-chrome = {
-        image = "ghcr.io/karakeep-app/karakeep-chrome:release";
-        pull = "always";
-
+        image = "ghcr.io/karakeep-app/karakeep-chrome:156.0.8078.47-r1@sha256:4ad61127638dd27bfe685222787c5780dd1d083d23a7658c39af657775814c44";
+        pull = "missing";
         cmd = [
           "--disable-gpu"
           "--disable-dev-shm-usage"
@@ -130,7 +114,6 @@ in
           "--disable-blink-features=AutomationControlled"
           "--window-size=1440,900"
         ];
-
         extraOptions = [
           "--network=karakeep"
           "--init"
@@ -138,21 +121,17 @@ in
       };
 
       karakeep-meilisearch = {
-        image = "docker.io/getmeili/meilisearch:v1.13.3";
-        pull = "always";
-
+        image = "docker.io/getmeili/meilisearch:v1.41.0@sha256:860fa4baed04ae1c235de870edab0c8006227546dea1bbb6411fbfc5e27cf1db";
+        pull = "missing";
         environment = {
           MEILI_NO_ANALYTICS = "true";
         };
-
         environmentFiles = [
           config.sops.templates."karakeep-meilisearch.env".path
         ];
-
         volumes = [
-          "/var/lib/karakeep/meilisearch:/meili_data"
+          "/var/lib/karakeep/meili-v1.41:/meili_data"
         ];
-
         extraOptions = [
           "--network=karakeep"
         ];

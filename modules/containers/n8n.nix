@@ -1,3 +1,4 @@
+
 { config, lib, pkgs, ... }:
 
 let
@@ -9,14 +10,14 @@ in
 
     image = lib.mkOption {
       type = lib.types.str;
-      default = "docker.io/n8nio/n8n@sha256:a8c95f75c6fdf65f5f2b7a7b354744eaa1c62bb911b5c00af6499c3f38e4cd32";
+      default = "docker.io/n8nio/n8n:2.44.6@sha256:d02752c6ab446ae9db8deec2f9cc887c378f77cdcad31650814df936b7386dfb";
       description = "n8n container image.";
     };
 
     postgresImage = lib.mkOption {
       type = lib.types.str;
-      default = "docker.io/library/postgres@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685";
-      description = "PostgreSQL container image.";
+      default = "docker.io/library/postgres:16.15@sha256:9e2cf6287f25c3151f4c9421ccce2b17f3e60061c111a29165e0d2cdd9ff0a97";
+      description = "PostgreSQL 16.15 container image for n8n.";
     };
 
     dataDir = lib.mkOption {
@@ -82,8 +83,13 @@ in
     };
 
     systemd.services.podman-n8n-db = {
-      requires = [ "podman-network-n8n.service" ];
-      after = [ "podman-network-n8n.service" ];
+      requires = [
+        "podman-network-n8n.service"
+      ];
+
+      after = [
+        "podman-network-n8n.service"
+      ];
     };
 
     systemd.services.podman-n8n = {
@@ -124,7 +130,9 @@ in
       n8n = {
         image = cfg.image;
 
-        dependsOn = [ "n8n-db" ];
+        dependsOn = [
+          "n8n-db"
+        ];
 
         ports = [
           "127.0.0.1:${toString cfg.port}:5678"
@@ -136,12 +144,9 @@ in
           DB_POSTGRESDB_PORT = "5432";
           DB_POSTGRESDB_DATABASE = "n8n";
           DB_POSTGRESDB_USER = "n8n";
-
           NODE_ENV = "production";
           NODE_FUNCTION_ALLOW_BUILTIN = "*";
-
           TZ = "Etc/UTC";
-
           WEBHOOK_URL = "https://n8n.fiordland-gar.ts.net/";
         };
 
