@@ -18,22 +18,32 @@ in
     dataDir = lib.mkOption {
       type = lib.types.str;
       default = "/var/lib/actual-mcp";
-      description = "Separate local MCP budget cache.";
+      description = "Separate local Actual MCP cache.";
     };
 
     port = lib.mkOption {
       type = lib.types.port;
       default = 3001;
-      description = "MCP HTTP port over Tailscale.";
+      description = "MCP HTTP port.";
+    };
+
+    openFirewall = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = "Open MCP port on LAN/WAN interfaces.";
     };
   };
 
   config = lib.mkIf cfg.enable {
-    # Actual passwords are already declared by
-    # modules/containers/actual-bunq-importer.nix.
-    sops.secrets."saga/actual_mcp_bearer_token".sopsFile =
-      ../../secrets.yaml;
 
+    # Existing Actual Budget passwords are declared
+    # by actual-bunq-importer.nix.
+    # Only the MCP bearer token is new.
+    sops.secrets."saga/actual_mcp_bearer_token" = {
+      sopsFile = ../../secrets.yaml;
+    };
+
+    # Generate environment file securely through SOPS.
     sops.templates."actual-mcp.env" = {
       mode = "0400";
 
@@ -47,10 +57,13 @@ in
       '';
     };
 
+    # Separate data directory for MCP.
+    # No direct access to Actual Budget database.
     systemd.tmpfiles.rules = [
       "d ${cfg.dataDir} 0700 root root -"
     ];
 
+    # Podman container
     virtualisation.oci-containers.containers.actual-mcp = {
       image = cfg.image;
       pull = "missing";
@@ -64,13 +77,15 @@ in
         "${cfg.dataDir}:/data"
       ];
 
-      # Actual Budget listens on Saga localhost only.
+      # Host networking is required because Actual Budget
+      # listens on 127.0.0.1:5006 on Saga.
       extraOptions = [
         "--network=host"
         "--security-opt=no-new-privileges"
       ];
 
-      # Read-only: deliberately no --enable-write.
+      # Streamable HTTP transport with bearer authentication.
+      # Write access is deliberately disabled.
       cmd = [
         "--sse"
         "--enable-bearer"
@@ -79,14 +94,25 @@ in
       ];
     };
 
+    # Start MCP after Actual Budget.
     systemd.services.podman-actual-mcp = {
-      requires = [ "podman-actual-budget.service" ];
-      after = [ "podman-actual-budget.service" ];
+      requires = [
+        "podman-actual-budget.service"
+      ];
+
+      after = [
+        "podman-actual-budget.service"
+      ];
     };
 
-    # Only allow MCP through Tailscale.
+    # Only expose MCP through Tailscale by default.
     networking.firewall.interfaces.tailscale0.allowedTCPPorts = [
       cfg.port
     ];
+
+    # Optional LAN/WAN access.
+    # Disabled by default and by hosts/saga/apps.nix.
+    networking.firewall.allowedTCPPorts =
+      lib.optionals cfg.openFirewall [ cfg.port ];
   };
 }
