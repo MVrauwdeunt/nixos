@@ -40,7 +40,7 @@ in
 
     redisImage = lib.mkOption {
       type = lib.types.str;
-      default = "docker.io/library/redis:8@sha256:2c2dff791878316e3b083188be0d578423b24813cdda5de0e80ea4f7b3e6bfd6";
+      default = "docker.io/library/redis:8@sha256:f245f4c83b84a9e9a0588da1c9456e579455310f0945d5db52cd2ba27f2000cc";
       description = "Redis 8 container image";
     };
 
