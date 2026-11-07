@@ -4,6 +4,8 @@
   image,
   port,
   containerPort ? port,
+  bindAddress ? "127.0.0.1",
+  networks ? [ ],
   dataDir ? "/var/lib/${name}",
   configMount ? "/config",
   extraVolumes ? [ ],
@@ -19,6 +21,9 @@
 
 let
   cfg = config.apps.${name};
+
+  networkUnits =
+    map (network: "podman-network-${network}.service") networks;
 in
 {
   options.apps.${name} = {
@@ -48,18 +53,29 @@ in
 
   config = lib.mkIf cfg.enable {
     virtualisation.oci-containers.containers.${name} = {
-      inherit image environment extraOptions;
+      inherit image environment;
 
       pull = "missing";
 
+      networks = networks;
+
       ports = [
-        "${toString cfg.port}:${toString containerPort}"
+        "${bindAddress}:${toString cfg.port}:${toString containerPort}"
       ];
 
       volumes = [
         "${cfg.dataDir}:${configMount}"
       ] ++ extraVolumes;
+
+      extraOptions =
+        extraOptions;
     };
+
+    systemd.services."podman-${name}" =
+      lib.mkIf (networks != [ ]) {
+        requires = networkUnits;
+        after = networkUnits;
+      };
 
     systemd.tmpfiles.rules = [
       "d ${cfg.dataDir} ${directoryMode} ${directoryOwner} ${directoryGroup} -"

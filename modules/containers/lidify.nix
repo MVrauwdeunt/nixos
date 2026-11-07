@@ -1,73 +1,98 @@
+
 { config, lib, ... }:
-with lib;
-let cfg = config.apps.lidify;
+
+let
+  cfg = config.apps.lidify;
 in
 {
   options.apps.lidify = {
-    enable = mkEnableOption "Lidify container";
+    enable = lib.mkEnableOption "Lidify container";
+
     tailscale.enable = lib.mkOption {
       type = lib.types.bool;
       default = true;
-      description = "Expose Sonarr through Tailscale Serve.";
+      description = "Expose Lidify through Tailscale Serve.";
     };
-    image = mkOption {
-      type = types.str;
+
+    image = lib.mkOption {
+      type = lib.types.str;
       default = "docker.io/thewicklowwolf/lidify:0.2.11@sha256:3e99fa32bd5f4462e61d07ac949ca3443931f4a62a3cfcf443ec804814a2cd76";
       description = "Lidify container image.";
     };
-    dataDir = mkOption {
-      type = types.str;
+
+    dataDir = lib.mkOption {
+      type = lib.types.str;
       default = "/var/lib/lidify";
-      description = "Lidify application data directory.";
     };
-    secretName = mkOption {
-      type = types.str;
+
+    secretName = lib.mkOption {
+      type = lib.types.str;
       default = "mimir/lidify/env";
-      description = "SOPS secret name for the Lidify environment file.";
     };
-    port = mkOption {
-      type = types.port;
+
+    port = lib.mkOption {
+      type = lib.types.port;
       default = 5000;
-      description = "Lidify web UI port.";
     };
-    openFirewall = mkOption {
-      type = types.bool;
+
+    openFirewall = lib.mkOption {
+      type = lib.types.bool;
       default = false;
-      description = "Open the Lidify web UI port in the firewall.";
     };
   };
 
-  config = mkIf cfg.enable {
+  config = lib.mkIf cfg.enable {
     virtualisation.oci-containers.containers.lidify = {
       image = cfg.image;
       pull = "missing";
-      ports = [ "${toString cfg.port}:5000" ];
+
+      networks = [ "arr-internal" ];
+
+      ports = [
+        "127.0.0.1:${toString cfg.port}:5000"
+      ];
+
       volumes = [
         "${cfg.dataDir}:/lidify/config"
         "/etc/localtime:/etc/localtime:ro"
       ];
+
       environmentFiles = [
         config.sops.secrets.${cfg.secretName}.path
       ];
+
       environment = {
         TZ = "Europe/Amsterdam";
         PUID = "1000";
         PGID = "1000";
         mode = "LastFM";
-        lidarr_address = "http://192.168.178.240:8686";
+        lidarr_address = "http://lidarr:8686";
         root_folder_path = "/music";
         search_for_missing_albums = "False";
         dry_run_adding_to_lidarr = "False";
       };
+
       extraOptions = [
-        "--network=bridge"
         "--health-cmd=none"
       ];
     };
+
+    systemd.services.podman-lidify = {
+      requires = [
+        "podman-network-arr-internal.service"
+      ];
+
+      after = [
+        "podman-network-arr-internal.service"
+        "podman-lidarr.service"
+      ];
+    };
+
     systemd.tmpfiles.rules = [
       "d ${cfg.dataDir} 0755 1000 1000 -"
     ];
-    networking.firewall = mkIf cfg.openFirewall {
+
+    networking.firewall = lib.mkIf cfg.openFirewall {
       allowedTCPPorts = [ cfg.port ];
     };
   };
