@@ -1,4 +1,5 @@
 
+# modules/containers/caddy.nix
 { config, lib, pkgs, ... }:
 
 let
@@ -11,6 +12,10 @@ let
     mapAttrsToList;
 
   cfg = config.apps.caddy;
+
+  # Dedicated non-root container identity
+  caddyUid = 991;
+  caddyGid = 991;
 
   vhostToBlock = name: v: ''
     ${name} {
@@ -33,12 +38,13 @@ let
       }
     }
 
-    ${concatStringsSep "\n\n" (mapAttrsToList vhostToBlock cfg.virtualHosts)}
+    ${concatStringsSep "\n\n"
+      (mapAttrsToList vhostToBlock cfg.virtualHosts)}
   '';
 
-  # Immutable Caddyfile in the Nix store.
-  # Its store path changes whenever its contents change.
-  caddyfileStorePath = pkgs.writeText "Caddyfile" caddyfileText;
+  # Immutable Caddyfile in the Nix store
+  caddyfileStorePath =
+    pkgs.writeText "Caddyfile" caddyfileText;
 
   dataDir = cfg.dataDir;
 
@@ -71,23 +77,24 @@ in
     };
 
     virtualHosts = mkOption {
-      type = types.attrsOf (types.submodule ({ ... }: {
-        options = {
-          upstream = mkOption {
-            type = types.str;
-          };
+      type = types.attrsOf
+        (types.submodule ({ ... }: {
+          options = {
+            upstream = mkOption {
+              type = types.str;
+            };
 
-          extraConfig = mkOption {
-            type = types.lines;
-            default = "";
-          };
+            extraConfig = mkOption {
+              type = types.lines;
+              default = "";
+            };
 
-          proxyExtraConfig = mkOption {
-            type = types.lines;
-            default = "";
+            proxyExtraConfig = mkOption {
+              type = types.lines;
+              default = "";
+            };
           };
-        };
-      }));
+        }));
 
       default = { };
     };
@@ -107,34 +114,66 @@ in
     virtualisation.podman.enable = true;
     virtualisation.oci-containers.backend = "podman";
 
-    # Keep a host-side reference for inspection.
+    # Dedicated system group
+    users.groups.caddy = {
+      gid = caddyGid;
+    };
+
+    # Dedicated system user
+    users.users.caddy = {
+      isSystemUser = true;
+      uid = caddyUid;
+      group = "caddy";
+      home = dataDir;
+      createHome = false;
+      description = "Caddy reverse proxy";
+    };
+
+    # Host-side reference for inspection
     environment.etc."caddy/Caddyfile".source =
       caddyfileStorePath;
 
-    # Restart the container when the generated
-    # Caddyfile changes between NixOS generations.
+    # Restart when generated Caddyfile changes
     systemd.services.podman-caddy.restartTriggers = [
       caddyfileStorePath
     ];
 
-    # Ensure the Caddy data directory exists.
+    # Persistent Caddy storage owned by dedicated user
     systemd.tmpfiles.rules = [
-      "d ${dataDir} 0750 root root -"
+      "d ${dataDir} 0750 caddy caddy -"
     ];
 
-    # Open HTTP and HTTPS ports when requested.
+    # Existing firewall behavior - unchanged
     networking.firewall = mkIf cfg.openFirewall {
       allowedTCPPorts = [ 80 443 ];
     };
 
-    # Run Caddy as a Podman container.
     virtualisation.oci-containers.containers.caddy = {
       image = cfg.image;
       pull = "missing";
 
       extraOptions = [
+        # Existing networking - unchanged
         "--network=host"
         "--dns=100.100.100.100"
+
+        # Prevent privilege escalation
+        "--security-opt=no-new-privileges"
+
+        # Remove all default capabilities
+        "--cap-drop=ALL"
+
+        # Allow binding to privileged ports
+        "--cap-add=NET_BIND_SERVICE"
+
+        # Read-only container root filesystem
+        "--read-only"
+
+        # Writable temporary filesystem
+        "--tmpfs=/tmp:rw,nosuid,nodev,size=32m"
+
+        # Run as dedicated non-root user
+        "--user=${toString caddyUid}:${toString caddyGid}"
       ];
 
       environment =
@@ -143,6 +182,7 @@ in
           CADDY_EMAIL = cfg.email;
         };
 
+      # Existing persistent volumes - unchanged
       volumes = [
         "${caddyfileStorePath}:/etc/caddy/Caddyfile:ro"
         "${dataDir}:/data"
@@ -151,3 +191,4 @@ in
     };
   };
 }
+
