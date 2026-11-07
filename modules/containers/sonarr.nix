@@ -1,46 +1,20 @@
 
-{ config, lib, ... }:
+{ ... }:
 
-let
-  cfg = config.apps.sonarr;
-in
 {
-  options.apps.sonarr = {
-    enable = lib.mkEnableOption "Sonarr container";
+  imports = [
+    (import ./common.nix {
+      name = "sonarr";
 
-    tailscale.enable = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Expose Sonarr through Tailscale Serve.";
-    };
-
-    dataDir = lib.mkOption {
-      type = lib.types.str;
-      default = "/var/lib/sonarr";
-    };
-
-    port = lib.mkOption {
-      type = lib.types.port;
-      default = 8989;
-    };
-
-    openFirewall = lib.mkOption {
-      type = lib.types.bool;
-      default = false;
-    };
-  };
-
-  config = lib.mkIf cfg.enable {
-    virtualisation.oci-containers.containers.sonarr = {
       image = "docker.io/linuxserver/sonarr:4.0.20.3014-ls329@sha256:44b06045a98bc1f237b9ffefc4b28dab64cb29305e4a2a94875ae93b5224e4cc";
-      pull = "missing";
 
-      ports = [
-        "${toString cfg.port}:8989"
-      ];
+      port = 8989;
+      tailscaleDefault = true;
 
-      volumes = [
-        "${cfg.dataDir}:/config"
+      directoryOwner = "1000";
+      directoryGroup = "1000";
+
+      extraVolumes = [
         "/mnt/shares/Downloads/Series:/downloads"
         "/mnt/shares/Media/Series:/media"
       ];
@@ -55,14 +29,6 @@ in
         "--network=bridge"
         "--health-cmd=none"
       ];
-    };
-
-    systemd.tmpfiles.rules = [
-      "d ${cfg.dataDir} 0755 1000 1000 -"
-    ];
-
-    networking.firewall = lib.mkIf cfg.openFirewall {
-      allowedTCPPorts = [ cfg.port ];
-    };
-  };
+    })
+  ];
 }
