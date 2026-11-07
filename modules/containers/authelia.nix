@@ -5,9 +5,11 @@
 let
   cfg = config.apps.authelia;
 
+  autheliaUid = 990;
+  autheliaGid = 990;
+
   secret = name: config.sops.placeholder.${name};
 
-  # Load only explicitly enabled OIDC clients
   clientFiles =
     lib.optionals cfg.oidc.openWebui.enable [
       ./authelia-clients/open-webui.nix
@@ -22,37 +24,32 @@ let
   oidcClients =
     map (file: import file { inherit secret; }) clientFiles;
 
-  # Correct YAML indentation:
-  # clients: is at 4 spaces, list items at 6 spaces
-  clientYaml = lib.concatMapStringsSep "\n"
-    (client:
-      lib.concatMapStringsSep "\n"
-        (line: "      ${line}")
-        (lib.splitString "\n"
-          (lib.removeSuffix "\n" client.yaml)))
-    oidcClients;
+  clientYaml = lib.concatMapStringsSep "\n" (client:
+    lib.concatMapStringsSep "\n"
+      (line: "      ${line}")
+      (lib.splitString "\n" (lib.removeSuffix "\n" client.yaml))
+  ) oidcClients;
 
   userPasswordKey = name: user:
     if user.passwordKey != null
     then user.passwordKey
     else "authelia/users/${name}_password";
 
-  usersYaml = lib.concatMapStringsSep "\n"
-    (name:
-      let
-        user = cfg.users.${name};
-        passwordKey = userPasswordKey name user;
-        groups = lib.concatMapStringsSep ", "
-          (group: builtins.toJSON group)
-          user.groups;
-      in ''
-        ${name}:
-          displayname: ${builtins.toJSON user.displayName}
-          email: ${builtins.toJSON user.email}
-          groups: [${groups}]
-          password: "${secret passwordKey}"
-      '')
-    (builtins.attrNames cfg.users);
+  usersYaml = lib.concatMapStringsSep "\n" (name:
+    let
+      user = cfg.users.${name};
+      passwordKey = userPasswordKey name user;
+      groups = lib.concatMapStringsSep ", "
+        (group: builtins.toJSON group)
+        user.groups;
+    in ''
+      ${name}:
+        displayname: ${builtins.toJSON user.displayName}
+        email: ${builtins.toJSON user.email}
+        groups: [${groups}]
+        password: "${secret passwordKey}"
+    ''
+  ) (builtins.attrNames cfg.users);
 
 in
 {
@@ -89,10 +86,8 @@ in
       description = "SOPS secrets file";
     };
 
-    # OIDC provider and individual clients
     oidc = {
-      enable =
-        lib.mkEnableOption "Authelia OIDC provider";
+      enable = lib.mkEnableOption "Authelia OIDC provider";
 
       openWebui.enable =
         lib.mkEnableOption "Open WebUI OIDC client";
@@ -105,27 +100,29 @@ in
     };
 
     users = lib.mkOption {
-      type = lib.types.attrsOf (lib.types.submodule {
-        options = {
-          displayName = lib.mkOption {
-            type = lib.types.str;
-          };
+      type = lib.types.attrsOf (
+        lib.types.submodule {
+          options = {
+            displayName = lib.mkOption {
+              type = lib.types.str;
+            };
 
-          email = lib.mkOption {
-            type = lib.types.str;
-          };
+            email = lib.mkOption {
+              type = lib.types.str;
+            };
 
-          groups = lib.mkOption {
-            type = lib.types.listOf lib.types.str;
-            default = [];
-          };
+            groups = lib.mkOption {
+              type = lib.types.listOf lib.types.str;
+              default = [];
+            };
 
-          passwordKey = lib.mkOption {
-            type = lib.types.nullOr lib.types.str;
-            default = null;
+            passwordKey = lib.mkOption {
+              type = lib.types.nullOr lib.types.str;
+              default = null;
+            };
           };
-        };
-      });
+        }
+      );
 
       default = {};
     };
@@ -152,7 +149,11 @@ in
       };
 
       sameSite = lib.mkOption {
-        type = lib.types.enum [ "lax" "strict" "none" ];
+        type = lib.types.enum [
+          "lax"
+          "strict"
+          "none"
+        ];
         default = "lax";
       };
 
@@ -169,32 +170,40 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    # Dedicated non-root identity
+    users.groups.authelia = {
+      gid = autheliaGid;
+    };
+
+    users.users.authelia = {
+      isSystemUser = true;
+      uid = autheliaUid;
+      group = "authelia";
+      home = cfg.dataDir;
+      createHome = false;
+      description = "Authelia authentication service";
+    };
 
     # SOPS secrets
     sops.secrets = lib.mkMerge [
       {
-        "authelia/jwt_secret".sopsFile =
-          cfg.sops.file;
-
-        "authelia/session_secret".sopsFile =
-          cfg.sops.file;
-
-        "authelia/storage_encryption_key".sopsFile =
-          cfg.sops.file;
+        "authelia/jwt_secret".sopsFile = cfg.sops.file;
+        "authelia/session_secret".sopsFile = cfg.sops.file;
+        "authelia/storage_encryption_key".sopsFile = cfg.sops.file;
       }
 
       (lib.mkIf cfg.oidc.enable {
-        "authelia/oidc/hmac_secret".sopsFile =
-          cfg.sops.file;
+        "authelia/oidc/hmac_secret".sopsFile = cfg.sops.file;
 
         "authelia/oidc/jwks_private_key" = {
           sopsFile = ../../secrets/authelia-oidc-key.pem.enc;
           format = "binary";
+          owner = "authelia";
+          group = "authelia";
           mode = "0400";
         };
       })
 
-      # Secrets for enabled OIDC clients
       (lib.mkIf cfg.oidc.enable (
         lib.listToAttrs (map (client: {
           name = client.secretKey;
@@ -204,17 +213,16 @@ in
         }) oidcClients)
       ))
 
-      # User password secrets
-      (lib.mapAttrs'
-        (name: user: {
-          name = userPasswordKey name user;
-          value.sopsFile = cfg.sops.file;
-        })
-        cfg.users)
+      (lib.mapAttrs' (name: user: {
+        name = userPasswordKey name user;
+        value.sopsFile = cfg.sops.file;
+      }) cfg.users)
     ];
 
-    # Users database
+    # Generated user database
     sops.templates.authelia-users = {
+      owner = "authelia";
+      group = "authelia";
       mode = "0400";
 
       content = ''
@@ -225,13 +233,14 @@ in
       '';
     };
 
-    # Main Authelia configuration
+    # Generated Authelia configuration
     sops.templates.authelia-config = {
+      owner = "authelia";
+      group = "authelia";
       mode = "0400";
 
       content = ''
         server:
-          # Only listen on localhost
           address: tcp://127.0.0.1:${toString cfg.hostPort}
 
         log:
@@ -279,23 +288,25 @@ in
       '' + clientYaml + "\n");
     };
 
-    # Host configuration paths
+    # Host-side references
     environment.etc."authelia/config.yml".source =
       config.sops.templates.authelia-config.path;
 
     environment.etc."authelia/users_database.yml".source =
       config.sops.templates.authelia-users.path;
 
-    # Persistent storage
+    # Persistent SQLite and notifier storage
     systemd.tmpfiles.rules = [
-      "d ${cfg.dataDir} 0755 root root - -"
+      "d ${cfg.dataDir} 0750 authelia authelia - -"
     ];
 
-    # Podman service
+    # Hardened Authelia Podman service
     systemd.services.podman-authelia = {
       description = "Authelia (Podman)";
 
-      wantedBy = [ "multi-user.target" ];
+      wantedBy = [
+        "multi-user.target"
+      ];
 
       after = [
         "network-online.target"
@@ -310,42 +321,49 @@ in
         RestartSec = 5;
         TimeoutStopSec = 60;
 
-        # Ephemeral healthcheck state
         RuntimeDirectory = "authelia";
         RuntimeDirectoryMode = "0700";
 
         ExecStartPre = [
           "-${pkgs.podman}/bin/podman rm -f authelia"
+
           "${pkgs.coreutils}/bin/mkdir -p ${cfg.dataDir}"
 
-          # Create an empty writable file in /run
-          "${pkgs.coreutils}/bin/install -m 0600 /dev/null /run/authelia/healthcheck.env"
+          "${pkgs.coreutils}/bin/install -o ${toString autheliaUid} -g ${toString autheliaGid} -m 0600 /dev/null /run/authelia/healthcheck.env"
         ];
 
         ExecStart = lib.concatStringsSep " " (
           [
             "${pkgs.podman}/bin/podman run --rm --name authelia"
             "--pull=missing"
+
+            # Existing networking - unchanged
             "--network=host"
 
-            # Security hardening
+            # Container hardening
             "--security-opt=no-new-privileges"
             "--cap-drop=ALL"
-
-            # Read-only root filesystem
             "--read-only"
-
-            # Writable temporary storage in RAM
             "--tmpfs=/tmp:rw,nosuid,nodev,size=16m"
 
-            # Writable healthcheck file only
+            # Dedicated non-root identity
+            "--user=${toString autheliaUid}:${toString autheliaGid}"
+
+            # Official Authelia healthcheck
+            "--health-cmd=/app/healthcheck.sh"
+            "--health-interval=30s"
+            "--health-timeout=10s"
+            "--health-start-period=30s"
+            "--health-retries=3"
+
+            # Writable healthcheck environment file
             "-v /run/authelia/healthcheck.env:/app/.healthcheck.env:rw"
 
-            # Read-only SOPS configuration
+            # Read-only SOPS templates
             "-v ${config.sops.templates.authelia-config.path}:/config/config.yml:ro"
             "-v ${config.sops.templates.authelia-users.path}:/config/users_database.yml:ro"
 
-            # Writable persistent storage
+            # Persistent SQLite and notifier storage
             "-v ${cfg.dataDir}:/var/lib/authelia:rw"
           ]
 
