@@ -1,4 +1,5 @@
 
+# modules/containers/authelia.nix
 { config, lib, pkgs, ... }:
 
 let
@@ -98,8 +99,9 @@ in
 
       actualBudget.enable =
         lib.mkEnableOption "Actual Budget OIDC client";
+
       wallos.enable =
-        lib.mkEnableOption "Wallos OIDC client";  
+        lib.mkEnableOption "Wallos OIDC client";
     };
 
     users = lib.mkOption {
@@ -227,11 +229,10 @@ in
     sops.templates.authelia-config = {
       mode = "0400";
 
-      # Keep the optional OIDC block separate so Nix
-      # normalizes indentation independently.
       content = ''
         server:
-          address: tcp://0.0.0.0:${toString cfg.hostPort}
+          # Only listen on localhost
+          address: tcp://127.0.0.1:${toString cfg.hostPort}
 
         log:
           level: info
@@ -309,22 +310,42 @@ in
         RestartSec = 5;
         TimeoutStopSec = 60;
 
+        # Ephemeral healthcheck state
+        RuntimeDirectory = "authelia";
+        RuntimeDirectoryMode = "0700";
+
         ExecStartPre = [
           "-${pkgs.podman}/bin/podman rm -f authelia"
           "${pkgs.coreutils}/bin/mkdir -p ${cfg.dataDir}"
+
+          # Create an empty writable file in /run
+          "${pkgs.coreutils}/bin/install -m 0600 /dev/null /run/authelia/healthcheck.env"
         ];
 
         ExecStart = lib.concatStringsSep " " (
           [
             "${pkgs.podman}/bin/podman run --rm --name authelia"
             "--pull=missing"
-            "--network host"
+            "--network=host"
 
-            # SOPS configuration mounts
+            # Security hardening
+            "--security-opt=no-new-privileges"
+            "--cap-drop=ALL"
+
+            # Read-only root filesystem
+            "--read-only"
+
+            # Writable temporary storage in RAM
+            "--tmpfs=/tmp:rw,nosuid,nodev,size=16m"
+
+            # Writable healthcheck file only
+            "-v /run/authelia/healthcheck.env:/app/.healthcheck.env:rw"
+
+            # Read-only SOPS configuration
             "-v ${config.sops.templates.authelia-config.path}:/config/config.yml:ro"
             "-v ${config.sops.templates.authelia-users.path}:/config/users_database.yml:ro"
 
-            # Persistent storage
+            # Writable persistent storage
             "-v ${cfg.dataDir}:/var/lib/authelia:rw"
           ]
 
