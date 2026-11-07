@@ -85,6 +85,12 @@ in
     # cookie.redirectURL = "https://auth.gladsheimr.nl";
   };
 
+  my.tailscale.tags = [
+    "server"
+    "nixos"
+    "vps"
+  ];
+
   # Service startup dependencies
   systemd.services.podman-caddy.after = [
     "network-online.target"

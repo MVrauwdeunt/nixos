@@ -28,6 +28,10 @@ let
         get_accounts,
         get_schedules,
         get_rules,
+        get_categories,
+        get_category_groups,
+        create_category,
+        create_category_group,
         create_schedule,
         create_schedule_config,
     )
@@ -47,6 +51,8 @@ let
           (builtins.toJSON cfg.allowedAccounts)})
     )
 
+    category_group = ${builtins.toJSON cfg.categoryGroup};
+
     frequency_map = {
         1: "daily",
         2: "weekly",
@@ -57,58 +63,144 @@ let
     wallos_pattern = re.compile(r"^Wallos \[([^\]]+)\] ")
 
     # --------------------------------------------------
-    # Wallos
+    # Wallos API
     # --------------------------------------------------
 
-    url = (
-        "http://127.0.0.1:${toString cfg.wallosPort}"
+    base_url = "http://127.0.0.1:${toString cfg.wallosPort}"
+
+    def wallos_request(endpoint):
+        body = urllib.parse.urlencode({
+            "api_key": secret("wallos-api-key"),
+        }).encode()
+
+        request = urllib.request.Request(
+            base_url + endpoint,
+            data=body,
+            headers={
+                "Content-Type": "application/x-www-form-urlencoded",
+                "Accept": "application/json",
+            },
+            method="POST",
+        )
+
+        with urllib.request.urlopen(
+            request, timeout=30
+        ) as response:
+            result = json.load(response)
+
+        if (
+            not isinstance(result, dict)
+            or result.get("success") is not True
+        ):
+            raise SystemExit(
+                f"Invalid Wallos API response: {endpoint}"
+            )
+
+        return result
+
+    subscriptions_response = wallos_request(
         "/api/subscriptions/get_subscriptions.php"
     )
 
-    body = urllib.parse.urlencode({
-        "api_key": secret("wallos-api-key"),
-    }).encode()
-
-    request = urllib.request.Request(
-        url,
-        data=body,
-        headers={
-            "Content-Type": "application/x-www-form-urlencoded",
-            "Accept": "application/json",
-        },
-        method="POST",
+    categories_response = wallos_request(
+        "/api/categories/get_categories.php"
     )
 
-    with urllib.request.urlopen(request, timeout=30) as response:
-        result = json.load(response)
+    subscriptions = subscriptions_response.get(
+        "subscriptions"
+    )
 
-    if (
-        not isinstance(result, dict)
-        or result.get("success") is not True
-        or not isinstance(result.get("subscriptions"), list)
-    ):
-        raise SystemExit("Invalid Wallos API response")
+    wallos_categories_raw = categories_response.get(
+        "categories"
+    )
+
+    if not isinstance(subscriptions, list):
+        raise SystemExit("Invalid Wallos subscription list")
+
+    if not isinstance(wallos_categories_raw, list):
+        raise SystemExit("Invalid Wallos category list")
+
+    if not wallos_categories_raw:
+        raise SystemExit(
+            "Wallos returned no categories; refusing sync"
+        )
+
+    # --------------------------------------------------
+    # Wallos categories
+    # --------------------------------------------------
+
+    wallos_categories = {}
+    wallos_category_ids = {}
+
+    for category in wallos_categories_raw:
+        identifier = str(
+            category.get("id") or ""
+        ).strip()
+
+        name = str(
+            category.get("name") or ""
+        ).strip()
+
+        if not identifier or not name:
+            raise SystemExit(
+                "Invalid Wallos category"
+            )
+
+        if name in wallos_categories:
+            raise SystemExit(
+                f"Duplicate Wallos category name: {name}"
+            )
+
+        if identifier in wallos_category_ids:
+            raise SystemExit(
+                f"Duplicate Wallos category ID: {identifier}"
+            )
+
+        wallos_categories[name] = identifier
+        wallos_category_ids[identifier] = name
+
+    # --------------------------------------------------
+    # Wallos subscriptions
+    # --------------------------------------------------
 
     planned = {}
     seen_names = set()
+    inactive_ids = set()
 
-    for item in result["subscriptions"]:
-        if str(item.get("inactive", 0)).lower() in ("1", "true"):
-            continue
+    for item in subscriptions:
+        identifier = str(
+            item.get("id") or ""
+        ).strip()
 
-        identifier = str(item.get("id") or "").strip()
-        name = str(item.get("name") or "").strip()
+        name = str(
+            item.get("name") or ""
+        ).strip()
 
         if not identifier or not name:
-            raise SystemExit("Missing Wallos subscription ID or name")
+            raise SystemExit(
+                "Missing Wallos subscription ID or name"
+            )
 
-        if identifier in planned:
-            raise SystemExit(f"Duplicate Wallos ID: {identifier}")
+        if (
+            identifier in planned
+            or identifier in inactive_ids
+        ):
+            raise SystemExit(
+                f"Duplicate Wallos subscription ID: {identifier}"
+            )
+
+        if str(
+            item.get("inactive", 0)
+        ).lower() in ("1", "true"):
+            inactive_ids.add(identifier)
+            continue
 
         target_name = f"Wallos [{identifier}] {name}"
 
         if target_name in seen_names:
-            raise SystemExit(f"Duplicate schedule name: {target_name}")
+            raise SystemExit(
+                f"Duplicate schedule name: {target_name}"
+            )
 
         seen_names.add(target_name)
 
@@ -126,13 +218,19 @@ let
             amount = Decimal(
                 str(item["price"]).replace(",", ".")
             )
+
             cycle = int(item["cycle"])
             interval = int(item["frequency"])
+
             start = date.fromisoformat(
                 str(item["next_payment"])
             )
+
         except (
-            KeyError, TypeError, ValueError, InvalidOperation
+            KeyError,
+            TypeError,
+            ValueError,
+            InvalidOperation,
         ) as exc:
             raise SystemExit(
                 f"Invalid Wallos data for {target_name}: {exc}"
@@ -141,12 +239,41 @@ let
         if (
             not amount.is_finite()
             or amount <= 0
-            or amount != amount.quantize(Decimal("0.01"))
+            or amount != amount.quantize(
+                Decimal("0.01")
+            )
         ):
-            raise SystemExit(f"Invalid amount for {target_name}")
+            raise SystemExit(
+                f"Invalid amount for {target_name}"
+            )
 
         if cycle not in frequency_map or interval < 1:
-            raise SystemExit(f"Invalid recurrence for {target_name}")
+            raise SystemExit(
+                f"Invalid recurrence for {target_name}"
+            )
+
+        category_id = str(
+            item.get("category_id") or ""
+        ).strip()
+
+        category_name = str(
+            item.get("category_name") or ""
+        ).strip()
+
+        if category_id not in wallos_category_ids:
+            raise SystemExit(
+                f"Unknown Wallos category ID for "
+                f"{target_name}: {category_id!r}"
+            )
+
+        expected_name = wallos_category_ids[category_id]
+
+        if category_name != expected_name:
+            raise SystemExit(
+                f"Wallos category mismatch for "
+                f"{target_name}: "
+                f"{category_name!r} != {expected_name!r}"
+            )
 
         planned[identifier] = {
             "id": identifier,
@@ -157,46 +284,49 @@ let
             "start": start,
             "interval": interval,
             "frequency": frequency_map[cycle],
+            "category_name": category_name,
         }
 
     if not planned:
         raise SystemExit(
-            "No active subscriptions; refusing to synchronize"
+            "No active subscriptions; refusing sync"
         )
+
+    print(
+        f"Wallos: {len(planned)} active subscriptions",
+        flush=True,
+    )
+
+    print(
+        f"Wallos: {len(wallos_categories)} categories",
+        flush=True,
+    )
 
     # --------------------------------------------------
     # Helpers
     # --------------------------------------------------
 
-    def read_conditions(rule):
-        raw = rule.conditions
+    def read_json(value):
+        if isinstance(value, str):
+            return json.loads(value)
 
-        if isinstance(raw, str):
-            conditions = json.loads(raw)
-        elif isinstance(raw, list):
-            conditions = copy.deepcopy(raw)
-        else:
-            raise ValueError(
-                f"Unsupported conditions type: {type(raw)}"
+        return copy.deepcopy(value)
+
+    def write_json(original, value):
+        if isinstance(original, str):
+            return json.dumps(
+                value,
+                separators=(",", ":"),
             )
 
-        if not isinstance(conditions, list):
-            raise ValueError("Invalid rule conditions")
-
-        return conditions
-
-    def write_conditions(rule, conditions):
-        if isinstance(rule.conditions, str):
-            rule.conditions = json.dumps(
-                conditions, separators=(",", ":")
-            )
-        else:
-            rule.conditions = conditions
+        return value
 
     def get_condition(conditions, field):
         matches = [
-            condition for condition in conditions
-            if condition.get("field") == field
+            condition
+            for condition in conditions
+            if isinstance(condition, dict)
+            and condition.get("field") == field
         ]
 
         if len(matches) != 1:
@@ -219,14 +349,14 @@ let
         updated = copy.deepcopy(existing)
 
         if not isinstance(updated, dict):
-            raise ValueError("Invalid date recurrence")
+            raise ValueError(
+                "Invalid date recurrence"
+            )
 
         updated["start"] = item["start"].isoformat()
         updated["interval"] = item["interval"]
         updated["frequency"] = item["frequency"]
 
-        # Preserve Actual-specific recurrence settings.
-        # Do not overwrite patterns, weekend handling, etc.
         return updated
 
     def schedule_id_from_name(name):
@@ -239,14 +369,33 @@ let
                 f"No rule found for {schedule.name}"
             )
 
-        conditions = read_conditions(rule)
+        conditions = read_json(rule.conditions)
+        actions = read_json(rule.actions)
+
+        if not isinstance(conditions, list):
+            raise ValueError(
+                f"Invalid conditions: {schedule.name}"
+            )
+
+        if (
+            not isinstance(actions, list)
+            or not all(
+                isinstance(action, dict)
+                for action in actions
+            )
+        ):
+            raise ValueError(
+                f"Invalid actions: {schedule.name}"
+            )
 
         amount_condition = get_condition(
             conditions, "amount"
         )
+
         account_condition = get_condition(
             conditions, "acct"
         )
+
         date_condition = get_condition(
             conditions, "date"
         )
@@ -260,20 +409,31 @@ let
                 f"Unexpected rule structure: {schedule.name}"
             )
 
-        actions = (
-            json.loads(rule.actions)
-            if isinstance(rule.actions, str)
-            else rule.actions
-        )
+        links = [
+            action
+            for action in actions
+            if action.get("op") == "link-schedule"
+        ]
+
+        category_actions = [
+            action
+            for action in actions
+            if action.get("field") == "category"
+        ]
 
         if (
-            not isinstance(actions, list)
-            or len(actions) != 1
-            or actions[0].get("op") != "link-schedule"
-            or str(actions[0].get("value")) != str(schedule.id)
+            len(links) != 1
+            or str(links[0].get("value"))
+                != str(schedule.id)
+            or len(category_actions) > 1
+            or any(
+                action.get("op") != "set"
+                for action in category_actions
+            )
         ):
             raise ValueError(
-                f"Unexpected schedule action: {schedule.name}"
+                f"Unexpected schedule actions: "
+                f"{schedule.name}: {actions!r}"
             )
 
         if bool(schedule.posts_transaction):
@@ -284,16 +444,47 @@ let
 
         return (
             conditions,
+            actions,
             amount_condition,
             account_condition,
             date_condition,
         )
 
+    def desired_actions(actions, category_id):
+        updated = [
+            copy.deepcopy(action)
+            for action in actions
+            if action.get("field") != "category"
+        ]
+
+        if category_id is not None:
+            updated.append({
+                "op": "set",
+                "field": "category",
+                "value": category_id,
+                "type": "id",
+                "options": {
+                    "splitIndex": 0,
+                },
+            })
+
+        return updated
+
+    def category_action_values(actions):
+        return [
+            str(action.get("value"))
+            for action in actions
+            if action.get("field") == "category"
+        ]
+
     # --------------------------------------------------
     # Actual Budget
     # --------------------------------------------------
 
-    with TemporaryDirectory(prefix="wallos-actual-") as cache:
+    with TemporaryDirectory(
+        prefix="wallos-actual-"
+    ) as cache:
+
         with Actual(
             base_url="http://127.0.0.1:${toString cfg.actualPort}",
             password=secret("actual-password"),
@@ -308,17 +499,77 @@ let
             schedules = get_schedules(actual.session)
             rules = get_rules(actual.session)
 
+            categories = get_categories(actual.session)
+
+            category_groups = get_category_groups(
+                actual.session
+            )
+
+            # ------------------------------------------
+            # Actual categories
+            # ------------------------------------------
+
+            actual_categories = {}
+
+            for category in categories:
+                name = (
+                    category.name or ""
+                ).strip()
+
+                if not name:
+                    continue
+
+                if name in actual_categories:
+                    raise SystemExit(
+                        f"Duplicate Actual category name: {name}"
+                    )
+
+                actual_categories[name] = category
+
+            group_exists = any(
+                group.name == category_group
+                for group in category_groups
+            )
+
+            new_categories = []
+
+            for name in wallos_categories:
+                if name not in actual_categories:
+                    new_categories.append(name)
+
+                    print(
+                        f"[CATEGORY CREATE] {name}",
+                        flush=True,
+                    )
+                else:
+                    print(
+                        f"[CATEGORY OK] {name}",
+                        flush=True,
+                    )
+
+            if new_categories and not group_exists:
+                print(
+                    f"[GROUP CREATE] {category_group}",
+                    flush=True,
+                )
+
+            # ------------------------------------------
+            # Accounts
+            # ------------------------------------------
+
             account_map = {}
 
             for account in accounts:
-                name = (account.name or "").strip()
+                name = (
+                    account.name or ""
+                ).strip()
 
                 if not name:
                     continue
 
                 if name in account_map:
                     raise SystemExit(
-                        f"Duplicate Actual account name: {name}"
+                        f"Duplicate Actual account: {name}"
                     )
 
                 account_map[name] = account
@@ -326,9 +577,13 @@ let
             for item in planned.values():
                 if item["account_name"] not in account_map:
                     raise SystemExit(
-                        "Actual account missing: "
-                        + item["account_name"]
+                        f"Actual account missing: "
+                        f"{item['account_name']}"
                     )
+
+            # ------------------------------------------
+            # Existing schedules
+            # ------------------------------------------
 
             rule_map = {
                 str(rule.id): rule
@@ -347,38 +602,80 @@ let
 
                 if identifier in existing:
                     raise SystemExit(
-                        f"Duplicate Actual Wallos ID: {identifier}"
+                        f"Duplicate Actual Wallos ID: "
+                        f"{identifier}"
                     )
 
                 existing[identifier] = schedule
+
+            # ------------------------------------------
+            # Category placeholders
+            # ------------------------------------------
+
+            # Preview uses names to compare categories.
+            # Sync creates missing categories before
+            # applying schedule changes.
+
+            def category_name_for(item):
+                name = item["category_name"]
+
+                if name in (
+                    "Geen categorie",
+                    "No category",
+                ):
+                    return None
+
+                return name
+
+            def resolve_category_id(name):
+                if name is None:
+                    return None
+
+                category = actual_categories.get(name)
+
+                if category is None:
+                    raise ValueError(
+                        f"Actual category missing: {name}"
+                    )
+
+                return str(category.id)
 
             changes = []
             new_items = []
             removed_ids = []
 
-            # --------------------------------------------------
-            # Compare, without modifying anything yet
-            # --------------------------------------------------
+            # ------------------------------------------
+            # Compare schedules
+            # ------------------------------------------
 
             for identifier, item in planned.items():
+                category_name = category_name_for(item)
+
                 schedule = existing.get(identifier)
 
                 if schedule is None:
                     new_items.append(item)
+
                     print(
                         f"[CREATE] {item['name']} "
                         f"EUR {item['amount']:.2f} "
-                        f"account={item['account_name']}",
+                        f"category={category_name or 'None'}",
                         flush=True,
                     )
                     continue
 
-                rule = rule_map.get(str(schedule.rule_id))
+                rule = rule_map.get(
+                    str(schedule.rule_id)
+                )
 
                 try:
-                    conditions, amount_cond, account_cond, date_cond = (
-                        validate_rule(schedule, rule)
-                    )
+                    (
+                        conditions,
+                        actions,
+                        amount_cond,
+                        account_cond,
+                        date_cond,
+                    ) = validate_rule(schedule, rule)
                 except ValueError as exc:
                     raise SystemExit(str(exc))
 
@@ -387,34 +684,73 @@ let
                 )
 
                 wanted_date = desired_recurrence(
-                    item, date_cond["value"]
+                    item,
+                    date_cond["value"],
                 )
 
+                current_category = category_action_values(
+                    actions
+                )
+
+                if category_name is None:
+                    category_changed = bool(
+                        current_category
+                    )
+
+                elif category_name in actual_categories:
+                    category_id = resolve_category_id(
+                        category_name
+                    )
+
+                    category_changed = (
+                        current_category != [category_id]
+                    )
+                else:
+                    category_changed = True
+
                 differences = []
+
+                if category_changed:
+                    differences.append("category")
 
                 if schedule.name != item["name"]:
                     differences.append("name")
 
-                if amount_cond["value"] != item["amount_cents"]:
+                if (
+                    amount_cond["value"]
+                    != item["amount_cents"]
+                ):
                     differences.append("amount")
 
-                if str(account_cond["value"]) != account_id:
+                if (
+                    str(account_cond["value"])
+                    != account_id
+                ):
                     differences.append("account")
 
-                date_value = date_cond["value"]
-
-                for field in ("start", "interval", "frequency"):
-                    if date_value.get(field) != wanted_date[field]:
-                        differences.append(f"date.{field}")
+                for field in (
+                    "start",
+                    "interval",
+                    "frequency",
+                ):
+                    if (
+                        date_cond["value"].get(field)
+                        != wanted_date[field]
+                    ):
+                        differences.append(
+                            f"date.{field}"
+                        )
 
                 if differences:
                     changes.append({
                         "schedule": schedule,
                         "rule": rule,
                         "conditions": conditions,
+                        "actions": actions,
                         "item": item,
                         "account_id": account_id,
                         "wanted_date": wanted_date,
+                        "category_name": category_name,
                     })
 
                     print(
@@ -428,28 +764,77 @@ let
                         flush=True,
                     )
 
+            # ------------------------------------------
+            # Inactive / removed
+            # ------------------------------------------
+
             for identifier, schedule in existing.items():
                 if identifier not in planned:
                     removed_ids.append(identifier)
+
+                    reason = (
+                        "inactive"
+                        if identifier in inactive_ids
+                        else "missing"
+                    )
+
                     print(
-                        f"[REVIEW] No longer active in Wallos: "
-                        f"{schedule.name}",
+                        f"[REVIEW] {schedule.name}: "
+                        f"{reason} in Wallos",
                         flush=True,
                     )
 
+            # ------------------------------------------
+            # Summary
+            # ------------------------------------------
+
             print()
-            print(f"Create: {len(new_items)}")
-            print(f"Update: {len(changes)}")
-            print(f"Unchanged: {len(planned) - len(new_items) - len(changes)}")
+            print(
+                f"Categories to create: "
+                f"{len(new_categories)}"
+            )
+            print(f"Schedules to create: {len(new_items)}")
+            print(f"Schedules to update: {len(changes)}")
+            print(
+                f"Unchanged: "
+                f"{len(planned) - len(new_items) - len(changes)}"
+            )
             print(f"Inactive/missing: {len(removed_ids)}")
 
             if mode == "preview":
-                print("READ ONLY: no changes saved", flush=True)
+                print(
+                    "READ ONLY: no changes saved",
+                    flush=True,
+                )
                 sys.exit(0)
 
-            # --------------------------------------------------
-            # Apply validated changes
-            # --------------------------------------------------
+            # ------------------------------------------
+            # Create categories
+            # ------------------------------------------
+
+            if new_categories and not group_exists:
+                create_category_group(
+                    actual.session,
+                    category_group,
+                )
+
+            for name in new_categories:
+                category = create_category(
+                    actual.session,
+                    name=name,
+                    group_name=category_group,
+                )
+
+                actual_categories[name] = category
+
+                print(
+                    f"[CATEGORY CREATED] {name}",
+                    flush=True,
+                )
+
+            # ------------------------------------------
+            # Update existing schedules
+            # ------------------------------------------
 
             for change in changes:
                 schedule = change["schedule"]
@@ -470,31 +855,89 @@ let
                     conditions, "date"
                 )["value"] = change["wanted_date"]
 
-                write_conditions(rule, conditions)
+                category_id = resolve_category_id(
+                    change["category_name"]
+                )
+
+                updated_actions = desired_actions(
+                    change["actions"],
+                    category_id,
+                )
+
+                rule.conditions = write_json(
+                    rule.conditions,
+                    conditions,
+                )
+
+                rule.actions = write_json(
+                    rule.actions,
+                    updated_actions,
+                )
+
                 schedule.name = item["name"]
 
+            # ------------------------------------------
+            # Create schedules
+            # ------------------------------------------
+
             for item in new_items:
-                create_schedule(
+                schedule = create_schedule(
                     actual.session,
                     date=recurrence(item),
                     amount=-item["amount"],
                     amount_operation="is",
                     name=item["name"],
-                    account=account_map[item["account_name"]],
+                    account=account_map[
+                        item["account_name"]
+                    ],
                     posts_transaction=False,
                 )
 
-            if changes or new_items:
+                category_id = resolve_category_id(
+                    category_name_for(item)
+                )
+
+                if category_id is not None:
+                    rule = schedule.rule
+
+                    actions = read_json(
+                        rule.actions
+                    )
+
+                    rule.actions = write_json(
+                        rule.actions,
+                        desired_actions(
+                            actions,
+                            category_id,
+                        ),
+                    )
+
+            # ------------------------------------------
+            # Commit
+            # ------------------------------------------
+
+            if (
+                new_categories
+                or changes
+                or new_items
+            ):
                 actual.commit()
 
             print(
                 f"SYNC FINISHED: "
-                f"{len(new_items)} created, "
-                f"{len(changes)} updated",
+                f"{len(new_categories)} categories created, "
+                f"{len(new_items)} schedules created, "
+                f"{len(changes)} schedules updated",
                 flush=True,
             )
+
             print(
                 "Automatic transaction posting: disabled",
+                flush=True,
+            )
+
+            print(
+                "Existing Actual categories: preserved",
                 flush=True,
             )
   '';
@@ -554,15 +997,26 @@ in
 
     allowedAccounts = lib.mkOption {
       type = lib.types.listOf lib.types.str;
+
       default = [
         "Inkomen/Vaste Lasten"
         "Betaalrekening"
       ];
     };
 
+    categoryGroup = lib.mkOption {
+      type = lib.types.str;
+      default = "Wallos Abonnementen";
+
+      description =
+        "Actual Budget category group used for "
+        + "new categories imported from Wallos";
+    };
+
     autoSync = lib.mkOption {
       type = lib.types.bool;
       default = false;
+
       description =
         "Enable daily Wallos to Actual synchronization";
     };

@@ -111,6 +111,12 @@ in
 
       environment = {
         TZ = "Europe/Amsterdam";
+
+        # Upload limits (MB).
+        # Prevent HTTP 413 for large sync payloads.
+        ACTUAL_UPLOAD_FILE_SIZE_LIMIT_MB = "100";
+        ACTUAL_UPLOAD_FILE_SYNC_SIZE_LIMIT_MB = "100";
+        ACTUAL_UPLOAD_SYNC_ENCRYPTED_FILE_SYNC_SIZE_LIMIT_MB = "100";
       } // lib.optionalAttrs cfg.oidc.enable {
         ACTUAL_OPENID_DISCOVERY_URL = cfg.oidc.discoveryURL;
         ACTUAL_OPENID_CLIENT_ID = cfg.oidc.clientId;

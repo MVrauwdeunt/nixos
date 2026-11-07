@@ -4,6 +4,7 @@
 let
   enabledApps = [
     "actual-budget"
+    "actual-mcp"
     "allos"
     "mazanoke"
     "pdf"

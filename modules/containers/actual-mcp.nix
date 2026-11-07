@@ -11,7 +11,7 @@ in
 
     image = lib.mkOption {
       type = lib.types.str;
-      default = "docker.io/sstefanov/actual-mcp:v1.14.0";
+      default = "docker.io/sstefanov/actual-mcp:v1.15.1";
       description = "Actual MCP container image.";
     };
 
@@ -38,18 +38,26 @@ in
 
     # Existing Actual Budget passwords are declared
     # by actual-bunq-importer.nix.
-    # Only the MCP bearer token is new.
-    sops.secrets."saga/actual_mcp_bearer_token" = {
-      sopsFile = ../../secrets.yaml;
+    #
+    # MCP bearer token and actual budget Sync ID.
+    sops.secrets = {
+      "saga/actual_mcp_bearer_token" = {
+        sopsFile = ../../secrets.yaml;
+      };
+
+      "saga/actual_budget_sync_id" = {
+        sopsFile = ../../secrets.yaml;
+      };
     };
 
-    # Generate environment file securely through SOPS.
+    # Generate environment securely through SOPS.
     sops.templates."actual-mcp.env" = {
       mode = "0400";
 
       content = ''
         ACTUAL_SERVER_URL=http://127.0.0.1:5006
         ACTUAL_PASSWORD=${config.sops.placeholder."saga/actual_budget_password"}
+        ACTUAL_BUDGET_SYNC_ID=${config.sops.placeholder."saga/actual_budget_sync_id"}
         ACTUAL_BUDGET_ENCRYPTION_PASSWORD=${config.sops.placeholder."saga/actual_budget_encryption_password"}
         BEARER_TOKEN=${config.sops.placeholder."saga/actual_mcp_bearer_token"}
         ACTUAL_DATA_DIR=/data
@@ -57,13 +65,12 @@ in
       '';
     };
 
-    # Separate data directory for MCP.
-    # No direct access to Actual Budget database.
+    # Persistent cache separate from Actual Budget.
     systemd.tmpfiles.rules = [
       "d ${cfg.dataDir} 0700 root root -"
     ];
 
-    # Podman container
+    # Actual MCP Podman container.
     virtualisation.oci-containers.containers.actual-mcp = {
       image = cfg.image;
       pull = "missing";
@@ -77,15 +84,15 @@ in
         "${cfg.dataDir}:/data"
       ];
 
-      # Host networking is required because Actual Budget
-      # listens on 127.0.0.1:5006 on Saga.
+      # Host networking because Actual Budget
+      # listens on Saga localhost:5006.
       extraOptions = [
         "--network=host"
         "--security-opt=no-new-privileges"
       ];
 
-      # Streamable HTTP transport with bearer authentication.
-      # Write access is deliberately disabled.
+      # Streamable HTTP with bearer authentication.
+      # No --enable-write: MCP remains read-only.
       cmd = [
         "--sse"
         "--enable-bearer"
@@ -105,13 +112,13 @@ in
       ];
     };
 
-    # Only expose MCP through Tailscale by default.
+    # Allow MCP traffic via Tailscale.
     networking.firewall.interfaces.tailscale0.allowedTCPPorts = [
       cfg.port
     ];
 
-    # Optional LAN/WAN access.
-    # Disabled by default and by hosts/saga/apps.nix.
+    # Optional access through other interfaces.
+    # Disabled by default.
     networking.firewall.allowedTCPPorts =
       lib.optionals cfg.openFirewall [ cfg.port ];
   };

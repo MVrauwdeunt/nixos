@@ -1,23 +1,48 @@
+
 # modules/tailscale.nix
 { config, lib, ... }:
 
+let
+  cfg = config.my.tailscale;
+
+  advertisedTags = map (tag: "tag:${tag}") cfg.tags;
+
+  tagFlags = lib.optionals (cfg.tags != []) [
+    "--advertise-tags=${lib.concatStringsSep "," advertisedTags}"
+  ];
+in
 {
-  services.tailscale = {
-    enable = lib.mkDefault true;
-    authKeyFile = config.sops.secrets.tailscaleAuthKey.path;
+  options.my.tailscale.tags = lib.mkOption {
+    type = lib.types.listOf lib.types.str;
+    default = [];
+    example = [ "server" "nixos" "vps" ];
 
-    extraUpFlags = lib.mkDefault [
-      "--advertise-exit-node"
-      "--ssh"
-    ];
-
-    useRoutingFeatures = lib.mkDefault "server";
+    description = ''
+      Tailscale tags assigned to this host.
+      Specify tags without the "tag:" prefix.
+    '';
   };
 
-  # Keep Tailscale running during NixOS switches so remote
-  # deployments over the tailnet do not terminate themselves.
-  systemd.services.tailscaled.restartIfChanged = false;
+  config = {
+    services.tailscale = {
+      enable = lib.mkDefault true;
 
-  # Allow direct Tailscale UDP traffic.
-  networking.firewall.allowedUDPPorts = lib.mkDefault [ 41641 ];
+      # Authentication via SOPS
+      authKeyFile =
+        config.sops.secrets.tailscaleAuthKey.path;
+
+      # Connection preferences and advertised tags
+      extraUpFlags = lib.mkDefault (
+        [ "--ssh" ] ++ tagFlags
+      );
+
+      # Firewall managed by the Tailscale NixOS module
+      openFirewall = true;
+
+      useRoutingFeatures = lib.mkDefault "server";
+    };
+
+    # Avoid unnecessary daemon restarts during deployments
+    systemd.services.tailscaled.restartIfChanged = false;
+  };
 }

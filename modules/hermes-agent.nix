@@ -3,17 +3,16 @@
 { inputs, config, pkgs, lib, ... }:
 
 let
-  # Officiële Honcho-plugin uit de flake-input.
+  # Official Honcho plugin from flake input.
   honchoPlugin = pkgs.runCommand "hermes-honcho-plugin" {} ''
     mkdir -p "$out"
     cp -r ${inputs.honcho}/hermes-plugin-honcho/. "$out/"
   '';
 
-  # Gebruik dezelfde Python-package-set als Hermes.
+  # Use the same Python package set as Hermes.
   python = config.services.hermes-agent.package.python.pkgs;
 
-  # Honcho SDK zonder dubbele dependencies.
-  # httpx en pydantic zitten al in Hermes' sealed venv.
+  # Honcho SDK without duplicate dependencies.
   honchoSdk = python.buildPythonPackage {
     pname = "honcho-ai";
 
@@ -59,25 +58,9 @@ in
   virtualisation.oci-containers.backend = "podman";
 
   # --------------------------------------------------
-  # Hermes CLI-wrapper
-  # --------------------------------------------------
-
-  environment.systemPackages = [
-    pkgs.podman
-
-    (pkgs.writeShellScriptBin "hermes" ''
-      exec sudo ${pkgs.podman}/bin/podman exec -it hermes-agent \
-        env HERMES_HOME=/data/.hermes HOME=/home/hermes \
-        /data/current-package/bin/hermes "$@"
-    '')
-  ];
-
-  # --------------------------------------------------
   # Honcho plugin alias
   # --------------------------------------------------
 
-  # Hermes zoekt de memory-plugin onder plugins/honcho.
-  # De NixOS-module maakt zelf een nix-managed symlink.
   system.activationScripts.hermes-honcho-alias =
     lib.stringAfter [ "hermes-agent-setup" ] ''
       ln -sfn ${honchoPlugin} /var/lib/hermes/.hermes/plugins/honcho
@@ -91,19 +74,34 @@ in
   services.hermes-agent = {
     enable = true;
 
+    # Use the official NixOS CLI integration.
+    # No custom Podman exec wrapper.
+    addToSystemPackages = true;
+
     container = {
       enable = true;
       backend = "podman";
 
-      # Ubuntu 24.04 - bestaande amd64-image op Vili.
-      image = "docker.io/library/ubuntu:24.04@sha256:786a8b558f7be160c6c8c4a54f9a57274f3b4fb1491cf65146521ae77ff1dc54";
+      # Allow zanbee to use the managed Hermes CLI.
+      hostUsers = [ "zanbee" ];
+
+      # Ubuntu 24.04, pinned image.
+      image =
+        "docker.io/library/ubuntu:24.04@sha256:786a8b558f7be160c6c8c4a54f9a57274f3b4fb1491cf65146521ae77ff1dc54";
     };
+
+    # ------------------------------------------------
+    # Secrets
+    # ------------------------------------------------
 
     environmentFiles = [
       config.sops.secrets."vili/hermes/env".path
     ];
 
-    # Honcho-plugin en bijbehorende Python SDK.
+    # ------------------------------------------------
+    # Plugins
+    # ------------------------------------------------
+
     extraPlugins = [
       honchoPlugin
     ];
@@ -113,12 +111,9 @@ in
     ];
 
     # ------------------------------------------------
-    # Honcho clientconfiguratie
+    # Honcho configuration
     # ------------------------------------------------
 
-    # Honcho API draait op Vili in een aparte container.
-    # Hermes gebruikt host networking en bereikt
-    # Honcho via 127.0.0.1:8000.
     hermesHomeFiles."honcho.json" = builtins.toJSON {
       baseUrl = "http://127.0.0.1:8000";
 
@@ -129,10 +124,7 @@ in
         aiPeer = "hermes";
         peerName = "michel";
 
-        # Voorkomt een lege session key vanuit de CLI.
         sessionStrategy = "global";
-
-        # Eén gebruikersidentiteit voor de kanalen.
         pinUserPeer = true;
 
         recallMode = "hybrid";
@@ -141,7 +133,7 @@ in
     };
 
     # ------------------------------------------------
-    # Hermes instellingen
+    # Hermes settings
     # ------------------------------------------------
 
     settings = {

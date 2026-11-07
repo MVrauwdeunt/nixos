@@ -13,10 +13,10 @@ let
   ]);
 
   importerSource = pkgs.fetchFromGitHub {
-    owner = "mastradus";
+    owner = "MaartenStaa";
     repo = "actual-bunq-importer";
-    rev = "3f825938d024ee8ecf196678dda24ffa37dbba21";
-    sha256 = "0hyns7wjanzhaga2bz6rmx3zs433rdfzff09jswymf9a7wg4c86m";
+    rev = "d25fee72e859007419058c196d92d10d0353022f";
+    hash = "sha256-HdqLOZlaGBCd9Mr9j+nzkQKyI6ubHXh1c8Wuj+/fuO0="; # Replace with the actual hash reported by Nix on first build
   };
 
   patchedImporter = pkgs.runCommand
