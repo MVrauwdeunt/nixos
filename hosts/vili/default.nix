@@ -1,7 +1,9 @@
+
 { modulesPath, inputs, ... }:
 {
   imports = [
     (modulesPath + "/virtualisation/proxmox-lxc.nix")
+    ../../modules/roles/proxmox-lxc.nix
     ../../modules/users/zanbee
 
     ./system.nix
@@ -13,5 +15,6 @@
 
     ./apps.nix
   ];
+
   infrastructure.podman.aiBackend.enable = true;
 }

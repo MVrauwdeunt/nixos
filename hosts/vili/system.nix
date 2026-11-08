@@ -1,44 +1,10 @@
+
 { lib, ... }:
 {
-  nix.settings.sandbox = false;
-  nix.settings.trusted-users = [ "root" "zanbee" ];
 
-  proxmoxLXC = {
-    manageNetwork = false;
-    manageHostName = false;
-    privileged = false;
-  };
-
-  # Not useful in containers
-  services.fstrim.enable = lib.mkForce false;
-  services.qemuGuest.enable = lib.mkForce false;
-  systemd.oomd.enable = false;
-
-  # --------------------------------------------------
-  # TEMPORARY SSH BOOTSTRAP CONFIG
-  # --------------------------------------------------
+  # SSH policy comes from modules/ssh-hardened.nix.
   services.openssh.enable = true;
   services.openssh.openFirewall = true;
-  services.openssh.settings = {
-    PermitRootLogin = lib.mkForce "yes";
-    PasswordAuthentication = lib.mkForce true;
-    PermitEmptyPasswords = lib.mkForce true;
-  };
 
-  # DNS caching
-  services.resolved.settings = {
-    Resolve = {
-      Cache = true;
-      CacheFromLocalhost = true;
-    };
-  };
-
-  # --------------------------------------------------
-  # System
-  # --------------------------------------------------
   system.stateVersion = lib.mkForce "26.05";
-
-  systemd.suppressedSystemUnits = [
-    "sys-kernel-debug.mount"
-  ];
 }
