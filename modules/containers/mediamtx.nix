@@ -1,5 +1,4 @@
 
-# modules/containers/mediamtx.nix
 { config, lib, pkgs, ... }:
 
 let
@@ -35,42 +34,43 @@ let
   '';
 in
 {
-  options.apps.mediamtx = {
-    enable = lib.mkEnableOption "MediaMTX";
+  imports = [
+    (import ./common.nix {
+      name = "mediamtx";
 
-    openFirewall = lib.mkOption {
-      type = lib.types.bool;
-      default = false;
-      description = "Open MediaMTX ports in the firewall.";
-    };
-
-    webrtcAdditionalHosts = lib.mkOption {
-      type = lib.types.listOf lib.types.str;
-      default = [ ];
-      description = "Additional hosts advertised to WebRTC clients.";
-    };
-  };
-
-  config = lib.mkIf cfg.enable {
-    virtualisation.oci-containers.containers.mediamtx = {
       image = "docker.io/bluenviron/mediamtx:1.21.2@sha256:c7540465f868a02652118bea5a0daab12a29ac0f6cb8485abd535939ecddf886";
-      pull = "missing";
 
-      ports = [
+      port = 1935;
+
+      publishedPorts = [
         "1935:1935/tcp"
         "8888:8888/tcp"
         "8889:8889/tcp"
         "8189:8189/udp"
       ];
 
-      volumes = [
+      mountConfig = false;
+      createDataDir = false;
+      useTimezone = false;
+      usePuidPgid = false;
+      bridgeNetwork = false;
+      disableHealthcheck = false;
+
+      extraVolumes = [
         "${mediamtxConfig}:/mediamtx.yml:ro"
       ];
-    };
+    })
+  ];
 
+  options.apps.mediamtx.webrtcAdditionalHosts = lib.mkOption {
+    type = lib.types.listOf lib.types.str;
+    default = [ ];
+    description = "Additional hosts advertised to WebRTC clients.";
+  };
+
+  config = lib.mkIf cfg.enable {
     networking.firewall = lib.mkIf cfg.openFirewall {
       allowedTCPPorts = [
-        1935
         8888
         8889
       ];

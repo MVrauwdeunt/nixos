@@ -5,15 +5,22 @@
   port,
   containerPort ? port,
   bindAddress ? "127.0.0.1",
+  publishedPorts ? null,
   networks ? [ ],
   dataDir ? "/var/lib/${name}",
   configMount ? "/config",
+  mountConfig ? true,
+  createDataDir ? true,
   extraVolumes ? [ ],
   environment ? { },
+  useTimezone ? true,
   extraOptions ? [ ],
   directoryMode ? "0755",
-  directoryOwner ? "root",
-  directoryGroup ? "root",
+  directoryOwner ? "1000",
+  directoryGroup ? "1000",
+  usePuidPgid ? true,
+  bridgeNetwork ? true,
+  disableHealthcheck ? true,
   tailscaleDefault ? false,
 }:
 
@@ -24,6 +31,15 @@ let
 
   networkUnits =
     map (network: "podman-network-${network}.service") networks;
+
+  sharedEnvironment =
+    lib.optionalAttrs useTimezone {
+      TZ = config.time.timeZone;
+    }
+    // lib.optionalAttrs usePuidPgid {
+      PUID = "1000";
+      PGID = "1000";
+    };
 in
 {
   options.apps.${name} = {
@@ -53,22 +69,32 @@ in
 
   config = lib.mkIf cfg.enable {
     virtualisation.oci-containers.containers.${name} = {
-      inherit image environment;
+      inherit image networks;
 
       pull = "missing";
 
-      networks = networks;
+      environment = sharedEnvironment // environment;
 
-      ports = [
-        "${bindAddress}:${toString cfg.port}:${toString containerPort}"
-      ];
+      ports =
+        if publishedPorts != null then
+          publishedPorts
+        else
+          [
+            "${bindAddress}:${toString cfg.port}:${toString containerPort}"
+          ];
 
-      volumes = [
-        "${cfg.dataDir}:${configMount}"
-      ] ++ extraVolumes;
+      volumes =
+        lib.optionals mountConfig [
+          "${cfg.dataDir}:${configMount}"
+        ]
+        ++ extraVolumes;
 
       extraOptions =
-        extraOptions;
+        lib.optionals (networks == [ ] && bridgeNetwork) [
+          "--network=bridge"
+        ]
+        ++ lib.optional disableHealthcheck "--health-cmd=none"
+        ++ extraOptions;
     };
 
     systemd.services."podman-${name}" =
@@ -77,9 +103,10 @@ in
         after = networkUnits;
       };
 
-    systemd.tmpfiles.rules = [
-      "d ${cfg.dataDir} ${directoryMode} ${directoryOwner} ${directoryGroup} -"
-    ];
+    systemd.tmpfiles.rules =
+      lib.optionals createDataDir [
+        "d ${cfg.dataDir} ${directoryMode} ${directoryOwner} ${directoryGroup} -"
+      ];
 
     networking.firewall = lib.mkIf cfg.openFirewall {
       allowedTCPPorts = [ cfg.port ];

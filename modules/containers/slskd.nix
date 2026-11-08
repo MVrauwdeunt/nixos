@@ -1,77 +1,45 @@
-
 { config, lib, ... }:
 
-with lib;
-
-let
-  cfg = config.apps.slskd;
-in
 {
+  imports = [
+    (import ./common.nix {
+      name = "slskd";
+      image = "docker.io/slskd/slskd:0.26.2.0@sha256:d0963a3e5b16facd295bf4f2156dad0182f246b1b21a032cae12f5494c694843";
+      port = 5030;
+      tailscaleDefault = true;
+
+      bindAddress = "0.0.0.0";
+      configMount = "/app";
+      usePuidPgid = false;
+      bridgeNetwork = false;
+      disableHealthcheck = false;
+      directoryMode = "0775";
+      directoryOwner = "zanbee";
+      directoryGroup = "users";
+      extraVolumes = [
+        "${config.apps.slskd.downloadsDir}:/downloads"
+        "${config.apps.slskd.mediaDir}:/music:ro"
+      ];
+      environment.SLSKD_REMOTE_CONFIGURATION = "true";
+    })
+  ];
+
   options.apps.slskd = {
-    enable = mkEnableOption "slskd container";
-
-    tailscale.enable = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Expose Sonarr through Tailscale Serve.";
-    };
-
-    dataDir = mkOption {
-      type = types.str;
-      default = "/var/lib/slskd";
-    };
-
-    downloadsDir = mkOption {
-      type = types.str;
+    downloadsDir = lib.mkOption {
+      type = lib.types.str;
       default = "/mnt/shares/Downloads/Muziek/soularr";
     };
-
-    mediaDir = mkOption {
-      type = types.str;
+    mediaDir = lib.mkOption {
+      type = lib.types.str;
       default = "/mnt/shares/Media/Muziek";
-    };
-
-    port = mkOption {
-      type = types.port;
-      default = 5030;
-    };
-
-    openFirewall = mkOption {
-      type = types.bool;
-      default = false;
     };
   };
 
-  config = mkIf cfg.enable {
-    virtualisation.oci-containers.containers.slskd = {
-      image = "docker.io/slskd/slskd:0.26.2.0@sha256:d0963a3e5b16facd295bf4f2156dad0182f246b1b21a032cae12f5494c694843";
-      pull = "missing";
-
-      ports = [
-        "${toString cfg.port}:5030"
-      ];
-
-      volumes = [
-        "${cfg.dataDir}:/app"
-        "${cfg.downloadsDir}:/downloads"
-        "${cfg.mediaDir}:/music:ro"
-      ];
-
-      environment = {
-        TZ = "Europe/Amsterdam";
-        SLSKD_REMOTE_CONFIGURATION = "true";
-      };
-    };
-
+  config = lib.mkIf config.apps.slskd.enable {
     systemd.tmpfiles.rules = [
-      "d ${cfg.dataDir} 0775 zanbee users -"
-      "d ${cfg.downloadsDir} 0775 zanbee users -"
-      "d ${cfg.downloadsDir}/incomplete 0775 zanbee users -"
-      "d ${cfg.downloadsDir}/complete 0775 zanbee users -"
+      "d ${config.apps.slskd.downloadsDir} 0775 zanbee users -"
+      "d ${config.apps.slskd.downloadsDir}/incomplete 0775 zanbee users -"
+      "d ${config.apps.slskd.downloadsDir}/complete 0775 zanbee users -"
     ];
-
-    networking.firewall = mkIf cfg.openFirewall {
-      allowedTCPPorts = [ cfg.port ];
-    };
   };
 }

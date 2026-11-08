@@ -281,7 +281,7 @@ in
         extraOptions = [
           "--network=adventurelog"
           "--health-cmd=node -e \"fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""
-          "--health-interval=30s"
+          "--health-interval=120s"
           "--health-timeout=5s"
           "--health-retries=5"
           "--health-start-period=30s"
