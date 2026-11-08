@@ -1,65 +1,85 @@
-{ config, lib, pkgs, ... }:
 
-with lib;
+{ config, lib, ... }:
 
 let
   cfg = config.apps.soulsync;
 in
 {
+  imports = [
+    (import ./common.nix {
+      name = "soulsync";
+
+      # Official upstream stable image
+      image = cfg.image;
+
+      # SoulSync WebUI
+      port = 8008;
+      containerPort = 8008;
+      bindAddress = "127.0.0.1";
+
+      tailscaleDefault = true;
+
+      # Persistent configuration
+      configMount = "/app/config";
+      createDataDir = true;
+
+      # Upstream runtime settings
+      useTimezone = true;
+      usePuidPgid = true;
+      bridgeNetwork = true;
+      disableHealthcheck = false;
+
+      environment = {
+        PYTHONPATH = "/app";
+        SOULSYNC_CONFIG_PATH = "/app/config/config.json";
+        UMASK = "022";
+      };
+
+      extraVolumes = [
+        # Application logs
+        "${cfg.dataDir}/logs:/app/logs"
+
+        # Persistent SQLite databases
+        "soulsync_database:/app/data"
+
+        # Shared Soulseek downloads
+        "${cfg.downloadsDir}:/app/downloads"
+
+        # Music library / transfer destination
+        "${cfg.musicDir}:/app/Transfer"
+      ];
+    })
+  ];
+
   options.apps.soulsync = {
-    enable = mkEnableOption "SoulSync container";
-
-    tailscale.enable = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Expose Sonarr through Tailscale Serve.";
+    image = lib.mkOption {
+      type = lib.types.str;
+      default = "docker.io/boulderbadgedad/soulsync:latest";
+      description = "Official SoulSync stable container image.";
     };
 
-    image = mkOption {
-      type = types.str;
-      default = "ghcr.io/nezreka/soulsync:latest";
+    downloadsDir = lib.mkOption {
+      type = lib.types.str;
+      default = "/mnt/shares/Downloads/Muziek/soularr";
+      description = "Shared download directory used by slskd.";
     };
 
-    dataDir = mkOption {
-      type = types.path;
-      default = "/var/lib/soulsync";
-    };
-
-    musicDir = mkOption {
-      type = types.path;
-      default = "/mnt/Volume2/music";
-    };
-
-    port = mkOption {
-      type = types.port;
-      default = 3001;
-    };
-
-    openFirewall = mkOption {
-      type = types.bool;
-      default = false;
+    musicDir = lib.mkOption {
+      type = lib.types.str;
+      default = "/mnt/shares/Media/Muziek";
+      description = "Music library and transfer destination.";
     };
   };
 
-  config = mkIf cfg.enable {
+  config = lib.mkIf cfg.enable {
     virtualisation.oci-containers.containers.soulsync = {
-      image = cfg.image;
-      pull = "always";
-      ports = [ "${toString cfg.port}:3000" ];
+      pull = lib.mkForce "always";
 
-      volumes = [
-        "${cfg.dataDir}:/config"
-        "/mnt/shares/Downloads/Muziek:/downloads"
-        "/mnt/shares/Media/Muziek:/music"
-      ];
-
-      environment = {
-        TZ = "Europe/Amsterdam";
-      };
-
-      labels = {
-        "app" = "soulsync";
-      };
+      labels.app = "soulsync";
     };
+
+    systemd.tmpfiles.rules = [
+      "d ${cfg.dataDir}/logs 0755 1000 1000 -"
+    ];
   };
 }

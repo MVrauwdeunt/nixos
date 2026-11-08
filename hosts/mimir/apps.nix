@@ -10,6 +10,7 @@ let
     "lidarr"
     "sabnzbd"
     "soularr"
+    "soulsync"
     "slskd"
     "lidify"
     "profilarr"
