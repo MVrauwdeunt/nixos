@@ -3,80 +3,36 @@
 
 let
   cfg = config.apps.manyfold;
+
+  defaultImage =
+    "ghcr.io/manyfold3d/manyfold-solo:0.153.0@sha256:161109b917a158b5efd8478a437e9900db7bdc57235c167aa70d5ad69425fc31";
 in
 {
-  options.apps.manyfold = {
-    enable = lib.mkEnableOption "Manyfold 3D model manager";
+  imports = [
+    (import ./common.nix {
+      name = "manyfold";
+      image = defaultImage;
 
-    image = lib.mkOption {
-      type = lib.types.str;
-      default = "ghcr.io/manyfold3d/manyfold-solo:0.153.0@sha256:161109b917a158b5efd8478a437e9900db7bdc57235c167aa70d5ad69425fc31";
-    };
+      port = 3214;
+      containerPort = 3214;
+      bindAddress = "127.0.0.1";
 
-    dataDir = lib.mkOption {
-      type = lib.types.str;
-      default = "/var/lib/manyfold";
-    };
+      tailscaleDefault = true;
 
-    libraryDir = lib.mkOption {
-      type = lib.types.str;
-      default = "/mnt/Volume2/3d-models";
-    };
+      # De twee volumes gebruiken expliciet :rw.
+      mountConfig = false;
 
-    port = lib.mkOption {
-      type = lib.types.port;
-      default = 3214;
-    };
+      directoryMode = "0750";
+      directoryOwner = "1000";
+      directoryGroup = "1000";
 
-    openFirewall = lib.mkOption {
-      type = lib.types.bool;
-      default = false;
-    };
+      # TZ, PUID en PGID komen uit common.nix.
+      useTimezone = true;
+      usePuidPgid = true;
 
-    tailscale.enable = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-    };
-  };
-
-  config = lib.mkIf cfg.enable {
-    virtualisation.oci-containers.backend = "podman";
-
-    sops.secrets."saga/manyfold/secret_key_base" = {};
-
-    sops.templates."manyfold-env" = {
-      content = ''
-        SECRET_KEY_BASE=${config.sops.placeholder."saga/manyfold/secret_key_base"}
-      '';
-    };
-
-    systemd.tmpfiles.rules = [
-      "d ${cfg.dataDir} 0750 1000 1000 -"
-    ];
-
-    virtualisation.oci-containers.containers.manyfold = {
-      image = cfg.image;
-      pull = "missing";
-      autoStart = true;
-
-      ports = [
-        "127.0.0.1:${toString cfg.port}:3214"
-      ];
-
-      volumes = [
-        "${cfg.dataDir}:/config:rw"
-        "${cfg.libraryDir}:/models:rw"
-      ];
-
-      environment = {
-        PUID = "1000";
-        PGID = "1000";
-        TZ = "Europe/Amsterdam";
-      };
-
-      environmentFiles = [
-        config.sops.templates."manyfold-env".path
-      ];
+      # Geen extra Podman-netwerk- of healthcheckopties.
+      bridgeNetwork = false;
+      disableHealthcheck = false;
 
       extraOptions = [
         "--security-opt=no-new-privileges:true"
@@ -86,10 +42,43 @@ in
         "--cap-add=SETUID"
         "--cap-add=SETGID"
       ];
+    })
+  ];
+
+  options.apps.manyfold = {
+    image = lib.mkOption {
+      type = lib.types.str;
+      default = defaultImage;
+      description = "Manyfold container image.";
     };
 
-    networking.firewall = lib.mkIf cfg.openFirewall {
-      allowedTCPPorts = [ cfg.port ];
+    libraryDir = lib.mkOption {
+      type = lib.types.str;
+      default = "/mnt/Volume2/3d-models";
+      description = "Directory containing 3D model files.";
+    };
+  };
+
+  config = lib.mkIf cfg.enable {
+    sops.secrets."saga/manyfold/secret_key_base" = {};
+
+    sops.templates."manyfold-env" = {
+      content = ''
+        SECRET_KEY_BASE=${config.sops.placeholder."saga/manyfold/secret_key_base"}
+      '';
+    };
+
+    virtualisation.oci-containers.containers.manyfold = {
+      image = lib.mkForce cfg.image;
+
+      volumes = [
+        "${cfg.dataDir}:/config:rw"
+        "${cfg.libraryDir}:/models:rw"
+      ];
+
+      environmentFiles = [
+        config.sops.templates."manyfold-env".path
+      ];
     };
 
     systemd.services.podman-manyfold = {

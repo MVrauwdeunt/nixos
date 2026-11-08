@@ -400,13 +400,41 @@ let
             conditions, "date"
         )
 
-        if (
-            amount_condition.get("op") != "is"
-            or account_condition.get("op") != "is"
-            or date_condition.get("op") != "isapprox"
-        ):
+        # Diagnose operators without logging values,
+        # account IDs, or other sensitive data.
+        expected_operators = {
+            "amount": "is",
+            "acct": "is",
+            "date": "isapprox",
+        }
+
+        actual_operators = {
+            "amount": amount_condition.get("op"),
+            "acct": account_condition.get("op"),
+            "date": date_condition.get("op"),
+        }
+
+        unexpected = {
+            field: {
+                "expected": expected_op,
+                "actual": actual_operators[field],
+            }
+            for field, expected_op in expected_operators.items()
+            if actual_operators[field] != expected_op
+        }
+
+        if unexpected:
+            fields = [
+                condition.get("field")
+                if isinstance(condition, dict)
+                else "<invalid>"
+                for condition in conditions
+            ]
+
             raise ValueError(
-                f"Unexpected rule structure: {schedule.name}"
+                f"Unexpected rule structure: {schedule.name}; "
+                f"operator mismatches: {unexpected!r}; "
+                f"condition fields: {fields!r}"
             )
 
         links = [
@@ -433,7 +461,7 @@ let
         ):
             raise ValueError(
                 f"Unexpected schedule actions: "
-                f"{schedule.name}: {actions!r}"
+                f"{schedule.name}"
             )
 
         if bool(schedule.posts_transaction):
@@ -612,10 +640,6 @@ let
             # Category placeholders
             # ------------------------------------------
 
-            # Preview uses names to compare categories.
-            # Sync creates missing categories before
-            # applying schedule changes.
-
             def category_name_for(item):
                 name = item["category_name"]
 
@@ -643,6 +667,10 @@ let
             changes = []
             new_items = []
             removed_ids = []
+
+            # Track existing rules intentionally skipped
+            # because their structure is not safe to edit.
+            skipped_items = []
 
             # ------------------------------------------
             # Compare schedules
@@ -676,8 +704,25 @@ let
                         account_cond,
                         date_cond,
                     ) = validate_rule(schedule, rule)
-                except ValueError as exc:
-                    raise SystemExit(str(exc))
+
+                except (ValueError, TypeError, KeyError) as exc:
+                    # A manually modified or unexpected
+                    # existing rule must not block the
+                    # synchronization of other subscriptions.
+                    #
+                    # Do not modify or recreate this schedule.
+                    skipped_items.append({
+                        "id": identifier,
+                        "name": item["name"],
+                        "reason": str(exc),
+                    })
+
+                    print(
+                        f"[SKIP] {item['name']}: {exc}",
+                        flush=True,
+                    )
+
+                    continue
 
                 account_id = str(
                     account_map[item["account_name"]].id
@@ -788,18 +833,47 @@ let
             # Summary
             # ------------------------------------------
 
+            unchanged_count = (
+                len(planned)
+                - len(new_items)
+                - len(changes)
+                - len(skipped_items)
+            )
+
             print()
             print(
                 f"Categories to create: "
                 f"{len(new_categories)}"
             )
-            print(f"Schedules to create: {len(new_items)}")
-            print(f"Schedules to update: {len(changes)}")
             print(
-                f"Unchanged: "
-                f"{len(planned) - len(new_items) - len(changes)}"
+                f"Schedules to create: {len(new_items)}"
             )
-            print(f"Inactive/missing: {len(removed_ids)}")
+            print(
+                f"Schedules to update: {len(changes)}"
+            )
+            print(
+                f"Unchanged: {unchanged_count}"
+            )
+            print(
+                f"Skipped (protected): "
+                f"{len(skipped_items)}"
+            )
+            print(
+                f"Inactive/missing: {len(removed_ids)}"
+            )
+
+            if skipped_items:
+                print()
+                print(
+                    "Protected schedules left untouched:",
+                    flush=True,
+                )
+
+                for skipped in skipped_items:
+                    print(
+                        f"  - {skipped['name']}",
+                        flush=True,
+                    )
 
             if mode == "preview":
                 print(
@@ -927,7 +1001,8 @@ let
                 f"SYNC FINISHED: "
                 f"{len(new_categories)} categories created, "
                 f"{len(new_items)} schedules created, "
-                f"{len(changes)} schedules updated",
+                f"{len(changes)} schedules updated, "
+                f"{len(skipped_items)} schedules skipped",
                 flush=True,
             )
 

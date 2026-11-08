@@ -3,43 +3,49 @@
 
 let
   cfg = config.apps.actual-mcp;
+
+  defaultImage = "docker.io/sstefanov/actual-mcp:v1.15.1";
 in
 {
-  options.apps.actual-mcp = {
-    enable = lib.mkEnableOption
-      "read-only Actual Budget MCP server";
+  imports = [
+    (import ./common.nix {
+      name = "actual-mcp";
+      image = defaultImage;
 
-    image = lib.mkOption {
-      type = lib.types.str;
-      default = "docker.io/sstefanov/actual-mcp:v1.15.1";
-      description = "Actual MCP container image.";
-    };
+      port = 3101;
 
-    dataDir = lib.mkOption {
-      type = lib.types.str;
-      default = "/var/lib/actual-mcp";
-      description = "Separate local Actual MCP cache.";
-    };
+      # Host networking: geen Podman port publishing.
+      publishedPorts = [ ];
+      bridgeNetwork = false;
 
-    port = lib.mkOption {
-      type = lib.types.port;
-      default = 3101;
-      description = "MCP HTTP port.";
-    };
+      dataDir = "/var/lib/actual-mcp";
+      configMount = "/data";
 
-    openFirewall = lib.mkOption {
-      type = lib.types.bool;
-      default = false;
-      description = "Open MCP port on LAN/WAN interfaces.";
-    };
+      directoryMode = "0700";
+      directoryOwner = "root";
+      directoryGroup = "root";
+
+      # Behoud de oorspronkelijke environment en healthcheck.
+      useTimezone = false;
+      usePuidPgid = false;
+      disableHealthcheck = false;
+
+      extraOptions = [
+        "--network=host"
+        "--security-opt=no-new-privileges"
+      ];
+    })
+  ];
+
+  options.apps.actual-mcp.image = lib.mkOption {
+    type = lib.types.str;
+    default = defaultImage;
+    description = "Actual MCP container image.";
   };
 
   config = lib.mkIf cfg.enable {
-
     # Existing Actual Budget passwords are declared
     # by actual-bunq-importer.nix.
-    #
-    # MCP bearer token and actual budget Sync ID.
     sops.secrets = {
       "saga/actual_mcp_bearer_token" = {
         sopsFile = ../../secrets.yaml;
@@ -65,30 +71,11 @@ in
       '';
     };
 
-    # Persistent cache separate from Actual Budget.
-    systemd.tmpfiles.rules = [
-      "d ${cfg.dataDir} 0700 root root -"
-    ];
-
-    # Actual MCP Podman container.
     virtualisation.oci-containers.containers.actual-mcp = {
-      image = cfg.image;
-      pull = "missing";
-      autoStart = true;
+      image = lib.mkForce cfg.image;
 
       environmentFiles = [
         config.sops.templates."actual-mcp.env".path
-      ];
-
-      volumes = [
-        "${cfg.dataDir}:/data"
-      ];
-
-      # Host networking because Actual Budget
-      # listens on Saga localhost:5006.
-      extraOptions = [
-        "--network=host"
-        "--security-opt=no-new-privileges"
       ];
 
       # Streamable HTTP with bearer authentication.
@@ -116,10 +103,5 @@ in
     networking.firewall.interfaces.tailscale0.allowedTCPPorts = [
       cfg.port
     ];
-
-    # Optional access through other interfaces.
-    # Disabled by default.
-    networking.firewall.allowedTCPPorts =
-      lib.optionals cfg.openFirewall [ cfg.port ];
   };
 }
