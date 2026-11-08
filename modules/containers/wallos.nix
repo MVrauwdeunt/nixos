@@ -5,40 +5,79 @@ let
   cfg = config.apps.wallos;
 
   oidcSecretName = "saga/wallos_oidc_client_secret";
+
+  defaultImage =
+    "docker.io/bellamy/wallos:5.10.2@sha256:8873c2328e745c7ca8ff0e0f5508215219ec5c02a3469c0d8049602be2a2bca3";
 in
 {
-  options.apps.wallos = {
-    enable = lib.mkEnableOption
-      "Wallos subscription tracker";
+  imports = [
+    (import ./common.nix {
+      name = "wallos";
+      image = defaultImage;
 
+      port = 8282;
+      containerPort = 80;
+      bindAddress = "127.0.0.1";
+
+      dataDir = "/var/lib/wallos";
+
+      tailscaleDefault = true;
+
+      # Wallos uses separate database and logo mounts.
+      mountConfig = false;
+      createDataDir = false;
+
+      # Wallos manages its own PHP-FPM user.
+      useTimezone = true;
+      usePuidPgid = false;
+
+      # Preserve existing Podman behaviour.
+      bridgeNetwork = false;
+      disableHealthcheck = false;
+
+      extraVolumes =
+        [
+          "${cfg.dataDir}/db:/var/www/html/db"
+          "${cfg.dataDir}/logos:/var/www/html/images/uploads/logos"
+        ]
+        ++ lib.optionals cfg.oidc.enable [
+          "${config.sops.secrets.${oidcSecretName}.path}:/run/secrets/wallos-oidc-secret:ro"
+        ];
+
+      environment =
+        lib.optionalAttrs cfg.oidc.enable {
+          OIDC_ENABLED = "true";
+          OIDC_PROVIDER_NAME = "Authelia";
+
+          OIDC_CLIENT_ID = cfg.oidc.clientId;
+
+          OIDC_CLIENT_SECRET_FILE =
+            "/run/secrets/wallos-oidc-secret";
+
+          OIDC_ISSUER = cfg.oidc.issuer;
+
+          OIDC_REDIRECT_URL = cfg.oidc.redirectURL;
+
+          OIDC_SCOPES = "openid email profile";
+
+          OIDC_AUTO_CREATE_USER =
+            lib.boolToString cfg.oidc.autoCreateUser;
+
+          OIDC_DISABLE_PASSWORD_LOGIN =
+            lib.boolToString cfg.oidc.disablePasswordLogin;
+        };
+
+      extraOptions = [
+        "--dns=10.88.0.1"
+      ];
+    })
+  ];
+
+  options.apps.wallos = {
     image = lib.mkOption {
       type = lib.types.str;
-      default = "docker.io/bellamy/wallos:5.10.2@sha256:8873c2328e745c7ca8ff0e0f5508215219ec5c02a3469c0d8049602be2a2bca3";
+      default = defaultImage;
       description = "Wallos container image.";
-    };
-
-    dataDir = lib.mkOption {
-      type = lib.types.str;
-      default = "/var/lib/wallos";
-      description = "Persistent Wallos data directory.";
-    };
-
-    port = lib.mkOption {
-      type = lib.types.port;
-      default = 8282;
-      description = "Local HTTP port for Wallos.";
-    };
-
-    openFirewall = lib.mkOption {
-      type = lib.types.bool;
-      default = false;
-      description = "Open the Wallos port in the host firewall.";
-    };
-
-    tailscale.enable = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Expose Wallos through Tailscale Services.";
     };
 
     oidc = {
@@ -89,63 +128,19 @@ in
       };
     };
 
+    # Persistent directories.
+    #
+    # PHP-FPM workers run as www-data (UID/GID 82).
+    # SQLite needs write access to the database directory
+    # for journal/WAL files, not just to wallos.db.
     systemd.tmpfiles.rules = [
       "d ${cfg.dataDir} 0755 root root -"
-      "d ${cfg.dataDir}/db 0755 root root -"
+      "d ${cfg.dataDir}/db 0755 82 82 -"
       "d ${cfg.dataDir}/logos 0755 82 82 -"
     ];
 
-    virtualisation.oci-containers.containers.wallos = {
-      image = cfg.image;
-      pull = "missing";
-      autoStart = true;
-
-      ports = [
-        "127.0.0.1:${toString cfg.port}:80"
-      ];
-
-      volumes =
-        [
-          "${cfg.dataDir}/db:/var/www/html/db"
-          "${cfg.dataDir}/logos:/var/www/html/images/uploads/logos"
-        ]
-        ++ lib.optionals cfg.oidc.enable [
-          "${config.sops.secrets.${oidcSecretName}.path}:/run/secrets/wallos-oidc-secret:ro"
-        ];
-
-      environment =
-        {
-          TZ = "Europe/Amsterdam";
-        }
-        // lib.optionalAttrs cfg.oidc.enable {
-          OIDC_ENABLED = "true";
-          OIDC_PROVIDER_NAME = "Authelia";
-
-          OIDC_CLIENT_ID = cfg.oidc.clientId;
-
-          OIDC_CLIENT_SECRET_FILE =
-            "/run/secrets/wallos-oidc-secret";
-
-          OIDC_ISSUER = cfg.oidc.issuer;
-
-          OIDC_REDIRECT_URL =
-            cfg.oidc.redirectURL;
-
-          OIDC_SCOPES = "openid email profile";
-
-          OIDC_AUTO_CREATE_USER =
-            lib.boolToString cfg.oidc.autoCreateUser;
-
-          OIDC_DISABLE_PASSWORD_LOGIN =
-            lib.boolToString cfg.oidc.disablePasswordLogin;
-        };
-
-      extraOptions = [
-        "--dns=10.88.0.1"
-      ];
-    };
-
-    networking.firewall.allowedTCPPorts =
-      lib.mkIf cfg.openFirewall [ cfg.port ];
+    # Keep the image configurable through apps.wallos.image.
+    virtualisation.oci-containers.containers.wallos.image =
+      lib.mkForce cfg.image;
   };
 }

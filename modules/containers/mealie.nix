@@ -5,26 +5,28 @@ let
   cfg = config.apps.mealie;
 in
 {
-  options.apps.mealie = {
-    enable = lib.mkEnableOption "Mealie";
+  imports = [
+    (import ./common.nix {
+      name = "mealie";
 
-    port = lib.mkOption {
-      type = lib.types.port;
-      default = 9000;
-      description = "Local Mealie web port.";
-    };
+      image = "ghcr.io/mealie-recipes/mealie:v3.29.0@sha256:78eb28b8776d0bad40c5e605c72b3f4f5976793e491558c7dcbdfc04c835d4bc";
 
-    openFirewall = lib.mkOption {
-      type = lib.types.bool;
-      default = false;
-    };
+      port = 9000;
+      bindAddress = "127.0.0.1";
+      configMount = "/app/data";
 
-    tailscale.enable = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Expose Mealie through Tailscale Services.";
-    };
-  };
+      tailscaleDefault = true;
+
+      # Behoud de oorspronkelijke Podman-instellingen.
+      bridgeNetwork = false;
+      disableHealthcheck = false;
+
+      environment = {
+        ALLOW_SIGNUP = "false";
+        BASE_URL = "https://mealie.gladsheimr.nl";
+      };
+    })
+  ];
 
   config = lib.mkIf cfg.enable {
     sops.secrets."saga/mealie_openai_api_key" = {};
@@ -33,37 +35,8 @@ in
       OPENAI_API_KEY=${config.sops.placeholder."saga/mealie_openai_api_key"}
     '';
 
-    systemd.tmpfiles.rules = [
-      "d /var/lib/mealie 0755 1000 1000 -"
+    virtualisation.oci-containers.containers.mealie.environmentFiles = [
+      config.sops.templates."mealie.env".path
     ];
-
-    virtualisation.oci-containers.containers.mealie = {
-      image = "ghcr.io/mealie-recipes/mealie:v3.29.0@sha256:78eb28b8776d0bad40c5e605c72b3f4f5976793e491558c7dcbdfc04c835d4bc";
-      pull = "missing";
-
-      ports = [
-        "127.0.0.1:${toString cfg.port}:9000"
-      ];
-
-      environment = {
-        ALLOW_SIGNUP = "false";
-        PUID = "1000";
-        PGID = "1000";
-        TZ = "Europe/Amsterdam";
-        BASE_URL = "https://mealie.gladsheimr.nl";
-      };
-
-      environmentFiles = [
-        config.sops.templates."mealie.env".path
-      ];
-
-      volumes = [
-        "/var/lib/mealie:/app/data"
-      ];
-    };
-
-    networking.firewall = lib.mkIf cfg.openFirewall {
-      allowedTCPPorts = [ cfg.port ];
-    };
   };
 }

@@ -1,42 +1,38 @@
+
 { config, lib, ... }:
-let cfg = config.apps.tasktrove;
+
+let
+  cfg = config.apps.tasktrove;
 in
 {
-  options.apps.tasktrove = {
-    enable = lib.mkEnableOption "TaskTrove";
-    port = lib.mkOption {
-      type = lib.types.port;
-      default = 3002;
-      description = "Local TaskTrove web port.";
-    };
-    openFirewall = lib.mkOption {
-      type = lib.types.bool;
-      default = false;
-    };
-    tailscale.enable = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Expose TaskTrove through Tailscale Services.";
-    };
-  };
+  imports = [
+    (import ./common.nix {
+      name = "tasktrove";
+
+      image = "ghcr.io/dohsimpson/tasktrove:v0.12.4@sha256:ecfda986ed36909cde78cbdec8b3b39eb60e39be41df3e42afdb102baba9850b";
+
+      port = 3002;
+      containerPort = 3000;
+      bindAddress = "127.0.0.1";
+
+      dataDir = "/var/lib/tasktrove/data";
+      configMount = "/app/data";
+
+      tailscaleDefault = true;
+
+      directoryMode = "0755";
+      directoryOwner = "1000";
+      directoryGroup = "1000";
+
+      # Behoud de oorspronkelijke Podman-instellingen.
+      bridgeNetwork = false;
+      disableHealthcheck = false;
+    })
+  ];
+
   config = lib.mkIf cfg.enable {
     systemd.tmpfiles.rules = [
       "d /var/lib/tasktrove 0755 root root -"
-      "d /var/lib/tasktrove/data 0755 1000 1000 -"
     ];
-    virtualisation.oci-containers.containers.tasktrove = {
-      image = "ghcr.io/dohsimpson/tasktrove:v0.12.4@sha256:ecfda986ed36909cde78cbdec8b3b39eb60e39be41df3e42afdb102baba9850b";
-      pull = "missing";
-      ports = [ "127.0.0.1:${toString cfg.port}:3000" ];
-      environment = {
-        PUID = "1000";
-        PGID = "1000";
-        TZ = "Europe/Amsterdam";
-      };
-      volumes = [ "/var/lib/tasktrove/data:/app/data" ];
-    };
-    networking.firewall = lib.mkIf cfg.openFirewall {
-      allowedTCPPorts = [ cfg.port ];
-    };
   };
 }

@@ -1,3 +1,4 @@
+
 { config, lib, pkgs, ... }:
 
 let
@@ -18,27 +19,116 @@ let
   };
 in
 {
+  imports = [
+    (import ./common.nix {
+      name = "immich";
+      image = images.server;
+
+      port = 2283;
+      bindAddress = "127.0.0.1";
+
+      tailscaleDefault = true;
+
+      mountConfig = false;
+      createDataDir = false;
+
+      usePuidPgid = false;
+      bridgeNetwork = false;
+      disableHealthcheck = false;
+
+      extraVolumes = [
+        "/mnt/Volume2/Afbeeldingen/upload:/usr/src/app/upload"
+      ];
+
+      environment = {
+        DB_HOSTNAME = "immich-database";
+        DB_USERNAME = "immich";
+        DB_DATABASE_NAME = "immich";
+
+        REDIS_HOSTNAME = "immich-redis";
+
+        IMMICH_MEDIA_LOCATION = "/usr/src/app/upload";
+      };
+
+      extraOptions = [
+        "--network=immich"
+      ];
+    })
+
+    (import ./common.nix {
+      name = "immich-database";
+      image = images.database;
+
+      port = 5432;
+      publishedPorts = [ ];
+
+      dataDir = "/var/lib/immich/postgres";
+      configMount = "/var/lib/postgresql/data";
+      createDataDir = false;
+
+      useTimezone = false;
+      usePuidPgid = false;
+      bridgeNetwork = false;
+      disableHealthcheck = false;
+
+      environment = {
+        POSTGRES_USER = "immich";
+        POSTGRES_DB = "immich";
+        POSTGRES_INITDB_ARGS = "--data-checksums";
+      };
+
+      extraOptions = [
+        "--network=immich"
+        "--shm-size=128m"
+      ];
+    })
+
+    (import ./common.nix {
+      name = "immich-redis";
+      image = images.valkey;
+
+      port = 6379;
+      publishedPorts = [ ];
+
+      mountConfig = false;
+      createDataDir = false;
+
+      useTimezone = false;
+      usePuidPgid = false;
+      bridgeNetwork = false;
+      disableHealthcheck = false;
+
+      extraOptions = [
+        "--network=immich"
+      ];
+    })
+
+    (import ./common.nix {
+      name = "immich-machine-learning";
+      image = images.machineLearning;
+
+      port = 3003;
+      publishedPorts = [ ];
+
+      mountConfig = false;
+      createDataDir = false;
+
+      useTimezone = false;
+      usePuidPgid = false;
+      bridgeNetwork = false;
+      disableHealthcheck = false;
+
+      extraVolumes = [
+        "immich-model-cache:/cache"
+      ];
+
+      extraOptions = [
+        "--network=immich"
+      ];
+    })
+  ];
+
   options.apps.immich = {
-    enable = lib.mkEnableOption "Immich";
-
-    port = lib.mkOption {
-      type = lib.types.port;
-      default = 2283;
-      description = "Local Immich web port.";
-    };
-
-    openFirewall = lib.mkOption {
-      type = lib.types.bool;
-      default = false;
-      description = "Open the Immich port in the firewall.";
-    };
-
-    tailscale.enable = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Expose Immich through Tailscale Services.";
-    };
-
     tailscale.serviceName = lib.mkOption {
       type = lib.types.str;
       default = "photos";
@@ -46,150 +136,85 @@ in
     };
   };
 
-  config = lib.mkIf cfg.enable {
-    sops.secrets."saga/immich_db_password" = {};
+  config = lib.mkMerge [
+    {
+      apps.immich-database.enable = cfg.enable;
+      apps.immich-redis.enable = cfg.enable;
+      apps.immich-machine-learning.enable = cfg.enable;
+    }
 
-    sops.templates."immich-db.env".content = ''
-      POSTGRES_PASSWORD=${config.sops.placeholder."saga/immich_db_password"}
-    '';
+    (lib.mkIf cfg.enable {
+      sops.secrets."saga/immich_db_password" = {};
 
-    sops.templates."immich-server.env".content = ''
-      DB_PASSWORD=${config.sops.placeholder."saga/immich_db_password"}
-    '';
+      sops.templates."immich-db.env".content = ''
+        POSTGRES_PASSWORD=${config.sops.placeholder."saga/immich_db_password"}
+      '';
 
-    systemd.tmpfiles.rules = [
-      "d /var/lib/immich 0755 root root -"
-      "d /var/lib/immich/postgres 0755 root root -"
-    ];
+      sops.templates."immich-server.env".content = ''
+        DB_PASSWORD=${config.sops.placeholder."saga/immich_db_password"}
+      '';
 
-    systemd.services.podman-network-immich = {
-      description = "Create Immich Podman network";
-      wantedBy = [ "multi-user.target" ];
-
-      before = [
-        "podman-immich.service"
-        "podman-immich-database.service"
-        "podman-immich-redis.service"
-        "podman-immich-machine-learning.service"
+      systemd.tmpfiles.rules = [
+        "d /var/lib/immich 0755 root root -"
+        "d /var/lib/immich/postgres 0755 root root -"
       ];
 
-      serviceConfig.Type = "oneshot";
+      systemd.services.podman-network-immich = {
+        description = "Create Immich Podman network";
+        wantedBy = [ "multi-user.target" ];
 
-      script = ''
-        ${pkgs.podman}/bin/podman network exists immich \
-          || ${pkgs.podman}/bin/podman network create immich
-      '';
-    };
+        before = [
+          "podman-immich.service"
+          "podman-immich-database.service"
+          "podman-immich-redis.service"
+          "podman-immich-machine-learning.service"
+        ];
 
-    systemd.services.podman-immich = {
-      requires = [ "podman-network-immich.service" ];
-      after = [ "podman-network-immich.service" ];
-    };
+        serviceConfig.Type = "oneshot";
 
-    systemd.services.podman-immich-database = {
-      requires = [ "podman-network-immich.service" ];
-      after = [ "podman-network-immich.service" ];
-    };
+        script = ''
+          ${pkgs.podman}/bin/podman network exists immich \
+            || ${pkgs.podman}/bin/podman network create immich
+        '';
+      };
 
-    systemd.services.podman-immich-redis = {
-      requires = [ "podman-network-immich.service" ];
-      after = [ "podman-network-immich.service" ];
-    };
+      systemd.services.podman-immich = {
+        requires = [ "podman-network-immich.service" ];
+        after = [ "podman-network-immich.service" ];
+      };
 
-    systemd.services.podman-immich-machine-learning = {
-      requires = [ "podman-network-immich.service" ];
-      after = [ "podman-network-immich.service" ];
-    };
+      systemd.services.podman-immich-database = {
+        requires = [ "podman-network-immich.service" ];
+        after = [ "podman-network-immich.service" ];
+      };
 
-    virtualisation.oci-containers.containers = {
-      immich-database = {
-        image = images.database;
-        pull = "missing";
+      systemd.services.podman-immich-redis = {
+        requires = [ "podman-network-immich.service" ];
+        after = [ "podman-network-immich.service" ];
+      };
 
-        environment = {
-          POSTGRES_USER = "immich";
-          POSTGRES_DB = "immich";
-          POSTGRES_INITDB_ARGS = "--data-checksums";
+      systemd.services.podman-immich-machine-learning = {
+        requires = [ "podman-network-immich.service" ];
+        after = [ "podman-network-immich.service" ];
+      };
+
+      virtualisation.oci-containers.containers = {
+        immich = {
+          dependsOn = [
+            "immich-database"
+            "immich-redis"
+            "immich-machine-learning"
+          ];
+
+          environmentFiles = [
+            config.sops.templates."immich-server.env".path
+          ];
         };
 
-        environmentFiles = [
+        immich-database.environmentFiles = [
           config.sops.templates."immich-db.env".path
         ];
-
-        volumes = [
-          "/var/lib/immich/postgres:/var/lib/postgresql/data"
-        ];
-
-        extraOptions = [
-          "--network=immich"
-          "--shm-size=128m"
-        ];
       };
-
-      immich-redis = {
-        image = images.valkey;
-        pull = "missing";
-
-        extraOptions = [
-          "--network=immich"
-        ];
-      };
-
-      immich-machine-learning = {
-        image = images.machineLearning;
-        pull = "missing";
-
-        volumes = [
-          "immich-model-cache:/cache"
-        ];
-
-        extraOptions = [
-          "--network=immich"
-        ];
-      };
-
-      immich = {
-        image = images.server;
-        pull = "missing";
-
-        dependsOn = [
-          "immich-database"
-          "immich-redis"
-          "immich-machine-learning"
-        ];
-
-        ports = [
-          "127.0.0.1:${toString cfg.port}:2283"
-        ];
-
-        environment = {
-          DB_HOSTNAME = "immich-database";
-          DB_USERNAME = "immich";
-          DB_DATABASE_NAME = "immich";
-
-          REDIS_HOSTNAME = "immich-redis";
-
-          IMMICH_MEDIA_LOCATION = "/usr/src/app/upload";
-
-          TZ = "Europe/Amsterdam";
-        };
-
-        environmentFiles = [
-          config.sops.templates."immich-server.env".path
-        ];
-
-        volumes = [
-          "/mnt/Volume2/Afbeeldingen/upload:/usr/src/app/upload"
-        ];
-
-        extraOptions = [
-          "--network=immich"
-        ];
-      };
-    };
-
-    networking.firewall = lib.mkIf cfg.openFirewall {
-      allowedTCPPorts = [ cfg.port ];
-    };
-  };
+    })
+  ];
 }

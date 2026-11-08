@@ -8,45 +8,46 @@ let
   oidcSecretPath = config.sops.secrets.${oidcSecret}.path;
 in
 {
-  options.apps.actual-budget = {
-    enable = lib.mkEnableOption "Actual Budget";
+  imports = [
+    (import ./common.nix {
+      name = "actual-budget";
 
+      image = "ghcr.io/actualbudget/actual-server:26.10.0@sha256:24645e971da6bb1a1f953d6859e307a0b29be1e8b4130a35b3220c209b5b860c";
+
+      port = 5006;
+      bindAddress = "127.0.0.1";
+      configMount = "/data";
+
+      tailscaleDefault = true;
+
+      directoryMode = "0750";
+
+      # De oorspronkelijke container gebruikte alleen TZ.
+      usePuidPgid = false;
+
+      # Behoud het bestaande Podman-gedrag.
+      bridgeNetwork = false;
+      disableHealthcheck = false;
+
+      environment = {
+        ACTUAL_UPLOAD_FILE_SIZE_LIMIT_MB = "100";
+        ACTUAL_UPLOAD_FILE_SYNC_SIZE_LIMIT_MB = "100";
+        ACTUAL_UPLOAD_SYNC_ENCRYPTED_FILE_SYNC_SIZE_LIMIT_MB = "100";
+      };
+    })
+  ];
+
+  options.apps.actual-budget = {
     image = lib.mkOption {
       type = lib.types.str;
       default = "ghcr.io/actualbudget/actual-server:26.10.0@sha256:24645e971da6bb1a1f953d6859e307a0b29be1e8b4130a35b3220c209b5b860c";
       description = "Actual Budget container image.";
     };
 
-    dataDir = lib.mkOption {
+    tailscale.serviceName = lib.mkOption {
       type = lib.types.str;
-      default = "/var/lib/actual-budget";
-      description = "Persistent Actual Budget data directory.";
-    };
-
-    port = lib.mkOption {
-      type = lib.types.port;
-      default = 5006;
-      description = "Local HTTP port for Actual Budget.";
-    };
-
-    openFirewall = lib.mkOption {
-      type = lib.types.bool;
-      default = false;
-      description = "Open Actual Budget port in host firewall.";
-    };
-
-    tailscale = {
-      enable = lib.mkOption {
-        type = lib.types.bool;
-        default = true;
-        description = "Expose Actual Budget through Tailscale Services.";
-      };
-
-      serviceName = lib.mkOption {
-        type = lib.types.str;
-        default = "budget";
-        description = "Tailscale service name.";
-      };
+      default = "budget";
+      description = "Tailscale service name.";
     };
 
     oidc = {
@@ -88,36 +89,18 @@ in
       };
     };
 
-    systemd.tmpfiles.rules = [
-      "d ${cfg.dataDir} 0750 1000 1000 -"
-    ];
-
     virtualisation.oci-containers.containers.actual-budget = {
-      image = cfg.image;
+      image = lib.mkForce cfg.image;
+
       autoStart = true;
-      pull = "missing";
 
-      ports = [
-        "127.0.0.1:${toString cfg.port}:5006"
-      ];
-
-      volumes =
-        [
-          "${cfg.dataDir}:/data"
-        ]
-        ++ lib.optionals cfg.oidc.enable [
+      volumes = lib.mkAfter (
+        lib.optionals cfg.oidc.enable [
           "${oidcSecretPath}:/run/secrets/actual-oidc-client-secret:ro"
-        ];
+        ]
+      );
 
-      environment = {
-        TZ = "Europe/Amsterdam";
-
-        # Upload limits (MB).
-        # Prevent HTTP 413 for large sync payloads.
-        ACTUAL_UPLOAD_FILE_SIZE_LIMIT_MB = "100";
-        ACTUAL_UPLOAD_FILE_SYNC_SIZE_LIMIT_MB = "100";
-        ACTUAL_UPLOAD_SYNC_ENCRYPTED_FILE_SYNC_SIZE_LIMIT_MB = "100";
-      } // lib.optionalAttrs cfg.oidc.enable {
+      environment = lib.optionalAttrs cfg.oidc.enable {
         ACTUAL_OPENID_DISCOVERY_URL = cfg.oidc.discoveryURL;
         ACTUAL_OPENID_CLIENT_ID = cfg.oidc.clientId;
         ACTUAL_OPENID_SERVER_HOSTNAME = cfg.oidc.serverURL;
@@ -133,8 +116,5 @@ in
           if cfg.oidc.enforce then "true" else "false";
       };
     };
-
-    networking.firewall.allowedTCPPorts =
-      lib.mkIf cfg.openFirewall [ cfg.port ];
   };
 }
