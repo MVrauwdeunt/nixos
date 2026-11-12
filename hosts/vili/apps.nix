@@ -1,3 +1,4 @@
+
 { lib, ... }:
 
 let
@@ -17,6 +18,7 @@ let
 
   appModules =
     map (name: ../../modules/containers/${name}.nix) enabledApps;
+
 in
 {
   imports = modules ++ appModules;
@@ -24,6 +26,14 @@ in
   services.signalCli = {
     enable = true;
     httpPort = 8080;
+  };
+
+  # Publish the existing Hermes Webapp via Tailscale Services.
+  my.tailscaleServices.local.hermes = {
+    enable = true;
+    serviceName = "hermes";
+    port = 9120;
+    systemdUnit = "hermes-agent.service";
   };
 
   apps = (lib.genAttrs enabledApps (_: {
