@@ -16,7 +16,10 @@
       url = "github:plastic-labs/honcho";
       flake = false;
     };
-
+    hermes-official-plugins = {
+      url = "github:NousResearch/hermes-official-plugins";
+      flake = false;
+    };
     # Mailserver
     nixos-mailserver = {
       url = "gitlab:simple-nixos-mailserver/nixos-mailserver/nixos-26.05";
