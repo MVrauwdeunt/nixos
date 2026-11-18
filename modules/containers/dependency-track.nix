@@ -64,7 +64,7 @@ in
 
     postgresImage = lib.mkOption {
       type = lib.types.str;
-      default = "docker.io/library/postgres:18-alpine@sha256:898c60cb390d1085bc97bdd6a1ae968757421df394b071848b52b1c09c89d6a5";
+      default = "docker.io/library/postgres:18-alpine@sha256:ff64c9e3bdf8e2120107d3559de8db314e8305f7e38c5105903c6295876738ff";
     };
 
     # Persistent storage
