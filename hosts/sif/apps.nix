@@ -12,6 +12,7 @@ let
     "garmin-bridge"
     "homelable"
     "dependency-track"
+    "homebox"
   ];
 
   appModules =

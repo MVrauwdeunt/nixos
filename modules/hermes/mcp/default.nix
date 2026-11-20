@@ -1,13 +1,17 @@
 
 # modules/hermes/mcp/default.nix
-#
-# Globally available MCP servers.
-# Home Assistant is reserved for LYRA.
 
 { lib, ... }:
 
 let
   serverDir = ./servers;
+
+  # Profile-specific MCP servers are configured in profiles.nix.
+  profileSpecificServers = [
+    "default.nix"
+    "homeassistant.nix"
+    "homelable.nix"
+  ];
 
   serverFiles =
     builtins.attrNames (
@@ -15,8 +19,7 @@ let
         (name: type:
           type == "regular"
           && lib.hasSuffix ".nix" name
-          && name != "default.nix"
-          && name != "homeassistant.nix"
+          && !(builtins.elem name profileSpecificServers)
         )
         (builtins.readDir serverDir)
     );
@@ -26,7 +29,9 @@ in
   imports =
     map (name: serverDir + "/${name}") serverFiles;
 
-  # Explicitly disable the previously global Home Assistant MCP.
-  # Hermes/Nix preserves unmanaged keys in the existing config.
-  services.hermes-agent.settings.mcp_servers.homeassistant.enabled = false;
+  # Prevent the default NYX profile from loading these MCPs.
+  services.hermes-agent.settings.mcp_servers = {
+    homeassistant.enabled = false;
+    homelable.enabled = false;
+  };
 }

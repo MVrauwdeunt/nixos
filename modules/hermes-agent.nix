@@ -1,4 +1,3 @@
-
 # modules/hermes-agent.nix
 #
 # Asgard Hermes Agent
@@ -120,7 +119,7 @@ let
   #
   # IMPORTANT:
   # Use the NixOS setuid sudo wrapper.
-  # Do not use ${pkgs.sudo}/bin/sudo.
+  # Do not use the regular pkgs.sudo binary.
 
   hermesHostCli = pkgs.writeShellScriptBin "hermes" ''
     set -euo pipefail
@@ -317,6 +316,18 @@ in
     ];
 
     # ----------------------------------------------------------
+    # MCP execution
+    # ----------------------------------------------------------
+
+    # Profile-specific MCP servers are configured in profiles.nix.
+    #
+    # Forgejo MCP uses the absolute Nix store path of
+    # pkgs.forgejo-mcp, which is available inside the
+    # container through the existing /nix/store mount.
+    #
+    # No extraPackages entry is required in container mode.
+
+    # ----------------------------------------------------------
     # Honcho memory configuration
     # ----------------------------------------------------------
 
@@ -349,9 +360,11 @@ in
       # --------------------------------------------------------
 
       model = {
-        provider = "openai-api";
-        default = "gpt-5.4-mini";
-        key_env = "OPENAI_API_KEY";
+        provider = "openai-codex";
+        default = "gpt-5.3-codex";
+        api_mode = "codex_responses";
+        key_env = "";
+        base_url = "";
       };
 
       # --------------------------------------------------------
@@ -370,11 +383,12 @@ in
       ];
 
       # --------------------------------------------------------
-      # Webapp
+      # Hermes Webapp
       # --------------------------------------------------------
 
-      # Publish through the existing Tailscale Services manager.
-      # Keep the backend bound to loopback.
+      # Publish the Webapp through the existing Tailscale Service.
+      # Keep the backend bound to loopback on Vili.
+
       webapp = {
         enabled = true;
         host = "127.0.0.1";
