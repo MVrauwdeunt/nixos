@@ -51,7 +51,7 @@ in
     (import ./common.nix {
       name = "paperless-db";
 
-      image = "docker.io/library/mariadb:11.8.9@sha256:f16d7a344413e519dff518f27bdb221388f84b0d274c97c4fb5f2cb0dc1b34fa";
+      image = "docker.io/library/mariadb:11.8.9@sha256:e1d5495f445654134f226f55a41ce0da227116f6f27f283101f405c794d841fc";
 
       port = 3306;
       publishedPorts = [ ];
