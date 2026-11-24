@@ -11,7 +11,7 @@
 # WRAITH -> Homelable
 # VESPER -> Actual Budget
 # LYRA   -> Home Assistant
-# SYNTH  -> Forgejo (read-only)
+# SYNTH  -> Forgejo (read/write, pull requests)
 # PULSE  -> No MCP server
 
 { config, pkgs, ... }:
@@ -47,9 +47,11 @@ let
 
   agentConfig = {
     model = {
-      provider = "openai-api";
-      default = "gpt-5.4-mini";
-      key_env = "OPENAI_API_KEY";
+      provider = "openai-codex";
+      default = "gpt-6.2-sol";
+      api_mode = "codex_responses";
+      key_env = "";
+      base_url = "";
     };
   };
 
@@ -106,46 +108,88 @@ let
   );
 
   # ------------------------------------------------------------
-  # SYNTH - Forgejo MCP (read-only)
+  # SYNTH - Forgejo MCP runtime launcher
   # ------------------------------------------------------------
 
-  # Run the MCP server locally through stdio.
-  # No additional HTTP server or exposed port is required.
+  # Load the SOPS-managed Forgejo token at runtime.
+  # Configure the Forgejo URL through its environment variable.
+  # Never embed the token in the Nix store.
+
+  forgejoSynthLauncher = pkgs.writeShellScript "forgejo-synth-mcp" ''
+    set -eu
+
+    env_file="/data/.hermes/profiles/synth/.env"
+
+    if [ ! -r "$env_file" ]; then
+      echo "Forgejo MCP: SYNTH environment file unavailable" >&2
+      exit 1
+    fi
+
+    FORGEJO_ACCESS_TOKEN="$(
+      ${pkgs.gnused}/bin/sed -n \
+        's/^FORGEJO_SYNTH_TOKEN=//p' \
+        "$env_file"
+    )"
+
+    if [ -z "$FORGEJO_ACCESS_TOKEN" ]; then
+      echo "Forgejo MCP: SYNTH token missing" >&2
+      exit 1
+    fi
+
+    export FORGEJO_ACCESS_TOKEN
+    export FORGEJO_URL="https://forgejo.fiordland-gar.ts.net"
+
+    exec ${pkgs.forgejo-mcp}/bin/forgejo-mcp "$@"
+  '';
+
+  # ------------------------------------------------------------
+  # SYNTH - Forgejo MCP
+  # ------------------------------------------------------------
+
+  # Forgejo access is controlled by:
+  # 1. The SYNTH account's collaborator permissions.
+  # 2. The access token's repository permissions.
+  # 3. Forgejo branch protection rules.
   #
-  # The personal access token is loaded from SYNTH's .env.
-  # Only read-only MCP tools are registered.
-  #
-  # Read-only permissions must also be enforced
-  # by the Forgejo access token.
+  # Merge and delete tools are deliberately excluded.
 
   forgejoSynthMcp = {
     enabled = true;
 
-    command = "${pkgs.forgejo-mcp}/bin/forgejo-mcp";
+    command = "${forgejoSynthLauncher}";
 
     args = [
       "--transport"
       "stdio"
-      "--url"
-      "https://forgejo.fiordland-gar.ts.net"
     ];
-
-    env.FORGEJO_ACCESS_TOKEN =
-      "\${FORGEJO_SYNTH_TOKEN}";
 
     timeout = 120;
     connect_timeout = 30;
 
     tools = {
       include = [
+        # Repository discovery
         "search_repos"
         "list_branches"
         "get_repo_tree"
         "list_repo_contents"
         "get_file_content"
         "list_repo_commits"
+
+        # Pull request inspection
         "list_repo_pull_requests"
         "get_pull_request_diff"
+
+        # Branch management
+        "create_branch"
+
+        # Code modifications
+        "change_files"
+        "create_file"
+        "update_file"
+
+        # Pull request creation
+        "create_pull_request"
       ];
 
       resources = false;
@@ -173,7 +217,7 @@ in
     sopsFile = ../../secrets.yaml;
   };
 
-  # Dedicated read-only Forgejo token for SYNTH.
+  # Dedicated Forgejo token for SYNTH.
   sops.secrets."vili/hermes/forgejo-synth-token" = {
     sopsFile = ../../secrets.yaml;
   };
@@ -336,7 +380,7 @@ in
         # All profiles receive the OpenAI credential.
         # WRAITH receives Homelable credentials.
         # VESPER receives Actual Budget credentials.
-        # SYNTH receives the read-only Forgejo token.
+        # SYNTH receives the Forgejo token.
         # PULSE receives no additional MCP credentials.
         #
         # File mode: 0640
