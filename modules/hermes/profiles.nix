@@ -12,7 +12,7 @@
 # VESPER -> Actual Budget
 # LYRA   -> Home Assistant
 # SYNTH  -> Forgejo (read/write, pull requests)
-# PULSE  -> No MCP server
+# PULSE  -> Allos
 
 { config, pkgs, ... }:
 
@@ -56,6 +56,17 @@ let
   };
 
   agentModel = builtins.toJSON agentConfig;
+
+  # PULSE - Allos MCP
+  allosMcp =
+    (import ./mcp/servers/allos.nix { })
+      .services.hermes-agent.mcpServers.allos;
+
+  pulseConfig = builtins.toJSON (
+    agentConfig // {
+      mcp_servers.allos = allosMcp;
+    }
+  );
 
   # ------------------------------------------------------------
   # LYRA - Home Assistant MCP
@@ -209,6 +220,10 @@ in
   # SOPS secrets
   # ------------------------------------------------------------
 
+  sops.secrets."saga/allos_mcp_token" = {
+    sopsFile = ../../secrets.yaml;
+  };
+
   sops.secrets."saga/actual_mcp_bearer_token" = {
     sopsFile = ../../secrets.yaml;
   };
@@ -252,7 +267,7 @@ in
     "profiles/vesper/config.yaml" = vesperConfig;
     "profiles/lyra/config.yaml" = lyraConfig;
     "profiles/synth/config.yaml" = synthConfig;
-    "profiles/pulse/config.yaml" = agentModel;
+    "profiles/pulse/config.yaml" = pulseConfig;
   };
 
   # ------------------------------------------------------------
@@ -381,7 +396,7 @@ in
         # WRAITH receives Homelable credentials.
         # VESPER receives Actual Budget credentials.
         # SYNTH receives the Forgejo token.
-        # PULSE receives no additional MCP credentials.
+        # PULSE receives the Allos MCP token.
         #
         # File mode: 0640
         # Owner/group: hermes/hermes
@@ -397,6 +412,11 @@ in
           if [ "$profile" = "vesper" ]; then
             printf 'ACTUAL_MCP_TOKEN=%s\n' \
               "$actual_mcp_token"
+          fi
+
+          if [ "$profile" = "pulse" ]; then
+            printf 'ALLOS_MCP_TOKEN=%s\n' \
+              "$(${pkgs.coreutils}/bin/cat ${config.sops.secrets."saga/allos_mcp_token".path})"
           fi
 
           if [ "$profile" = "synth" ]; then

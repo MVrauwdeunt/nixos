@@ -13,6 +13,7 @@ let
   privateServers = [
     "default.nix"
     "homeassistant.nix"
+    "homelable.nix"
     "allos.nix"
   ];
 
@@ -36,6 +37,7 @@ in
   # Hermes/Nix preserves unmanaged keys in existing config.
   services.hermes-agent.settings.mcp_servers = {
     homeassistant.enabled = false;
+    homelable.enabled = false;
     allos.enabled = false;
   };
 }

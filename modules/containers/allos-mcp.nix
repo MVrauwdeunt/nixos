@@ -1,55 +1,18 @@
-
-# modules/containers/allos-mcp.nix
-#
-# Read-only MCP server for Allos health data.
-# Accessible directly through Saga's Tailscale IP.
-# No Tailscale Serve service required.
-
-{ config, lib, pkgs, ... }:
+{ config, lib, ... }:
 
 let
   cfg = config.apps.allos-mcp;
 
-  python = pkgs.python3.withPackages (ps: [
-    ps.mcp
-  ]);
-
-  source = pkgs.runCommand "allos-mcp-source" {} ''
-    mkdir -p $out/app
-    cp ${./allos-mcp/server.py} $out/app/server.py
-    cp ${./allos-mcp/db.py} $out/app/db.py
-  '';
-
-  image = pkgs.dockerTools.buildLayeredImage {
-    name = "allos-mcp";
-    tag = "0.2.3";
-
-    contents = [
-      python
-      source
-      pkgs.cacert
-    ];
-
-    config = {
-      WorkingDir = "/app";
-
-      Cmd = [
-        "${python}/bin/python3"
-        "${source}/app/server.py"
-      ];
-    };
-  };
+  images = { default = "ghcr.io/mvrauwdeunt/allos-mcp:0.2.1@sha256:1489ca7312789ab52ed972b959a9aafa62656adb640aef0aff615e640a0e1d10"; };
 in
 {
   imports = [
     (import ./common.nix {
       name = "allos-mcp";
-      image = "allos-mcp:0.2.3";
+      image = images.default;
 
       port = 8765;
       containerPort = 8765;
-
-      # Bind exclusively to Saga's Tailscale IPv4 address.
       bindAddress = cfg.listenAddress;
 
       mountConfig = false;
@@ -58,38 +21,45 @@ in
       useTimezone = false;
       usePuidPgid = false;
       bridgeNetwork = false;
-
       disableHealthcheck = true;
-
-      # No dedicated Tailscale Service.
       tailscaleDefault = false;
 
       environment = {
         ALLOS_DB_PATH = "/data/allos.db";
         ALLOS_PROFILE_ID = toString cfg.profileId;
+
+        ALLOS_MCP_AUTH_TOKEN_FILE = "/run/secrets/token";
+        ALLOS_MCP_TLS_CERT_FILE = "/run/secrets/server.crt";
+        ALLOS_MCP_TLS_KEY_FILE = "/run/secrets/server.key";
+
+        HOME = "/tmp";
+        TMPDIR = "/tmp";
       };
 
-      # Include SQLite WAL and SHM files.
       extraVolumes = [
         "${config.apps.allos.dataDir}:/data:ro"
+        "${config.sops.secrets."saga/allos_mcp_token".path}:/run/secrets/token:ro"
+        "${config.sops.secrets."saga/allos_mcp_tls_cert".path}:/run/secrets/server.crt:ro"
+        "${config.sops.secrets."saga/allos_mcp_tls_key".path}:/run/secrets/server.key:ro"
       ];
 
       extraOptions = [
-        # Match the Allos database owner.
         "--user=1000:1000"
-
-        # Container hardening.
         "--security-opt=no-new-privileges"
         "--cap-drop=ALL"
         "--read-only"
-
-        # Temporary runtime storage.
         "--tmpfs=/tmp:rw,nosuid,nodev,size=16m"
       ];
     })
   ];
 
   options.apps.allos-mcp = {
+    image = lib.mkOption {
+      type = lib.types.str;
+      default = images.default;
+      description = "Allos MCP container image.";
+    };
+
     profileId = lib.mkOption {
       type = lib.types.ints.positive;
       default = 2;
@@ -99,24 +69,35 @@ in
     listenAddress = lib.mkOption {
       type = lib.types.str;
       default = "127.0.0.1";
-      description = "Saga Tailscale IPv4 address.";
+      description = "Allos MCP bind address.";
     };
   };
 
   config = lib.mkIf cfg.enable {
-    assertions = [
-      {
-        assertion = cfg.listenAddress != "127.0.0.1";
-        message = "Set apps.allos-mcp.listenAddress to Saga's Tailscale IPv4 address.";
-      }
-      {
-        assertion = !cfg.tailscale.enable;
-        message = "Allos MCP must not use a separate Tailscale Service.";
-      }
-    ];
+    sops.secrets = lib.genAttrs [
+      "saga/allos_mcp_token"
+      "saga/allos_mcp_tls_cert"
+      "saga/allos_mcp_tls_key"
+    ] (_: {
+      sopsFile = ../../secrets.yaml;
+      uid = 1000;
+      gid = 1000;
+      mode = "0400";
+      restartUnits = [ "podman-allos-mcp.service" ];
+    });
 
     virtualisation.oci-containers.containers.allos-mcp = {
-      imageFile = image;
+      image = lib.mkForce cfg.image;
+
+      cmd = [
+        "--transport"
+        "http"
+        "--host"
+        "0.0.0.0"
+        "--port"
+        "8765"
+        "--allow-nonloopback"
+      ];
     };
 
     systemd.services.podman-allos-mcp = {
@@ -127,5 +108,9 @@ in
       ];
       wants = [ "tailscaled.service" ];
     };
+
+    networking.firewall.interfaces.tailscale0.allowedTCPPorts = [
+      cfg.port
+    ];
   };
 }
