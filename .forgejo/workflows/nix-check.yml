@@ -78,42 +78,7 @@ jobs:
           set -euo pipefail
           deadnix --fail --no-lambda-pattern-names .
 
-      - name: Evaluate system configurations
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          hosts=$(nix eval --raw \
-            --apply 'hosts: builtins.concatStringsSep " " (builtins.attrNames hosts)' \
-            .#nixosConfigurations)
-
-          failed=0
-
-          for host in $hosts; do
-            echo "Checking $host"
-
-            if nix eval --raw \
-              ".#nixosConfigurations.${host}.config.system.build.toplevel.drvPath"
-            then
-              echo
-              echo "PASS: $host"
-            else
-              echo "FAIL: $host"
-              failed=1
-            fi
-          done
-
-          exit "$failed"
-
-      - name: Validate flake and deploy definitions
-        shell: bash
-        run: |
-          nix flake check \
-            --no-build \
-            --no-update-lock-file \
-            --show-trace
-
-      - name: Infrastructure impact analysis
+      - name: Evaluate systems and analyze infrastructure impact
         shell: bash
         env:
           PR_BASE: ${{ github.event.pull_request.base.sha }}
@@ -153,6 +118,14 @@ jobs:
               echo '```'
             } >> "$GITHUB_STEP_SUMMARY"
           fi
+
+      - name: Validate flake and deploy definitions
+        shell: bash
+        run: |
+          nix flake check \
+            --no-build \
+            --no-update-lock-file \
+            --show-trace
 
       - name: Validation complete
         run: echo "All NixOS configurations passed validation."
