@@ -56,5 +56,14 @@
         magicRollback = false;
       };
     };
+    brokkr = {
+      hostname = "192.168.60.10";
+      sshUser = "zanbee";
+      profiles.system = {
+        user = "root";
+        path = deploy-rs.lib.${system}.activate.nixos self.nixosConfigurations.brokkr;
+        magicRollback = true;
+      };
+    };
   };
 }
