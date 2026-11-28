@@ -1,4 +1,6 @@
+
 { self, deploy-rs, system }:
+
 {
   nodes = {
     sif = {
@@ -20,6 +22,7 @@
         magicRollback = false;
       };
     };
+
     ratatosk = {
       hostname = "168.119.229.56";
       sshUser = "zanbee";
@@ -28,7 +31,8 @@
         path = deploy-rs.lib.${system}.activate.nixos self.nixosConfigurations.ratatosk;
         magicRollback = false;
       };
-    };    
+    };
+
     mimir = {
       hostname = "192.168.178.240";
       sshUser = "zanbee";
@@ -37,7 +41,8 @@
         path = deploy-rs.lib.${system}.activate.nixos self.nixosConfigurations.mimir;
         magicRollback = false;
       };
-    };  
+    };
+
     saga = {
       hostname = "192.168.178.250";
       sshUser = "zanbee";
@@ -46,7 +51,8 @@
         path = deploy-rs.lib.${system}.activate.nixos self.nixosConfigurations.saga;
         magicRollback = false;
       };
-    };    
+    };
+
     vili = {
       hostname = "100.78.198.109";
       sshUser = "zanbee";
@@ -56,9 +62,14 @@
         magicRollback = false;
       };
     };
+
     brokkr = {
       hostname = "192.168.60.10";
       sshUser = "zanbee";
+
+      # Transfer the closure directly from the deployment workstation.
+      fastConnection = true;
+
       profiles.system = {
         user = "root";
         path = deploy-rs.lib.${system}.activate.nixos self.nixosConfigurations.brokkr;
