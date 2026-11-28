@@ -132,7 +132,8 @@ in
           --url https://forgejo.fiordland-gar.ts.net/ \
           --uuid 2f6ef0fa-7d87-4cf3-86b7-c98923e3dbce \
           --token-url file://%d/runner-token \
-          --label brokkr:docker://docker.io/library/node:24-bookworm
+          --label brokkr:docker://docker.io/library/node:24-bookworm \
+          --label nixos:docker://docker.io/library/node:24-bookworm
       '';
 
       Restart = "on-failure";
@@ -154,3 +155,4 @@ in
     };
   };
 }
+
