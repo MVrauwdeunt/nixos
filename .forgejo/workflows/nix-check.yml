@@ -43,11 +43,12 @@ jobs:
           set -euo pipefail
           gitleaks git --redact --log-opts="--all" .
 
-      - name: Validate SOPS validation script
+      - name: Validate CI scripts
         shell: bash
         run: |
           set -euo pipefail
           shellcheck ci/check-sops.sh
+          shellcheck ci/check-impact.sh
 
       - name: Validate SOPS encryption and recipients
         shell: bash
@@ -111,6 +112,47 @@ jobs:
             --no-build \
             --no-update-lock-file \
             --show-trace
+
+      - name: Infrastructure impact analysis
+        shell: bash
+        env:
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PUSH_BASE: ${{ github.event.before }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+
+          case "$EVENT_NAME" in
+            pull_request)
+              base="$PR_BASE"
+              ;;
+            push)
+              base="$PUSH_BASE"
+              ;;
+            *)
+              base=$(git rev-parse HEAD^1)
+              ;;
+          esac
+
+          head=$(git rev-parse HEAD)
+
+          if ! git cat-file -e "${base}^{commit}" 2>/dev/null; then
+            echo "Base revision is unavailable"
+            exit 1
+          fi
+
+          bash ci/check-impact.sh "$base" "$head" |
+            tee /tmp/infrastructure-impact.txt
+
+          if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
+            {
+              echo "## Infrastructure Impact Report"
+              echo
+              echo '```text'
+              cat /tmp/infrastructure-impact.txt
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       - name: Validation complete
         run: echo "All NixOS configurations passed validation."
