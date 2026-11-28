@@ -46,7 +46,7 @@ let
   caddyfileStorePath =
     pkgs.writeText "Caddyfile" caddyfileText;
 
-  dataDir = cfg.dataDir;
+  inherit (cfg) dataDir;
 
 in
 {
@@ -149,7 +149,7 @@ in
     };
 
     virtualisation.oci-containers.containers.caddy = {
-      image = cfg.image;
+      inherit (cfg) image;
       pull = "missing";
 
       extraOptions = [

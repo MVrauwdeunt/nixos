@@ -3,7 +3,7 @@ let cfg = config.apps.forgejo;
 in {
   imports = [ (import ./common.nix {
     name = "forgejo";
-    image = cfg.image;
+    inherit (cfg) image;
     port = 3000;
     publishedPorts = [
       "127.0.0.1:${toString cfg.port}:${toString cfg.port}"

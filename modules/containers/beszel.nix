@@ -3,7 +3,7 @@ let cfg = config.apps.beszel;
 in {
   imports = [ (import ./common.nix {
     name = "beszel";
-    image = cfg.image;
+    inherit (cfg) image;
     port = 8090;
     dataDir = "/var/lib/beszel";
     tailscaleDefault = true;

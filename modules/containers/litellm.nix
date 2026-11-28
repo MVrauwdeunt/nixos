@@ -21,7 +21,7 @@ in
     (import ./common.nix {
       name = "litellm";
 
-      image = cfg.image;
+      inherit (cfg) image;
       port = 4000;
 
       mountConfig = false;

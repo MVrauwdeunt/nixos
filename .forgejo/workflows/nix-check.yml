@@ -38,6 +38,18 @@ jobs:
             nix-instantiate --parse "$file" >/dev/null
           done < <(git ls-files -z -- '*.nix')
 
+      - name: Check Nix code quality with Statix
+        shell: bash
+        run: |
+          set -euo pipefail
+          statix check .
+
+      - name: Check unused declarations with Deadnix
+        shell: bash
+        run: |
+          set -euo pipefail
+          deadnix --fail --no-lambda-pattern-names .
+
       - name: Evaluate system configurations
         shell: bash
         run: |

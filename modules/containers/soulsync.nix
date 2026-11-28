@@ -10,7 +10,7 @@ in
       name = "soulsync";
 
       # Official upstream stable image
-      image = cfg.image;
+      inherit (cfg) image;
 
       # SoulSync WebUI
       port = 8008;

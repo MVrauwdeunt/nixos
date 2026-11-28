@@ -57,7 +57,7 @@ in
   options.apps.allos-mcp = {
     image = lib.mkOption {
       type = lib.types.str;
-      default = images.default;
+      inherit (images) default;
       description = "Allos MCP container image.";
     };
 

@@ -3,7 +3,7 @@ let cfg = config.apps.netalertx;
 in {
   imports = [ (import ./common.nix {
     name = "netalertx";
-    image = cfg.image;
+    inherit (cfg) image;
     port = 20211;
     publishedPorts = [ ];
     dataDir = "/var/lib/netalertx";
