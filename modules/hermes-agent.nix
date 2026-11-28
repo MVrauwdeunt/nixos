@@ -37,6 +37,22 @@ let
   pythonPackages = hermesPackage.python.pkgs;
 
   # ------------------------------------------------------------
+  # Shared model configuration
+  # ------------------------------------------------------------
+
+  # All six agents use GPT-6.2 Sol through OpenAI Codex.
+
+  hermesModel = {
+    provider = "openai-codex";
+    default = "gpt-6.2-sol";
+    api_mode = "codex_responses";
+    key_env = "";
+    base_url = "";
+  };
+
+  yamlPython = pkgs.python3.withPackages (ps: [ ps.pyyaml ]);
+
+  # ------------------------------------------------------------
   # Honcho source
   # ------------------------------------------------------------
 
@@ -120,7 +136,7 @@ let
   #
   # IMPORTANT:
   # Use the NixOS setuid sudo wrapper.
-  # Do not use ${pkgs.sudo}/bin/sudo.
+  # Do not use the regular pkgs.sudo binary.
 
   hermesHostCli = pkgs.writeShellScriptBin "hermes" ''
     set -euo pipefail
@@ -263,6 +279,92 @@ in
         ${pkgs.coreutils}/bin/chmod g+x "$profile_dir"
       fi
     done
+
+    # ----------------------------------------------------------
+    # Enforce GPT-6.2 Sol for all specialist profiles
+    # ----------------------------------------------------------
+
+    # Preserve unrelated profile settings such as SOUL,
+    # tools, memory, credentials and skills.
+    #
+    # Refuse to modify Nix-managed configuration symlinks.
+
+    ${yamlPython}/bin/python3 - "$profiles_dir" <<'HERMES_PYTHON'
+import os
+import pathlib
+import pwd
+import grp
+import sys
+import yaml
+
+profiles_dir = pathlib.Path(sys.argv[1])
+
+model = {
+    "provider": "openai-codex",
+    "default": "gpt-6.2-sol",
+    "api_mode": "codex_responses",
+    "key_env": "",
+    "base_url": "",
+}
+
+for name in ("wraith", "vesper", "lyra", "synth", "pulse"):
+    folder = profiles_dir / name
+
+    if not folder.is_dir():
+        raise SystemExit(
+            f"Missing Hermes profile directory: {folder}"
+        )
+
+    path = folder / "config.yaml"
+
+    if path.is_symlink():
+        raise SystemExit(
+            f"Refusing to modify managed symlink: {path}"
+        )
+
+    existed = path.exists()
+
+    if existed:
+        with path.open(encoding="utf-8") as handle:
+            data = yaml.safe_load(handle) or {}
+    else:
+        data = {}
+
+    if not isinstance(data, dict):
+        raise SystemExit(
+            f"Invalid Hermes config: {path}"
+        )
+
+    data["model"] = model.copy()
+
+    for fallback_key in (
+        "fallback_model",
+        "fallback_models",
+        "fallback_providers",
+    ):
+        data.pop(fallback_key, None)
+
+    with path.open("w", encoding="utf-8") as handle:
+        yaml.safe_dump(
+            data,
+            handle,
+            sort_keys=False,
+            allow_unicode=True,
+        )
+
+    if not existed:
+        os.chown(
+            path,
+            pwd.getpwnam("hermes").pw_uid,
+            grp.getgrnam("hermes").gr_gid,
+        )
+
+    os.chmod(path, 0o600)
+
+    print(
+        f"Hermes: {name} uses gpt-6.2-sol"
+    )
+HERMES_PYTHON
   '';
 
   # ------------------------------------------------------------
@@ -317,6 +419,18 @@ in
     ];
 
     # ----------------------------------------------------------
+    # MCP execution
+    # ----------------------------------------------------------
+
+    # Profile-specific MCP servers are configured in profiles.nix.
+    #
+    # Forgejo MCP uses the absolute Nix store path of
+    # pkgs.forgejo-mcp, which is available inside the
+    # container through the existing /nix/store mount.
+    #
+    # No extraPackages entry is required in container mode.
+
+    # ----------------------------------------------------------
     # Honcho memory configuration
     # ----------------------------------------------------------
 
@@ -348,11 +462,7 @@ in
       # Model
       # --------------------------------------------------------
 
-      model = {
-        provider = "openai-api";
-        default = "gpt-5.4-mini";
-        key_env = "OPENAI_API_KEY";
-      };
+      model = hermesModel;
 
       # --------------------------------------------------------
       # Memory
@@ -370,11 +480,12 @@ in
       ];
 
       # --------------------------------------------------------
-      # Webapp
+      # Hermes Webapp
       # --------------------------------------------------------
 
-      # Publish through the existing Tailscale Services manager.
-      # Keep the backend bound to loopback.
+      # Publish the Webapp through the existing Tailscale Service.
+      # Keep the backend bound to loopback on Vili.
+
       webapp = {
         enabled = true;
         host = "127.0.0.1";

@@ -6,6 +6,7 @@ let
     "actual-budget"
     "actual-mcp"
     "allos"
+    "allos-mcp"
     "mazanoke"
     "pdf"
     "paperless"
@@ -39,6 +40,17 @@ in
       openFirewall = false;
     }))
     // {
+      allos-mcp = {
+        enable = true;
+        openFirewall = false;
+        tailscale.enable = false;
+
+        profileId = 2;
+
+        # Replace with Saga's actual Tailscale IPv4 address.
+        listenAddress = "100.89.53.60";
+      };
+
       actual-bunq-importer = {
         enable = true;
         budgetName = "My Finances";

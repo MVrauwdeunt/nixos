@@ -1,3 +1,4 @@
+
 {
   description = "Declarative NixOS configuration managed via flakes";
 
@@ -6,20 +7,24 @@
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
     disko.url = "github:nix-community/disko";
     sops-nix.url = "github:Mic92/sops-nix";
+
     deploy-rs = {
       url = "github:serokell/deploy-rs";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-   
+
     hermes-agent.url = "github:NousResearch/hermes-agent";
+
     honcho = {
       url = "github:plastic-labs/honcho";
       flake = false;
     };
+
     hermes-official-plugins = {
       url = "github:NousResearch/hermes-official-plugins";
       flake = false;
     };
+
     # Mailserver
     nixos-mailserver = {
       url = "gitlab:simple-nixos-mailserver/nixos-mailserver/nixos-26.05";
@@ -105,6 +110,15 @@
         }
 
         {
+          name = "brokkr";
+          platform = "proxmox";
+          firmware = "uefi";
+          disk = "/dev/sda";
+          useDisko = true;
+          isolated = true;
+        }
+
+        {
           name = "proxmox-vm";
           platform = "proxmox";
           firmware = "uefi";
@@ -120,6 +134,7 @@
           firmware,
           disk,
           useDisko ? false,
+          isolated ? false,
         }:
         lib.nameValuePair name (
           lib.nixosSystem {
@@ -138,10 +153,6 @@
                 ./modules/ssh-hardened.nix
                 #./modules/users/deploy
                 ./modules/just
-                sops-nix.nixosModules.sops
-                ./modules/sops.nix
-                ./modules/tailscale.nix
-                ./modules/services/beszel-agent.nix
 
                 (
                   if platform == "hetzner" then
@@ -160,6 +171,16 @@
                   (builtins.toString ./hosts) + "/${name}/default.nix"
                 ))
               ]
+
+              # Shared infrastructure services.
+              # Excluded from isolated hosts.
+              ++ lib.optionals (!isolated) [
+                sops-nix.nixosModules.sops
+                ./modules/sops.nix
+                ./modules/tailscale.nix
+                ./modules/services/beszel-agent.nix
+              ]
+
               ++ lib.optionals useDisko [
                 disko.nixosModules.disko
 

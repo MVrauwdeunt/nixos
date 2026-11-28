@@ -1,0 +1,76 @@
+
+name: Brokkr Validation
+
+on:
+  workflow_dispatch:
+
+jobs:
+  validation:
+    runs-on: brokkr
+    timeout-minutes: 5
+
+    steps:
+      - name: System information
+        run: |
+          hostname
+          id
+          uname -a
+          cat /etc/os-release
+          node --version
+
+      - name: Public internet access
+        run: |
+          curl --fail --silent --show-error \
+            --max-time 15 https://github.com \
+            --output /dev/null
+
+      - name: Forgejo connectivity
+        run: |
+          curl --fail --silent --show-error \
+            --max-time 15 \
+            https://forgejo.fiordland-gar.ts.net/ \
+            --output /dev/null
+
+      - name: Verify network isolation
+        shell: bash
+        run: |
+          set -eu
+
+          assert_blocked() {
+            if timeout 5 bash -c "echo >/dev/tcp/$1/$2" 2>/dev/null; then
+              echo "FAIL: $1:$2 is reachable"
+              exit 1
+            else
+              echo "PASS: $1:$2 is blocked"
+            fi
+          }
+
+          assert_blocked 100.108.247.120 22
+          assert_blocked 100.68.87.9 8006
+          assert_blocked 192.168.100.150 22
+          assert_blocked 192.168.100.250 8006
+          assert_blocked 192.168.60.254 443
+
+      - name: Verify container isolation
+        run: |
+          set -eu
+
+          for socket in \
+            /var/run/docker.sock \
+            /run/podman/podman.sock \
+            /run/forgejo-podman/podman.sock \
+            /run/user/1001/podman/podman.sock
+          do
+            if [ -S "$socket" ]; then
+              echo "FAIL: Runtime socket exposed: $socket"
+              exit 1
+            fi
+          done
+
+          test ! -e /var/lib/sops-nix/key.txt
+          test ! -e /run/secrets/forgejoRunnerToken
+
+          echo "PASS: No tested runtime sockets or host secrets exposed"
+
+      - name: Validation complete
+        run: echo "Brokkr validation passed."

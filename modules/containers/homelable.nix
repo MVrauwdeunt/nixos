@@ -1,3 +1,4 @@
+
 { config, lib, pkgs, ... }:
 let
   cfg = config.apps.homelable;
@@ -169,7 +170,7 @@ in
 
     sops.templates."homelable.env".content = ''
       SECRET_KEY=${config.sops.placeholder."sif/homelable_secret_key"}
-      AUTH_PASSWORD_HASH='${config.sops.placeholder."sif/homelable_password_hash"}'
+      AUTH_PASSWORD_HASH=${config.sops.placeholder."sif/homelable_password_hash"}
     ''
     + proxmoxEnv
     + lib.optionalString cfg.mcp.enable ''
