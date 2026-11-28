@@ -11,14 +11,8 @@ on:
 
 jobs:
   evaluate:
-    runs-on: nixos
+    runs-on: nixos-ci
     timeout-minutes: 45
-
-    env:
-      NIX_CONFIG: |
-        experimental-features = nix-command flakes
-        sandbox = false
-        build-users-group =
 
     steps:
       - name: Checkout repository
@@ -26,24 +20,13 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install Nix
+      - name: Check CI environment
         shell: bash
         run: |
           set -euo pipefail
-
-          mkdir -p /nix
-
-          curl -fsSL https://nixos.org/nix/install \
-            -o /tmp/install-nix.sh
-
-          sh /tmp/install-nix.sh --no-daemon --yes
-
-          echo "$HOME/.nix-profile/bin" >> "$GITHUB_PATH"
-
-      - name: Check Nix installation
-        shell: bash
-        run: |
           nix --version
+          node --version
+          git --version
 
       - name: Validate Nix syntax
         shell: bash
