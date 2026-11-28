@@ -7,17 +7,16 @@ let
   runtimeDir = "/run/user/1001";
   podmanSocket = "${runtimeDir}/forgejo-podman.sock";
 
+  ciImage = "forgejo.fiordland-gar.ts.net/zanbee/brokkr-ci@sha256:f8dc5f7eb3abc074e24adca7b51b4c60158d43d0696bd7f86edaeaca4660651d";
+
   runnerConfig = pkgs.writeText "forgejo-runner.yaml" ''
     log:
       level: info
-
     runner:
       capacity: 1
       timeout: 3h
-
     cache:
       enabled: false
-
     container:
       network: ""
       enable_ipv6: false
@@ -26,16 +25,15 @@ let
       docker_host: "-"
       force_pull: true
   '';
+
 in
 {
   environment.systemPackages = [
     pkgs.forgejo-runner
   ];
 
-  # Rootless Podman API within the delegated user cgroup.
   systemd.user.services.forgejo-podman = {
     description = "Rootless Podman API for Forgejo Runner";
-
     wantedBy = [ "default.target" ];
 
     unitConfig = {
@@ -54,9 +52,7 @@ in
 
     serviceConfig = {
       WorkingDirectory = runnerHome;
-
       ExecStart = "${pkgs.podman}/bin/podman system service --time=0 unix://${podmanSocket}";
-
       Delegate = true;
       Restart = "on-failure";
       RestartSec = 5;
@@ -64,10 +60,8 @@ in
     };
   };
 
-  # Forgejo Runner daemon.
   systemd.services.forgejo-runner = {
     description = "Brokkr Forgejo CI Runner";
-
     wantedBy = [ "multi-user.target" ];
 
     requires = [
@@ -101,7 +95,6 @@ in
       pkgs.systemd
     ];
 
-    # Start the user service and wait for its API.
     preStart = ''
       systemctl --user start forgejo-podman.service
 
@@ -119,7 +112,6 @@ in
     serviceConfig = {
       User = runnerUser;
       Group = runnerUser;
-
       WorkingDirectory = runnerHome;
 
       LoadCredential = [
@@ -133,7 +125,8 @@ in
           --uuid 2f6ef0fa-7d87-4cf3-86b7-c98923e3dbce \
           --token-url file://%d/runner-token \
           --label brokkr:docker://docker.io/library/node:24-bookworm \
-          --label nixos:docker://docker.io/library/node:24-bookworm
+          --label nixos:docker://docker.io/library/node:24-bookworm \
+          --label nixos-ci:docker://${ciImage}
       '';
 
       Restart = "on-failure";
@@ -155,4 +148,3 @@ in
     };
   };
 }
-
