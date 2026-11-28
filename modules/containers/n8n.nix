@@ -128,7 +128,7 @@ in
       };
 
       n8n = {
-        image = cfg.image;
+        inherit (cfg) image;
 
         dependsOn = [
           "n8n-db"

@@ -26,7 +26,7 @@ in
   imports = [
     (import ./common.nix {
       name = "allos";
-      image = cfg.image;
+      inherit (cfg) image;
 
       port = 3006;
       containerPort = 3000;
@@ -51,12 +51,12 @@ in
 
     (import ./common.nix {
       name = "allos-notify";
-      image = cfg.image;
+      inherit (cfg) image;
 
       port = 3000;
       publishedPorts = [ ];
 
-      dataDir = cfg.dataDir;
+      inherit (cfg) dataDir;
       configMount = "/app/data";
       createDataDir = false;
 

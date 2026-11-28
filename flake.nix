@@ -49,7 +49,7 @@
       ...
     }:
     let
-      lib = nixpkgs.lib;
+      inherit (nixpkgs) lib;
       system = "x86_64-linux";
 
       hosts = [
@@ -167,9 +167,7 @@
                   networking.hostName = name;
                 }
 
-                (builtins.toPath (
-                  (builtins.toString ./hosts) + "/${name}/default.nix"
-                ))
+                (./hosts + "/${name}/default.nix")
               ]
 
               # Shared infrastructure services.

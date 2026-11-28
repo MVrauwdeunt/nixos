@@ -11,7 +11,7 @@ in
   imports = [
     (import ./common.nix {
       name = "homebox";
-      image = cfg.image;
+      inherit (cfg) image;
 
       port = 3100;
       containerPort = 7745;

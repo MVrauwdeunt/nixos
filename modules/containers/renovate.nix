@@ -3,7 +3,7 @@ let cfg = config.apps.renovate;
 in {
   imports = [ (import ./common.nix {
     name = "renovate";
-    image = cfg.image;
+    inherit (cfg) image;
     port = 3000;
     publishedPorts = [ ];
     dataDir = "/var/lib/renovate";

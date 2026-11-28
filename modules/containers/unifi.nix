@@ -146,7 +146,7 @@ in
         ];
       };
       unifi = {
-        image = cfg.image;
+        inherit (cfg) image;
         pull = "missing";
         autoStart = true;
         dependsOn = [ "unifi-db" ];

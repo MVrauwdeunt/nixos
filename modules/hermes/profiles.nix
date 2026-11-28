@@ -55,8 +55,6 @@ let
     };
   };
 
-  agentModel = builtins.toJSON agentConfig;
-
   # PULSE - Allos MCP
   allosMcp =
     (import ./mcp/servers/allos.nix { })

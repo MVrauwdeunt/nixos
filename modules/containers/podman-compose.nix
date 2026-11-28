@@ -19,7 +19,7 @@ let
   composeDir = "/etc/compose/${cfg.stackName}";
   # Op NixOS is /etc/caddy een symlink → mount één bestand om symlinkgedoe te vermijden:
   caddyFileHost = "/etc/static/caddy/Caddyfile";
-  dataDir       = cfg.dataDir;
+  inherit (cfg) dataDir;
   composeYml    = "${composeDir}/compose.yml";
 in
 {
@@ -137,14 +137,14 @@ in
               (lib.optionalAttrs (cfg.email != null) { CADDY_EMAIL = cfg.email; });
 
             serviceBase = {
-              image = cfg.image;
-              volumes = volumes;
+              inherit (cfg) image;
+              inherit volumes;
               restart = "unless-stopped";
             };
 
             service =
               serviceBase
-              // (if cfg.useHostNetwork then { network_mode = "host"; } else { ports = cfg.ports; })
+              // (if cfg.useHostNetwork then { network_mode = "host"; } else { inherit (cfg) ports; })
               // (if envAttrs == {} then {} else { environment = envAttrs; })
               // cfg.serviceOverrides;
 
