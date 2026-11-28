@@ -4,6 +4,7 @@
   "extends": [
     "config:recommended"
   ],
+  "timezone": "Europe/Amsterdam",
   "enabledManagers": [
     "nix",
     "custom.regex"
@@ -19,7 +20,7 @@
         "/^modules\\/containers\\/.*\\.nix$/"
       ],
       "matchStrings": [
-        "(?:image|default)\\s*=\\s*\"(?<depName>(?:docker\\.io|ghcr\\.io|lscr\\.io|codeberg\\.org|docker\\.stirlingpdf\\.com)/[^\"\\s@:]+(?:/[^\"\\s@:]+)*):(?<currentValue>[^\"@\\s]+)@(?<currentDigest>sha256:[a-f0-9]{64})\""
+        "\"(?<depName>(?:docker\\.io|ghcr\\.io|lscr\\.io|codeberg\\.org|docker\\.stirlingpdf\\.com)/[^\"\\s@:]+):(?<currentValue>[^\"@\\s]+)(?:@(?<currentDigest>sha256:[a-f0-9]{64}))?\""
       ],
       "datasourceTemplate": "docker",
       "versioningTemplate": "docker"
@@ -39,19 +40,176 @@
   "prHourlyLimit": 2,
   "prConcurrentLimit": 5,
   "automerge": false,
+  "rebaseWhen": "behind-base-branch",
   "dependencyDashboard": true,
   "packageRules": [
     {
+      "description": "Group Nix flake inputs",
       "matchManagers": [
         "nix"
       ],
-      "groupName": "flake inputs"
+      "groupName": "flake inputs",
+      "addLabels": [
+        "nix"
+      ]
     },
     {
+      "description": "Pin container image digests",
       "matchDatasources": [
         "docker"
       ],
-      "pinDigests": true
+      "pinDigests": true,
+      "addLabels": [
+        "container"
+      ]
+    },
+    {
+      "description": "Label major updates",
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "addLabels": [
+        "major-update"
+      ]
+    },
+    {
+      "description": "Label container digest updates",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchUpdateTypes": [
+        "digest",
+        "pinDigest"
+      ],
+      "addLabels": [
+        "digest-update"
+      ]
+    },
+    {
+      "description": "Identify database containers",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "docker.io/library/postgres",
+        "docker.io/library/mariadb",
+        "docker.io/library/mysql",
+        "docker.io/library/mongo",
+        "docker.io/library/redis",
+        "docker.io/valkey/valkey",
+        "ghcr.io/immich-app/postgres",
+        "docker.io/tensorchord/pgvecto-rs",
+        "docker.io/pgvector/pgvector",
+        "docker.io/postgis/postgis",
+        "docker.io/getmeili/meilisearch"
+      ],
+      "automerge": false,
+      "addLabels": [
+        "database"
+      ]
+    },
+    {
+      "description": "Group Immich application containers",
+      "matchPackageNames": [
+        "ghcr.io/immich-app/immich-server",
+        "ghcr.io/immich-app/immich-machine-learning"
+      ],
+      "groupName": "Immich",
+      "groupSlug": "immich"
+    },
+    {
+      "description": "Group Dependency-Track containers",
+      "matchPackageNames": [
+        "ghcr.io/dependencytrack/apiserver",
+        "ghcr.io/dependencytrack/frontend"
+      ],
+      "groupName": "Dependency-Track",
+      "groupSlug": "dependency-track"
+    },
+    {
+      "description": "Group Homelable containers",
+      "matchPackageNames": [
+        "ghcr.io/pouzor/homelable-backend",
+        "ghcr.io/pouzor/homelable-frontend",
+        "ghcr.io/pouzor/homelable-mcp"
+      ],
+      "groupName": "Homelable",
+      "groupSlug": "homelable"
+    },
+    {
+      "description": "Group AdventureLog containers",
+      "matchPackageNames": [
+        "ghcr.io/seanmorley15/adventurelog-frontend",
+        "ghcr.io/seanmorley15/adventurelog-backend"
+      ],
+      "groupName": "AdventureLog",
+      "groupSlug": "adventurelog"
+    },
+    {
+      "description": "Group Wanderer containers",
+      "matchPackageNames": [
+        "docker.io/flomp/wanderer-web",
+        "docker.io/flomp/wanderer-db"
+      ],
+      "groupName": "Wanderer",
+      "groupSlug": "wanderer"
+    },
+    {
+      "description": "Prevent major database upgrades",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "docker.io/library/postgres",
+        "docker.io/library/mariadb",
+        "docker.io/library/mysql",
+        "docker.io/library/mongo",
+        "docker.io/library/redis",
+        "docker.io/valkey/valkey"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "Protect MariaDB and MongoDB release series",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "docker.io/library/mariadb",
+        "docker.io/library/mongo"
+      ],
+      "matchUpdateTypes": [
+        "major",
+        "minor"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "Require manual updates for specialized database images",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "docker.io/postgis/postgis",
+        "ghcr.io/immich-app/postgres",
+        "docker.io/pgvector/pgvector",
+        "docker.io/tensorchord/pgvecto-rs",
+        "docker.io/getmeili/meilisearch"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "Require manual updates for commit-tagged Allos images",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "ghcr.io/floorlamp/allos"
+      ],
+      "enabled": false
     }
   ]
 }
