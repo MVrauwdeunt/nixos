@@ -7,7 +7,7 @@ let
   runtimeDir = "/run/user/1001";
   podmanSocket = "${runtimeDir}/forgejo-podman.sock";
 
-  ciImage = "forgejo.fiordland-gar.ts.net/zanbee/brokkr-ci@sha256:f8dc5f7eb3abc074e24adca7b51b4c60158d43d0696bd7f86edaeaca4660651d";
+  ciImage = "forgejo.fiordland-gar.ts.net/zanbee/brokkr-ci@sha256:2c9489aa6d1c9d3276c79545ebcbab4032d5dd5dffe7d54b1b1516b68fe23049";
 
   runnerConfig = pkgs.writeText "forgejo-runner.yaml" ''
     log:
