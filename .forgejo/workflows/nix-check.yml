@@ -29,6 +29,7 @@ jobs:
           node --version
           git --version
           gitleaks version
+          yq --version
 
       - name: Scan repository for secrets
         shell: bash
@@ -41,6 +42,18 @@ jobs:
         run: |
           set -euo pipefail
           gitleaks git --redact --log-opts="--all" .
+
+      - name: Validate SOPS validation script
+        shell: bash
+        run: |
+          set -euo pipefail
+          shellcheck ci/check-sops.sh
+
+      - name: Validate SOPS encryption and recipients
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash ci/check-sops.sh
 
       - name: Validate Nix syntax
         shell: bash

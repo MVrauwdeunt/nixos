@@ -15,6 +15,7 @@ let
     cacert
     nodejs_24
     jq
+    yq-go
     gzip
     gnutar
     xz
@@ -38,7 +39,7 @@ let
 in
 pkgs.dockerTools.buildLayeredImage {
   name = "brokkr-ci";
-  tag = "1.0.0";
+  tag = "1.1.0";
 
   contents = tools ++ [
     nixConfig
