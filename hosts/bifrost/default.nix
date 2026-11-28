@@ -16,9 +16,12 @@ in
   imports =
     [
       ./hardware-configuration.nix
+      ./security.nix
       ../../modules/containers/caddy.nix
       ../../modules/containers/authelia.nix
       ../../modules/users/zanbee
+
+
     ]
     ++ vhostFiles;
 

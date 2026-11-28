@@ -14,6 +14,7 @@
     ./services.nix
     ./nextcloud.nix
     ./automx.nix
+    ./security.nix
   ];
 
   nix.settings.trusted-users = [

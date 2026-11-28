@@ -3,7 +3,7 @@
 let
   cfg = config.apps.allos-mcp;
 
-  images = { default = "ghcr.io/mvrauwdeunt/allos-mcp:0.2.1@sha256:1489ca7312789ab52ed972b959a9aafa62656adb640aef0aff615e640a0e1d10"; };
+  images = { default = "ghcr.io/mvrauwdeunt/allos-mcp:0.2.2@sha256:0fc702883457b41a56991b89e552d73dad0dd8e290db68e5caae175cd12b20d5"; };
 in
 {
   imports = [
@@ -26,6 +26,7 @@ in
 
       environment = {
         ALLOS_DB_PATH = "/data/allos.db";
+        ALLOS_MCP_ALLOWED_HOSTS = "saga.fiordland-gar.ts.net:8765";
         ALLOS_PROFILE_ID = toString cfg.profileId;
 
         ALLOS_MCP_AUTH_TOKEN_FILE = "/run/secrets/token";

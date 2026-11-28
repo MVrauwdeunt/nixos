@@ -5,7 +5,7 @@ let
   runnerUser = "forgejo-runner";
   runnerHome = "/var/lib/forgejo-runner";
   runtimeDir = "/run/user/1001";
-  podmanSocket = "/run/forgejo-podman/podman.sock";
+  podmanSocket = "${runtimeDir}/forgejo-podman.sock";
 
   runnerConfig = pkgs.writeText "forgejo-runner.yaml" ''
     log:
@@ -32,13 +32,15 @@ in
     pkgs.forgejo-runner
   ];
 
-  # Rootless Podman API.
-  systemd.services.forgejo-podman = {
+  # Rootless Podman API within the delegated user cgroup.
+  systemd.user.services.forgejo-podman = {
     description = "Rootless Podman API for Forgejo Runner";
 
-    wantedBy = [ "multi-user.target" ];
-    requires = [ "user@1001.service" ];
-    after = [ "user@1001.service" ];
+    wantedBy = [ "default.target" ];
+
+    unitConfig = {
+      ConditionUser = runnerUser;
+    };
 
     environment = {
       HOME = runnerHome;
@@ -51,12 +53,6 @@ in
     ];
 
     serviceConfig = {
-      User = runnerUser;
-      Group = runnerUser;
-
-      RuntimeDirectory = "forgejo-podman";
-      RuntimeDirectoryMode = "0700";
-
       WorkingDirectory = runnerHome;
 
       ExecStart = "${pkgs.podman}/bin/podman system service --time=0 unix://${podmanSocket}";
@@ -75,7 +71,7 @@ in
     wantedBy = [ "multi-user.target" ];
 
     requires = [
-      "forgejo-podman.service"
+      "user@1001.service"
     ];
 
     wants = [
@@ -85,15 +81,16 @@ in
     ];
 
     after = [
+      "user@1001.service"
       "network-online.target"
       "tailscaled.service"
       "dnsmasq.service"
-      "forgejo-podman.service"
     ];
 
     environment = {
       HOME = runnerHome;
       XDG_RUNTIME_DIR = runtimeDir;
+      DBUS_SESSION_BUS_ADDRESS = "unix:path=${runtimeDir}/bus";
       DOCKER_HOST = "unix://${podmanSocket}";
     };
 
@@ -101,7 +98,23 @@ in
       pkgs.git
       pkgs.podman
       pkgs.cacert
+      pkgs.systemd
     ];
+
+    # Start the user service and wait for its API.
+    preStart = ''
+      systemctl --user start forgejo-podman.service
+
+      for attempt in $(seq 1 30); do
+        if podman --remote --url unix://${podmanSocket} info >/dev/null 2>&1; then
+          exit 0
+        fi
+        sleep 1
+      done
+
+      echo "Rootless Podman API is unavailable"
+      exit 1
+    '';
 
     serviceConfig = {
       User = runnerUser;
@@ -119,7 +132,8 @@ in
           --url https://forgejo.fiordland-gar.ts.net/ \
           --uuid 2f6ef0fa-7d87-4cf3-86b7-c98923e3dbce \
           --token-url file://%d/runner-token \
-          --label brokkr:docker://docker.io/library/node:24-bookworm
+          --label brokkr:docker://docker.io/library/node:24-bookworm \
+          --label nixos:docker://docker.io/library/node:24-bookworm
       '';
 
       Restart = "on-failure";
@@ -129,7 +143,11 @@ in
       NoNewPrivileges = true;
       PrivateTmp = true;
       ProtectSystem = "strict";
-      ProtectHome = true;
+
+      InaccessiblePaths = [
+        "/home"
+        "/root"
+      ];
 
       ReadWritePaths = [
         runnerHome
@@ -137,3 +155,4 @@ in
     };
   };
 }
+

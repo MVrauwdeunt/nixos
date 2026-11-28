@@ -1,37 +1,94 @@
+
 name: NixOS configuration validation
 
 on:
   workflow_dispatch:
   pull_request:
     types: [opened, synchronize, reopened]
+  push:
+    branches:
+      - main
 
 jobs:
   evaluate:
     runs-on: nixos
-    timeout-minutes: 30
+    timeout-minutes: 45
+
+    env:
+      NIX_CONFIG: |
+        experimental-features = nix-command flakes
+        sandbox = false
+        build-users-group =
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
-      - name: Add Nix to PATH
+      - name: Install Nix
         shell: bash
         run: |
-          echo "/run/current-system/sw/bin" >> "$GITHUB_PATH"
+          set -euo pipefail
+
+          mkdir -p /nix
+
+          curl -fsSL https://nixos.org/nix/install \
+            -o /tmp/install-nix.sh
+
+          sh /tmp/install-nix.sh --no-daemon --yes
+
+          echo "$HOME/.nix-profile/bin" >> "$GITHUB_PATH"
+
+      - name: Check Nix installation
+        shell: bash
+        run: |
+          nix --version
+
+      - name: Validate Nix syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          while IFS= read -r -d '' file; do
+            echo "Checking $file"
+            nix-instantiate --parse "$file" >/dev/null
+          done < <(git ls-files -z -- '*.nix')
 
       - name: Evaluate system configurations
         shell: bash
         run: |
           set -euo pipefail
 
-          for host in bifrost sif mimir vili saga ratatosk vm proxmox-vm; do
+          hosts=$(nix eval --raw \
+            --apply 'hosts: builtins.concatStringsSep " " (builtins.attrNames hosts)' \
+            .#nixosConfigurations)
+
+          failed=0
+
+          for host in $hosts; do
             echo "Checking $host"
-            nix eval --raw ".#nixosConfigurations.${host}.config.system.build.toplevel.drvPath"
-            echo
+
+            if nix eval --raw \
+              ".#nixosConfigurations.${host}.config.system.build.toplevel.drvPath"
+            then
+              echo
+              echo "PASS: $host"
+            else
+              echo "FAIL: $host"
+              failed=1
+            fi
           done
+
+          exit "$failed"
 
       - name: Validate flake and deploy definitions
         shell: bash
         run: |
-          nix --version
-          nix flake check --no-build --show-trace
+          nix flake check \
+            --no-build \
+            --no-update-lock-file \
+            --show-trace
+
+      - name: Validation complete
+        run: echo "All NixOS configurations passed validation."
